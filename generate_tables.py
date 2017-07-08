@@ -5,7 +5,7 @@ tables = [os.path.basename(x) for x in glob.glob("/home/niles/Documents/odk/app-
 tables = [[x, utils.yank_instance_col(x,x) == "_id"] for x in tables]
 def entry(x):
     r = "<h2 onClick = 'window.location.href = \"table.html#"+x[0]+"\";'"
-    if not x[1]:
+    if x[1]:
         r += " style='color:darkred;'"
     r += ">" + x[0] + "</h2>"
     return r;

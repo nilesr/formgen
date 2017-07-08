@@ -4,7 +4,8 @@ import utils
 # TODO items
 # Must have before release!
 # 	- Some css would be nice
-# 	- A way to view the data, a list with add/edit buttons
+# 	- Pagination, searching
+#   - Permissions!
 #   - geopoint/doAction
 # Other things not implemented
 # 	- Text notification with validation fail message
@@ -87,6 +88,7 @@ for table in tables:
                     for rule in rules:
                         if falsey(rule):
                             continue_out = True
+                            break
                         screen.append("<span style='display: none;' class='validate' data-validate-rule=\"" + str(rule) + "\">")
                     if continue_out:
                         continue
@@ -115,7 +117,17 @@ for table in tables:
                     pass
                 elif item["type"] == "text" or item["type"] == "string":
                     screen.append("<input type=\"text\" " + attrs + _class + " />")
-                elif item["type"] in ["linegraph", "bargraph", "geopoint"]:
+                elif item["type"] == "geopoint":
+                    # NO DBCOL!
+                    screen.append("<button class='geopoint' data-dbcol='"+item["name"]+"'>Record location</button>")
+                    for suffix in ["latitude", "longitude", "altitude", "accuracy"]:
+                        column_id = item["name"] + "_" + suffix
+                        dbcol = "data-dbcol=\""+column_id+"\"";
+                        attrs = " ".join([dbcol, required, calculation, hint, constraint, constraint_message])
+                        screen.append("<br />")
+                        screen.append("<label for='"+column_id+"'>"+suffix[0].upper() + suffix[1:] +": </label>")
+                        screen.append("<input type=\"text\" disabled=true id='"+column_id+"' " + _class + attrs + " />")
+                elif item["type"] in ["linegraph", "bargraph", "piechart"]:
                     screen.append("TODO")
                 elif item["type"] == "integer":
                     screen.append("<input type=\"number\" data-validate=\"integer\" " + attrs + _class + " />")
@@ -217,6 +229,7 @@ var queries = """ + queries + """;
 var table_id = '""" + table + """';
 //var defaults = """ + json.dumps("""defaults""") + """
 var row_id = "";
+var opened_for_edit = false;
 var row_data = {};
 var S4 = function S4() {
     return (((1+Math.random())*0x10000)|0).toString(16).substring(1); 
@@ -241,34 +254,41 @@ var screen_data = function screen_data(id) {
     for (var i = 0; i < elems.length; i++) {
         if (elems[i].getAttribute("data-dbcol") == id) {
             if (elems[i].tagName == "INPUT") {
-                if (elems[i].value.length == 0) {
+                if (elems[i].value.trim().length == 0) {
                     return null;
                 }
                 if (elems[i].getAttribute("data-validate") == "integer" || elems[i].getAttribute("data-validate") == "double") {
                     return Number(elems[i].value);
                 }
-                return elems[i].value
+                return elems[i].value.trim();
             } else if (elems[i].tagName == "SELECT") {
                 if (elems[i].selectedOptions.length > 0) {
-                    return elems[i].selectedOptions[0].value;
+                    return elems[i].selectedOptions[0].value.trim();
                 }
                 return "";
-            } else if (elems[i].classList.contains("select-multiple") || elems[i].classList.contains("select-one")) {
+            } else if (elems[i].classList.contains("select-multiple")) {
                 var result = [];
                 var subs = elems[i].getElementsByTagName("input");
                 for (var j = 0; j < subs.length; j++) {
-                    // TODO will only return first element selected in a select multiple
                     if (subs[j].checked) {
-                        result = result.concat(subs[j].value);
+                        result = result.concat(subs[j].value.trim());
                     }
                 }
-                return result;
+                return JSON.stringify(result);
+            } else if (elems[i].classList.contains("select-one")) {
+                var subs = elems[i].getElementsByTagName("input");
+                for (var j = 0; j < subs.length; j++) {
+                    if (subs[j].checked) {
+                        return subs[j].value.trim();
+                    }
+                }
+                return null;
             } else if (elems[i].classList.contains("date")) {
                 var fields = elems[i].getElementsByTagName("select");
                 var total = [0, 0, 0];
                 for (var j = 0; j < fields.length; j++) {
                     var field = fields[j]; // the select element for day, month or year
-                    total[j] = field.selectedOptions[0].value;
+                    total[j] = field.selectedOptions[0].value.trim();
                 }
                 // fields on the screen are in the order YYYY/MM/DD
                 // but return here as YYYY-MM-DDT00:00:00.000000000 for storage in the database
@@ -280,7 +300,6 @@ var screen_data = function screen_data(id) {
             }
         }
     }
-    return false;
 }
 var data = function data(id) {
     return row_data[id];
@@ -388,8 +407,6 @@ var start_get_rows = function start_get_rows(which, query) {
     odkData.arbitraryQuery(query.linked_table_id, sql, selectionArgs, 1000, 0, function success_callback(d) {
         for (var i = 0; i < d.getCount(); i++) {
             choices = choices.concat(0);
-            // TODO TODO TODO
-            // TODO 16 is a magic number, not specified in formDef
             // var val = d.resultObj.data[i][16]
             //console.log(query.yanked_col);
             var text = d.getData(i, query.yanked_col);
@@ -425,20 +442,29 @@ var populate_choices = function populate_choices(selects, callback) {
     }
 }
 var changeElement = function changeElement(elem, newdata) {
+    if (elem.getAttribute("data-populated") == "loading") {
+        setTimeout(100, function(){changeElement(elem, newdata)})
+        return true;
+    }
+
     if (elem.tagName == "INPUT") {
         elem.value = newdata;
     } else if (elem.tagName == "SELECT") {
+        if (newdata == null || newdata.trim().length == 0) {
+            // we won't be able to find null in the options list
+            return false;
+        }
         var options = elem.options;
         var index = -1;
         for (var i = 0; i < options.length; i++) {
-            if (options[i].value == newdata) {
+            if (options[i].value != null && options[i].value.trim() == newdata.trim()) {
                 index = i;
                 break;
             }
         }
         if (index == -1) {
             // !!! THIS IS BAD !!!
-            console.log("Couldn't figure out selected option for " + elem.getAttribute("data-dbcol"))
+            console.log("Couldn't set selected option for " + elem.getAttribute("data-dbcol"))
         }
         elem.selectedIndex = index;
     } else if (elem.classList.contains("select-multiple")) {
@@ -446,10 +472,13 @@ var changeElement = function changeElement(elem, newdata) {
             newdata = [];
         } else {
             newdata = jsonParse(newdata);
+            for (var k = 0; k < newdata.length; k++) {
+                newdata[k] = newdata[k].trim();
+            }
         }
         var children = elem.getElementsByTagName("input");
         for (var k = 0; k < children.length; k++) {
-            if (newdata.indexOf(children[k].value) >= 0) {
+            if (newdata.indexOf(children[k].value.trim()) >= 0) {
                 children[k].checked = true;
             }
         }
@@ -472,6 +501,7 @@ var changeElement = function changeElement(elem, newdata) {
     } else {
         alert("This shouldn't be possible, don't know how to update screen column " + elem.getAttribute("data-dbcol"));
     }
+    return false;
 }
 var toArray = function toArray(i) {
     return Array.prototype.slice.call(i, 0);
@@ -646,11 +676,14 @@ var update = function update(delta) {
                 var elem = elems[j];
                 if (elem.getAttribute("data-dbcol") == col) {
                     console.log("Updating " + col + " to saved value " + row_data[col]);
-                    changeElement(elem, row_data[col]);
-                    if (row_data[col] !== null && screen_data(col) != row_data[col]) {
-                        noop = "Unexpected failure to set screen value of " + col + ". Tried to set it to " + row_data[col] + " but it came out as " + screen_data(col);
-                        update(0);
-                        return;
+                    var loading = changeElement(elem, row_data[col]);
+                    if (row_data[col] !== null && screen_data(col) != row_data[col] && !loading && screen_has_prompt(col)) {
+                        // This can happen when the database says a select one should be set to "M55" or something, but that's not one of the possible options.
+                        //noop = "Unexpected failure to set screen value of " + col + ". Tried to set it to " + row_data[col] + " but it came out as " + screen_data(col);
+                        console.log("Unexpected failure to set screen value of " + col + ". Tried to set it to " + row_data[col] + " but it came out as " + screen_data(col));
+                        row_data[col] = screen_data(col);
+                        //update(0);
+                        //return;
                     } else {
                         elem.setAttribute("data-data_populated", "done");
                     }
@@ -749,6 +782,15 @@ var update = function update(delta) {
         update(0);
     }
 }
+var screen_has_prompt = function screen_has_prompt(id) {
+    var elems = document.getElementsByClassName("prompt");
+    for (var i = 0; i < elems.length; i++) {
+        if (elems[i].getAttribute("data-dbcol") == id) {
+            return true;
+        }
+    }
+    return false;
+}
 var finalize = function finalize() {  
     //row_data["_savepoint_type"] = "COMPLETE";
     odkCommon.setSessionVariable(table_id + ":" + row_id + ":global_screen_idx", undefined);
@@ -767,9 +809,25 @@ var finalize = function finalize() {
         }
     });
 };
+var cancel = function cancel() {
+    if (!opened_for_edit) {
+        if (row_exists && confirm("Are you sure? All entered data will be deleted.")) {
+            // Escape the LIMIT 1
+            odkData.arbitraryQuery(table_id, "DELETE FROM " + table_id + " WHERE _id = ?;--", [row_id], 100, 0, function() {
+                window.history.back();
+            }, function(err) {
+                alert("Unexpected error deleting row " + JSON.stringify(err));
+                window.history.back();
+            });
+        } else {
+            window.history.back();
+        }
+    } else {
+        window.history.back();
+    }
+}
 var row_exists = true;
 var ol = function onLoad() {
-    document.getElementById("odk-toolbar").innerHTML = "<button id='back' onClick='update(-1)'>Back</button><button id='next' onClick='update(1)'>Next</button><button id='finalize' style='display: none;' onClick='finalize()'>Finalize</button>"
     var str = function str(i) { return Number(i).toString(); };
     for (var i = 1; i <= 31; i++) {
         choices = choices.concat({"choice_list_name": "_day", "data_value": str(i), "display": {"text": str(i)}})
@@ -786,6 +844,7 @@ var ol = function onLoad() {
     if (row_id.length == 0) {
         row_id = newGuid();
         alert("No row id in uri, beginning new instance with id " + row_id);
+        opened_for_edit = false;
     }
     global_screen_idx = Number(odkCommon.getSessionVariable(table_id + ":" + row_id + ":global_screen_idx"));
     if (isNaN(global_screen_idx)) {
@@ -803,8 +862,10 @@ var ol = function onLoad() {
             }
             if (d.getCount() == 0) {
                 row_exists = false;
+                opened_for_edit = false;
             } else {
                 row_exists = true;
+                opened_for_edit = true;
                 generator = function(i) { return d.getData(0, cols[i]); }
             }
             for (var i = 0; i < cols.length; i++) {
@@ -812,8 +873,14 @@ var ol = function onLoad() {
                     row_data[cols[i]] = generator(i);
                 }
             }
-            //row_data["_savepoint_type"] = "INCOMPLETE";
-            console.log(row_data);
+            var cancel = document.getElementById('cancel');
+            if (opened_for_edit) {
+                cancel.innerText = "Save incomplete";
+            } else {
+                cancel.innerText = "Cancel and delete row"
+            }
+            cancel.disabled = false;
+            //console.log(row_data);
             noop = false;
         } catch (e) {
             noop = e.toString();
@@ -828,7 +895,12 @@ var ol = function onLoad() {
     </script>
 </head>
 <body onLoad='ol();'>
-    <div class="odk-toolbar" id="odk-toolbar"></div>
+    <div class="odk-toolbar" id="odk-toolbar">
+        <button id='cancel' onClick='cancel()' disabled=true>Loading...</button>
+        <button id='back' onClick='update(-1)'>Back</button>
+        <button id='next' onClick='update(1)'>Next</button>
+        <button id='finalize' style='display: none;' onClick='finalize()'>Finalize</button>
+    </div>
     <div class="odk-container" id="odk-container">Please wait...</div>
     <!--
         <script type="text/javascript" data-main="survey/js/main" src="libs/require.2.3.2.js"></script>
