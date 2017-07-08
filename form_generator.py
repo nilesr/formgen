@@ -1,10 +1,12 @@
 import json, sys, os, glob, traceback, subprocess
+sys.path.append(".")
+import utils
 # TODO items
 # Must have before release!
-#   - Store dates in database correctly
 # 	- Some css would be nice
 # 	- A way to view the data, a list with add/edit buttons
-#   - Save row without finalizing it or provide defaults that won't cause number format exceptions
+#   - Save global screen idx to session and when resuming (if resuming), load it with default zero, subtract one then update(1)
+#   - geopoint/doAction
 # Other things not implemented
 # 	- Text notification with validation fail message
 # 	- Real translation
@@ -12,7 +14,6 @@ import json, sys, os, glob, traceback, subprocess
 # 	- image (EASY!)
 # 	- goto (EASY!)
 # 	- sections (could be hard)
-# 	- geopoint (could be hard)
 # 	- send_sms
 # 	- read_only_image
 # 	- datetime, time
@@ -44,6 +45,7 @@ import json, sys, os, glob, traceback, subprocess
 #   - save on prompt value change but also on next/back/finalize
 #   - Auto generate row id and insert new row if no row id given in hash
 #   - Automatically load prompt values from database abd save new values to database only when changed on the screen
+#   - Uses finalized/incomplete properly
 def die():
     global failed
     failed = True
@@ -53,17 +55,6 @@ def falsey(r):
     if r.endswith(";"):
         r = r[:-1].strip()
     return r == "0" or r == "false";
-def yank_instance_col(table, form):
-    formDef = json.loads(open("/home/niles/Documents/odk/app-designer/app/config/tables/" + table + "/forms/" + form + "/formDef.json", "r").read())
-    try:
-        return [x for x in formDef["xlsx"]["settings"] if x["setting_name"] == "instance_name"][0]["value"]
-    except:
-        pass
-    try:
-        return formDef["xlsx"]["specification"]["settings"]["instance_name"]["value"]
-    except:
-        print("ERROR could not yank instance col for " + table + "/" + form)
-        return "_id"
 tables = [os.path.basename(x) for x in glob.glob("/home/niles/Documents/odk/app-designer/app/config/tables/*")]
 for table in tables:
     global failed
@@ -74,6 +65,7 @@ for table in tables:
         rules = []
         screen = []
         assigns = []
+        #defaults = {}
         for item in formDef["xlsx"]["survey"]:
             #print(item)
             if "clause" in item:
@@ -130,13 +122,16 @@ for table in tables:
                 elif item["type"] in ["linegraph", "bargraph", "geopoint"]:
                     screen.append("TODO")
                 elif item["type"] == "integer":
-                    screen.append("<input type=\"number\" " + attrs + _class + " />")
+                    screen.append("<input type=\"number\" data-validate=\"integer\" " + attrs + _class + " />")
+                    #defaults[item["name"]] = 0.0;
                 elif item["type"] == "number" or item["type"] == "decimal":
-                    screen.append("<input type=\"text\" data-validate=\"double\" " + attrs + _class + " />")
+                    screen.append("<input type=\"number\" data-validate=\"double\" " + attrs + _class + " />")
+                    #defaults[item["name"]] = 0;
                 elif item["type"] == "image":
                     screen.append("TODO")
                 elif item["type"] == "select_multiple" or item["type"] == "select_multiple_inline":
                     screen.append("<br /><span style='display: inline-block;' data-values-list=\""+item["values_list"]+"\" class=\"select-multiple "+wrapped_class+"\"" + attrs + "></span>")
+                    #defaults[item["name"]] = []
                 elif item["type"] in ["select_one", "select_one_grid", "select_one_with_other"]:
                     screen.append("<br /><span style='display: inline-block;' data-values-list=\""+item["values_list"]+"\" class=\"select-one "+wrapped_class+"\"" + attrs + "></span>")
                 elif item["type"] == "select_one_dropdown":
@@ -154,6 +149,7 @@ for table in tables:
                     screen.append(" / ")
                     screen.append("<select data-values-list=\"_day\"></select>")
                     screen.append("</span>")
+                    #defaults[item["name"]] = "1970-01-01" + "T00:00:00.000000000";
                 elif item["type"] == "assign":
                     # The only one that's not a prompt
                     assigns.append("<span class=\"assign\" "+attrs+"></span>")
@@ -171,7 +167,7 @@ for table in tables:
         if "queries" in formDef["xlsx"]:
             for query in formDef["xlsx"]["queries"]:
                 if query["query_type"] == "linked_table":
-                    query["yanked_col"] = yank_instance_col(query["linked_table_id"], query["linked_form_id"])
+                    query["yanked_col"] = utils.yank_instance_col(query["linked_table_id"], query["linked_form_id"])
             queries = json.dumps(formDef["xlsx"]["queries"]);
         if "choices" in formDef["xlsx"]:
             choices = json.dumps(formDef["xlsx"]["choices"]);
@@ -179,9 +175,12 @@ for table in tables:
 <!doctype html>
 <html>
 <head>
+    <style>input {font-size: 16px;}</style>
     <meta http-equiv="content-type" content="text/html; charset=UTF-8">
-    <!-- <meta content='width=device-width; initial-scale=1.0; maximum-scale=1.0; user-scalable=0;' name='viewport' /> -->
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!--
+        <meta content='width=device-width; initial-scale=1.0; maximum-scale=1.0; user-scalable=0;' name='viewport' />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    -->
     <title>OpenDataKit Common Javascript Framework</title>
     <script type="text/javascript" src="../../../../system/js/odkCommon.js"></script>
     <script type="text/javascript" src="../../../../system/js/odkData.js"></script>
@@ -194,600 +193,636 @@ for table in tables:
     -->
     <noscript>This page requires javascript and a Chrome or WebKit browser</noscript>
     <script>
-        var display = function display(thing) {
-            var res = ""
-            if (thing.text !== undefined) {
-                res += thing.text; // TODO localize
-            }
-            if (thing.image != undefined) {
-                res += "<img src='" + thing.image + "'>";
-            }
-            if (thing.audio != undefined) {
-                res += "<audio controls='controls'><source src='" + thing.audio + "' /></audio>";
-            }
-            if (res.length > 0) return res;
-            if (thing.prompt !== undefined) {
-                return display(thing.prompt);
-            }
-            if (thing.title !== undefined) {
-                return display(thing.title);
-            }
-            return "Couldn't translate " + JSON.stringify(thing);
-        }
-        var screens = """ + json.dumps(screens) + """;
-        var choices = """ + choices + """;
-        var queries = """ + queries + """;
-        var table_id = '""" + table + """';
-        var row_id = "";
-        var row_data = {};
-        var S4 = function S4() {
-            return (((1+Math.random())*0x10000)|0).toString(16).substring(1); 
-        }
-        var newGuid = function newGuid() {
-            return (S4() + S4() + "-" + S4() + "-4" + S4().substr(0,3) + "-" + S4() + "-" + S4() + S4() + S4()).toLowerCase();
-        }
+var display = function display(thing) {
+    var res = ""
+    if (thing.text !== undefined) {
+        res += thing.text; // TODO localize
+    }
+    if (thing.image != undefined) {
+        res += "<img src='" + thing.image + "'>";
+    }
+    if (thing.audio != undefined) {
+        res += "<audio controls='controls'><source src='" + thing.audio + "' /></audio>";
+    }
+    if (res.length > 0) return res;
+    if (thing.prompt !== undefined) {
+        return display(thing.prompt);
+    }
+    if (thing.title !== undefined) {
+        return display(thing.title);
+    }
+    return "Couldn't translate " + JSON.stringify(thing);
+}
+var screens = """ + json.dumps(screens) + """;
+var choices = """ + choices + """;
+var queries = """ + queries + """;
+var table_id = '""" + table + """';
+//var defaults = """ + json.dumps("""defaults""") + """
+var row_id = "";
+var row_data = {};
+var S4 = function S4() {
+    return (((1+Math.random())*0x10000)|0).toString(16).substring(1); 
+}
+var newGuid = function newGuid() {
+    return (S4() + S4() + "-" + S4() + "-4" + S4().substr(0,3) + "-" + S4() + "-" + S4() + S4() + S4()).toLowerCase();
+}
 
-        var selected = function selected(id, value) {
-            if (typeof(id) == typeof([])) {
-                for (var i = 0; i < id.length; i++) {
-                    if (id[i] == value) return true;
-                }
-            }
-            return id == value
+var selected = function selected(id, value) {
+    if (typeof(id) == typeof([])) {
+        for (var i = 0; i < id.length; i++) {
+            if (id[i] == value) return true;
         }
-        var screen_data = function screen_data(id) {
-            var elems = document.getElementsByClassName("prompt");
-            for (var i = 0; i < elems.length; i++) {
-                if (elems[i].getAttribute("data-dbcol") == id) {
-                    if (elems[i].tagName == "INPUT") {
-                        if (elems[i].type == "number") {
-                            return Number(elems[i].value);
-                        }
-                        return elems[i].value
-                    } else if (elems[i].tagName == "SELECT") {
-                        if (elems[i].selectedOptions.length > 0) {
-                            return elems[i].selectedOptions[0].value;
-                        }
-                        return "";
-                    } else if (elems[i].classList.contains("select-multiple") || elems[i].classList.contains("select-one")) {
-                        var result = [];
-                        var subs = elems[i].getElementsByTagName("input");
-                        for (var j = 0; j < subs.length; j++) {
-                            // TODO will only return first element selected in a select multiple
-                            if (subs[j].checked) {
-                                result = result.concat(subs[j].value);
-                            }
-                        }
-                        return result;
-                    } else if (elems[i].classList.contains("date")) {
-                        var fields = elems[i].getElementsByTagName("select");
-                        var total = [0, 0, 0];
-                        for (var j = 0; j < fields.length; j++) {
-                            var field = fields[j]; // the select element for day, month or year
-                            total[j] = field.selectedOptions[0].value;
-                        }
-                        // fields on the screen are in the order YYYY/MM/DD
-                        // but return here as YYYY-MM-DDT00:00:00.000000000 for storage in the database
-                        return total[0] + "-" + total[1] + "-" + total[2] + "T00:00:00.000000000";
-                    } else {
-                        alert("Unknown prompt type!");
-                        return "ERROR";
+    }
+    return id == value
+}
+var screen_data = function screen_data(id) {
+    var elems = document.getElementsByClassName("prompt");
+    for (var i = 0; i < elems.length; i++) {
+        if (elems[i].getAttribute("data-dbcol") == id) {
+            if (elems[i].tagName == "INPUT") {
+                if (elems[i].value.length == 0) {
+                    return null;
+                }
+                if (elems[i].getAttribute("data-validate") == "integer" || elems[i].getAttribute("data-validate") == "double") {
+                    return Number(elems[i].value);
+                }
+                return elems[i].value
+            } else if (elems[i].tagName == "SELECT") {
+                if (elems[i].selectedOptions.length > 0) {
+                    return elems[i].selectedOptions[0].value;
+                }
+                return "";
+            } else if (elems[i].classList.contains("select-multiple") || elems[i].classList.contains("select-one")) {
+                var result = [];
+                var subs = elems[i].getElementsByTagName("input");
+                for (var j = 0; j < subs.length; j++) {
+                    // TODO will only return first element selected in a select multiple
+                    if (subs[j].checked) {
+                        result = result.concat(subs[j].value);
                     }
                 }
+                return result;
+            } else if (elems[i].classList.contains("date")) {
+                var fields = elems[i].getElementsByTagName("select");
+                var total = [0, 0, 0];
+                for (var j = 0; j < fields.length; j++) {
+                    var field = fields[j]; // the select element for day, month or year
+                    total[j] = field.selectedOptions[0].value;
+                }
+                // fields on the screen are in the order YYYY/MM/DD
+                // but return here as YYYY-MM-DDT00:00:00.000000000 for storage in the database
+                var pad = odkCommon.padWithLeadingZeros
+                return pad(total[0], 4) + "-" + pad(total[1], 2) + "-" + pad(total[2], 2) + "T00:00:00.000000000";
+            } else {
+                alert("Unknown prompt type!");
+                return "ERROR";
             }
-            return false;
         }
-        var data = function data(id) {
-            return row_data[id];
-        }
-        var jsonParse = function jsonParse(text) {
+    }
+    return false;
+}
+var data = function data(id) {
+    return row_data[id];
+}
+var jsonParse = function jsonParse(text) {
+    try {
+        text = text.replace(/\\'/g, '"');
+        return JSON.parse(text);
+    } catch (e) {
+        console.log(e);
+        return text;
+    }
+}
+var global_screen_idx = -1;
+var do_xhr = function do_xhr(choice_id, filename, callback) {
+    var xhr = new XMLHttpRequest();
+    xhr.onreadystatechange = function() {
+        if (this.readyState == 4 && this.status == 200) {
+            var all = []
+            var s = this.responseText.split("\\n")
+            var cols = s[0].split(",");
+            var s = s.slice(1);
+            for (var i = 0; i < s.length; i++) {
+                var cs = s[i].split(",");
+                var choice = {};
+                var valid = false;
+                for (var j = 0; j < cols.length; j++) {
+                    // Strip quotes, not really parsing it correctly
+                    if (cols[j][0] = '"' && cols[j][cols[j].length - 1] == '"') {
+                        cols[j] = cols[j].substr(1, cols[j].length - 2);
+                    }
+                    if (j >= cs.length) break;
+                    if (cs[j][0] = '"' && cs[j][cs[j].length - 1] == '"') {
+                        cs[j] = cs[j].substr(1, cs[j].length - 2);
+                    }
+                    cols[j] = cols[j].trim();
+                    if (cols[j].length > 0) {
+                        choice[cols[j]] = cs[j];
+                        valid = true;
+                    }
+                }
+                if (valid) {
+                    all = all.concat(choice);
+                }
+            }
             try {
-                text = text.replace(/\\'/g, '"');
-                return JSON.parse(text);
+                var context = all
+                var new_choices = eval(callback);
+                for (var i = 0; i < new_choices.length; i++) {
+                    new_choices[i]["choice_list_name"] = choice_id;
+                }
+                //console.log(new_choices);
+                choices = choices.concat(new_choices);
             } catch (e) {
+                // ignore
                 console.log(e);
-                return text;
             }
-        }
-        var global_screen_idx = -1;
-        var do_xhr = function do_xhr(choice_id, filename, callback) {
-            var xhr = new XMLHttpRequest();
-            xhr.onreadystatechange = function() {
-                if (this.readyState == 4 && this.status == 200) {
-                    var all = []
-                    var s = this.responseText.split("\\n")
-                    var cols = s[0].split(",");
-                    var s = s.slice(1);
-                    for (var i = 0; i < s.length; i++) {
-                        var cs = s[i].split(",");
-                        var choice = {};
-                        var valid = false;
-                        for (var j = 0; j < cols.length; j++) {
-                            // Strip quotes, not really parsing it correctly
-                            if (cols[j][0] = '"' && cols[j][cols[j].length - 1] == '"') {
-                                cols[j] = cols[j].substr(1, cols[j].length - 2);
-                            }
-                            if (j >= cs.length) break;
-                            if (cs[j][0] = '"' && cs[j][cs[j].length - 1] == '"') {
-                                cs[j] = cs[j].substr(1, cs[j].length - 2);
-                            }
-                            cols[j] = cols[j].trim();
-                            if (cols[j].length > 0) {
-                                choice[cols[j]] = cs[j];
-                                valid = true;
-                            }
-                        }
-                        if (valid) {
-                            all = all.concat(choice);
-                        }
-                    }
-                    try {
-                        var context = all
-                        var new_choices = eval(callback);
-                        for (var i = 0; i < new_choices.length; i++) {
-                            new_choices[i]["choice_list_name"] = choice_id;
-                        }
-                        //console.log(new_choices);
-                        choices = choices.concat(new_choices);
-                    } catch (e) {
-                        // ignore
-                        console.log(e);
-                    }
-                    update(0);
-                }
-            };
-            xhr.open("GET", filename, true);
-            xhr.send();
-        }
-        var get_choices = function get_choices(which, not_first_time) {
-            // first thing in the returned array is a boolean, true if the results are all there, false if they will be added to choices later
-            var found = false;
-            // TODO HANDLE CHOICE_FILTER !!
-            var result = [false];
-            for (var j = 0; j < choices.length; j++) {
-                if (choices[j].choice_list_name == which) {
-                    // concat on a list will merge them
-                    result = result.concat(0);
-                    result[result.length - 1] = [choices[j].data_value, display(choices[j].display)];
-                    result[0] = true; // we found at least one thing
-                }
-            }
-            if (result.length > 1) return result;
-            if (not_first_time) return [false];
-            for (var j = 0; j < queries.length; j++) {
-                if (queries[j].query_name == which) {
-                    found = true;
-                    if (queries[j].query_type == "linked_table") {
-                        start_get_rows(which, queries[j]);
-                        return [false];
-                    }
-                    if (queries[j].query_type == "csv") {
-                        var filename = queries[j].uri.replace('"', "").replace('"', "");
-                        do_xhr(which, filename, queries[j].callback);
-                        return [false]
-                    }
-                    return [false, ["TODO", "Unknown query type"]]
-                }
-            }
-        }
-        var start_get_rows = function start_get_rows(which, query) {
-            var sql = "SELECT * FROM " + query.linked_table_id;
-            if (query.selection) {
-                sql = sql.concat(" WHERE " + query.selection + " ");
-            }
-            var selectionArgs = [];
-            if (query.selectionArgs) {
-                // TODO wrap in try/catch
-                selectionArgs = jsonParse(query.selectionArgs);
-            }
-            odkData.arbitraryQuery(query.linked_table_id, sql, selectionArgs, 1000, 0, function success_callback(d) {
-                for (var i = 0; i < d.getCount(); i++) {
-                    choices = choices.concat(0);
-                    // TODO TODO TODO
-                    // TODO 16 is a magic number, not specified in formDef
-                    // var val = d.resultObj.data[i][16]
-                    //console.log(query.yanked_col);
-                    var text = d.getData(i, query.yanked_col);
-                    var val = d.getData(i, "_id")
-                    choices[choices.length - 1] = {"choice_list_name": which, "data_value": val, "display": {"text": text}};
-                    //console.log(choices[choices.length - 1]);
-                }
-                update(0);
-            }, function failure_callback() {
-                alert("Unexpected failure");
-            });
-        }
-        var populate_choices = function populate_choices(selects, callback) {
-            for (var i = 0; i < selects.length; i++) {
-                var select = selects[i];
-                if (select.getAttribute("data-populated") == "done") {
-                    continue;
-                }
-                var stuffs = null;
-                var which = select.getAttribute("data-values-list");
-                if (select.getAttribute("data-populated") == "loading") {
-                    stuffs = get_choices(which, true);
-                } else {
-                    stuffs = get_choices(which, false);
-                }
-                if (stuffs[0]) {
-                    select.setAttribute("data-populated", "done");
-                } else {
-                    select.setAttribute("data-populated", "loading");
-                }
-                stuffs = stuffs.slice(1);
-                callback(stuffs, select);
-            }
-        }
-        var changeElement = function changeElement(elem, newdata) {
-            if (elem.tagName == "INPUT") {
-                elem.value = newdata;
-            } else if (elem.tagName == "SELECT") {
-                var options = elem.options;
-                var index = -1;
-                for (var i = 0; i < options.length; i++) {
-                    if (options[i].value == newdata) {
-                        index = i;
-                        break;
-                    }
-                }
-                if (index == -1) {
-                    // !!!
-                    console.log("Couldn't figure out selected option for " + elem.getAttribute("data-dbcol"))
-                }
-                elem.selectedIndex = index;
-            } else if (elem.classList.contains("select-multiple")) {
-                if (!newdata || newdata.length == 0) {
-                    newdata = [];
-                } else {
-                    newdata = jsonParse(newdata);
-                }
-                var children = elem.getElementsByTagName("input");
-                for (var k = 0; k < children.length; k++) {
-                    if (newdata.contains(children[k].value)) {
-                        children[k].checked = true;
-                    }
-                }
-            } else if (elem.classList.contains("select-one")) {
-                var children = elem.getElementsByTagName("input");
-                for (var k = 0; k < children.length; k++) {
-                    if (newdata == children[k].value) {
-                        children[k].checked = true;
-                    }
-                }
-            } else if (elem.classList.contains("date")) {
-                var fields = elem.getElementsByTagName("select");
-                var total = newdata.split("-"); // total is now [YYYY, MM, DD plus some garbage]? I actually have no idea
-                total[2] = total[2].split("T")[0]; // should now be [YYYY, MM, DD]
-                for (var i = 0; i < fields.length; i++) {
-                    var field = fields[i]; // the select element for day, month or year
-                    changeElement(field, total[i]);
-                }
-            } else {
-                alert("This shouldn't be possible, don't know how to update screen column " + elem.getAttribute("data-dbcol"));
-            }
-        }
-        var toArray = function toArray(i) {
-            return Array.prototype.slice.call(i, 0);
-        }
-        var noop = true;
-        var updateOrInsert = function updateOrInsert() {
-            if (!row_exists) {
-                odkData.addRow(table_id, row_data, row_id, function(d) {
-                    row_exists = true;
-                }, function(d) {
-                    if (d.indexOf("ActionNotAuthorizedException") >= 0) {
-                        alert("ActionNotAuthorizedException")
-                    }
-                    console.log("Unexpected error on ADD row");
-                    noop = d;
-                    if (!noop) noop = true;
-                });
-            } else {
-                odkData.updateRow(table_id, row_data, row_id, function(){}, function() {
-                    alert("Unexpected failure to save row");
-                    console.log(arguments);
-                });
-            }
-            // null -> will prompt to finish making changes on opening a tool
-            // INCOMPLETE -> saved incomplete, can resume editing later but won't be sync'd
-            // var setTo = "INCOMPLETE"
-            var setTo = null;
-            odkData.arbitraryQuery(table_id, "UPDATE " + table_id + " SET _savepoint_type = ? WHERE row_id = ?", [set_to, row_id], 1000, 0, function success_callback(d) {
-                console.log("Set _savepoint_type to "+set_to+" successfully");
-            }, function failure(d) {
-                // TODO
-                alert(d);
-            });
-        }
-        var update = function update(delta) {
-            console.log("Update called " + delta);
-            // If we failed to load the data from the database in the first place,
-            if (noop) {
-                var error = "An error occured while loading the page. ";
-                if (noop !== true) {
-                    error = error.concat(noop);
-                }
-                document.getElementById("odk-container").innerHTML = error;
-                return;
-            }
-            var lock = false;
-            // EVENT LISTENER LOGIC
-            var elems = toArray(document.getElementsByTagName("select")).concat(toArray(document.getElementsByTagName("input")));
-            for (var i = 0; i < elems.length; i++) {
-                if (elems[i].getAttribute("data-has_event_listener") == "1") {
-                    continue;
-                }
-                elems[i].addEventListener("blur", function() { update(0); });
-                if (elems[i].tagName == "SELECT") {
-                    elems[i].addEventListener("change", function() { update(0); });
-                }
-                elems[i].setAttribute("data-has_event_listener", "1");
-            }
-
-            // TRANSLATION LOGIC
-            var elems = document.getElementsByClassName("translate");
-            var len = elems.length;
-            for (var i = 0; i < len; i++) {
-                var text = elems[0].innerText;
-                try {
-                    var json = jsonParse(text);
-                    elems[0].outerHTML = display(json);
-                } catch (e) {
-                    console.log(e)
-                    elems[0].outerHTML = "Error translating " + text; 
-                }
-            }
-
-            // SET UP SELECT ONE, SELECT MULTIPLE AVAILABLE CHOICES LOGIC
-            populate_choices(document.getElementsByTagName("select"), function(stuffs, select) {
-                for (var j = 0; j < stuffs.length; j++) {
-                    var elem = document.createElement("option")
-                    elem.setAttribute("value", stuffs[j][0]);
-                    elem.innerHTML = stuffs[j][1];
-                    select.appendChild(elem);
-                }
-            });
-            populate_choices(document.getElementsByClassName("select-multiple"), function(stuffs, select) {
-                for (var j = 0; j < stuffs.length; j++) {
-                    var id = select.getAttribute("data-dbcol") + "_" + stuffs[j][0];
-                    var elem = document.createElement("span")
-                    var inner = document.createElement("input")
-                    inner.type = "checkbox";
-                    inner.setAttribute("value", stuffs[j][0]);
-                    inner.setAttribute("id", id);
-                    inner.setAttribute("name", select.getAttribute("data-dbcol"));
-                    inner.addEventListener("change", function() {update(0);});
-                    elem.appendChild(inner);
-                    var label = document.createElement("label");
-                    var n = document.createElement("span");
-                    n.innerHTML = stuffs[j][1];
-                    label.appendChild(n);
-                    label.setAttribute("for", id);
-                    elem.appendChild(label);
-                    elem.appendChild(document.createElement("br"));
-                    select.appendChild(elem);
-                }
-            });
-            populate_choices(document.getElementsByClassName("select-one"), function(stuffs, select) {
-                for (var j = 0; j < stuffs.length; j++) {
-                    var id = select.getAttribute("data-dbcol") + "_" + stuffs[j][0];
-                    var elem = document.createElement("span")
-                    var inner = document.createElement("input")
-                    inner.type = "radio";
-                    inner.setAttribute("value", stuffs[j][0]);
-                    inner.setAttribute("id", id);
-                    inner.setAttribute("name", select.getAttribute("data-dbcol"));
-                    inner.addEventListener("change", function() {update(0);});
-                    elem.appendChild(inner);
-                    var label = document.createElement("label");
-                    var n = document.createElement("span");
-                    n.innerHTML = stuffs[j][1];
-                    label.appendChild(n);
-                    label.setAttribute("for", id);
-                    elem.appendChild(label);
-                    elem.appendChild(document.createElement("br"));
-                    select.appendChild(elem);
-                }
-            });
-
-            // VALIDATION LOGIC
-            var valid = true;
-            var elems = document.getElementsByTagName("input");
-            for (var i = 0; i < elems.length; i++) {
-                var this_valid = true;
-                if (elems[i].getAttribute("data-validate") == "double") {
-                    var num = Number(elems[i].value);
-                    if (isNaN(num)) {
-                        this_valid = false;
-                    }
-                }
-                if (elems[i].getAttribute("data-validate") == "integer") {
-                    var num = Number(elems[i].value);
-                    if (isNaN(num) || num | 0 != num) {
-                        this_valid = false;
-                    }
-                }
-                if (elems[i].getAttribute("data-required") != null) {
-                    if (elems[i].value.length == 0) {
-                        this_valid = false;
-                    }
-                }
-                if (elems[i].getAttribute("data-constraint") != null) {
-                    if (!eval(elems[i].getAttribute("data-constraint"))) {
-                        this_valid = false;
-                    }
-                }
-                if (!this_valid) {
-                    valid = false;
-                    elems[i].style.backgroundColor = "pink";
-                    if (elems[i].getAttribute("data-constraint_message") != null) {
-                        // TODO
-                    }
-                } else {
-                    elems[i].style.backgroundColor = ""; // Default
-                }
-            }
-            if (!valid) {
-                document.getElementById("next").disabled = true;
-                document.getElementById("back").disabled = true;
-                document.getElementById("finalize").disabled = true;
-                delta = 0;
-                lock = true;
-            }
-
-            // DATABASE SAVE/LOAD LOGIC
-            var num_updated = 0;
-            var to_set = [];
-            var elems = document.getElementsByClassName("prompt");
-            for (var i = 0; i < elems.length; i++) {
-                var elem = elems[i];
-                var col = elem.getAttribute("data-dbcol");
-                if (elem.getAttribute("data-populated") == "loading") {
-                    // if it's a select one or select multiple, and it doesn't have any choices yet, don't touch it
-                    continue;
-                } else if (elem.getAttribute("data-data_populated") == "loading") {
-                    continue;
-                } else if (elem.getAttribute("data-data_populated") == "done") {
-                    var newdata = screen_data(col);
-                    if (row_data[col] != newdata.toString()) {
-                        num_updated++;
-                        row_data[col] = newdata.toString();
-                        console.log("Updating database value for " + col + " to screen value " + row_data[col]);
-                    }
-                } else {
-                    to_set = to_set.concat(col);
-                }
-            }
-            // ASSIGN LOGIC
-            var elems = document.getElementsByClassName("assign");
-            for (var i = 0; i < elems.length; i++) {
-                var elem = elems[i];
-                var col = elem.getAttribute("data-dbcol");
-                if (row_data[col] == "") {
-                    row_data[col] = eval(elem.getAttribute("data-calculation")).toString()
-                    num_updated++;
-                }
-            }
-            if (to_set.length > 0) {
-                for (var i = 0; i < to_set.length; i++) {
-                    var col = to_set[i];
-                    var elems = document.getElementsByClassName("prompt");
-                    for (var j = 0; j < elems.length; j++) {
-                        var elem = elems[j];
-                        if (elem.getAttribute("data-dbcol") == col) {
-                            console.log("Updating " + col + " to saved value " + row_data[col]);
-                            changeElement(elem, row_data[col]);
-                            if (screen_data(col) != row_data[col]) {
-                                noop = "Unexpected failure to set screen value of " + col + ". Tried to set it to " + row_data[col] + " but it came out as " + screen_data(col);
-                                update(0);
-                                return;
-                            } else {
-                                elem.setAttribute("data-data_populated", "done");
-                            }
-                        }
-                    }
-                }
-                update(0);
-                return;
-            }
-            if (num_updated > 0 && valid) {
-                updateOrInsert()
-            }
-
-            // IF STATEMENTS LOGIC
-            var spans = document.getElementsByClassName("validate");
-            for (var i = 0; i < spans.length; i++) {
-                var rule = spans[i].getAttribute("data-validate-rule");
-                if (eval(rule)) {
-                    spans[i].style.display = "block";
-                } else {
-                    spans[i].style.display = "none";
-                }
-            }
-
-            // ENABLE/DISABLE NEXT/BACK/FINALIZE BUTTON LOGIC
-            if (lock) return;
-            global_screen_idx += delta;
-            if (global_screen_idx <= 0) {
-                global_screen_idx = 0;
-                document.getElementById("back").disabled = true;
-            } else {
-                document.getElementById("back").disabled = false;
-            }
-            if (global_screen_idx >= screens.length - 1) {
-                global_screen_idx = screens.length - 1;
-                document.getElementById("next").disabled = true;
-                document.getElementById("finalize").style.display = "inline-block";
-                document.getElementById("finalize").disabled = false;
-            } else {
-                document.getElementById("finalize").style.display = "none";
-                document.getElementById("next").disabled = false;
-            }
-            if (delta != 0) {
-                var container = document.getElementById("odk-container");
-                container.innerHTML = screens[global_screen_idx];
-                update(0);
-            }
-        }
-        var finalize = function finalize() {  
-            //row_data["_savepoint_type"] = "COMPLETE";
-            odkData.arbitraryQuery(table_id, "UPDATE " + table_id + " SET _savepoint_type = ? WHERE row_id = ?", ["COMPLETE", row_id], 1000, 0, function success_callback(d) {
-                console.log("Set _savepoint_type to COMPLETE successfully");
-            }, function failure(d) {
-                // TODO
-                alert(d);
-            });
             update(0);
-            window.history.back();
-        };
-        var row_exists = true;
-        var ol = function onLoad() {
-            document.getElementById("odk-toolbar").innerHTML = "<button id='back' onClick='update(-1)'>Back</button><button id='next' onClick='update(1)'>Next</button><button id='finalize' style='display: none;' onClick='finalize()'>Finalize</button>"
-            var str = function str(i) { return Number(i).toString(); };
-            for (var i = 1; i <= 31; i++) {
-                choices = choices.concat({"choice_list_name": "_day", "data_value": str(i), "display": {"text": str(i)}})
+        }
+    };
+    xhr.open("GET", filename, true);
+    xhr.send();
+}
+var get_choices = function get_choices(which, not_first_time) {
+    // first thing in the returned array is a boolean, true if the results are all there, false if they will be added to choices later
+    var found = false;
+    // TODO HANDLE CHOICE_FILTER !!
+    var result = [false];
+    for (var j = 0; j < choices.length; j++) {
+        if (choices[j].choice_list_name == which) {
+            // concat on a list will merge them
+            result = result.concat(0);
+            result[result.length - 1] = [choices[j].data_value, display(choices[j].display)];
+            result[0] = true; // we found at least one thing
+        }
+    }
+    if (result.length > 1) return result;
+    if (not_first_time) return [false];
+    for (var j = 0; j < queries.length; j++) {
+        if (queries[j].query_name == which) {
+            found = true;
+            if (queries[j].query_type == "linked_table") {
+                start_get_rows(which, queries[j]);
+                return [false];
             }
-            for (var i = 1; i <= 12; i++) {
-                choices = choices.concat({"choice_list_name": "_month", "data_value": str(i), "display": {"text": str(i)}})
+            if (queries[j].query_type == "csv") {
+                var filename = queries[j].uri.replace('"', "").replace('"', "");
+                do_xhr(which, filename, queries[j].callback);
+                return [false]
             }
-            for (var i = 2020; i >= 1940; i--) {
-                choices = choices.concat({"choice_list_name": "_year", "data_value": str(i), "display": {"text": str(i)}})
+            return [false, ["TODO", "Unknown query type"]]
+        }
+    }
+}
+var start_get_rows = function start_get_rows(which, query) {
+    var sql = "SELECT * FROM " + query.linked_table_id;
+    if (query.selection) {
+        sql = sql.concat(" WHERE " + query.selection + " ");
+    }
+    var selectionArgs = [];
+    if (query.selectionArgs) {
+        // TODO wrap in try/catch
+        selectionArgs = jsonParse(query.selectionArgs);
+    }
+    odkData.arbitraryQuery(query.linked_table_id, sql, selectionArgs, 1000, 0, function success_callback(d) {
+        for (var i = 0; i < d.getCount(); i++) {
+            choices = choices.concat(0);
+            // TODO TODO TODO
+            // TODO 16 is a magic number, not specified in formDef
+            // var val = d.resultObj.data[i][16]
+            //console.log(query.yanked_col);
+            var text = d.getData(i, query.yanked_col);
+            var val = d.getData(i, "_id")
+            choices[choices.length - 1] = {"choice_list_name": which, "data_value": val, "display": {"text": text}};
+            //console.log(choices[choices.length - 1]);
+        }
+        update(0);
+    }, function failure_callback() {
+        alert("Unexpected failure");
+    });
+}
+var populate_choices = function populate_choices(selects, callback) {
+    for (var i = 0; i < selects.length; i++) {
+        var select = selects[i];
+        if (select.getAttribute("data-populated") == "done") {
+            continue;
+        }
+        var stuffs = null;
+        var which = select.getAttribute("data-values-list");
+        if (select.getAttribute("data-populated") == "loading") {
+            stuffs = get_choices(which, true);
+        } else {
+            stuffs = get_choices(which, false);
+        }
+        if (stuffs[0]) {
+            select.setAttribute("data-populated", "done");
+        } else {
+            select.setAttribute("data-populated", "loading");
+        }
+        stuffs = stuffs.slice(1);
+        callback(stuffs, select);
+    }
+}
+var changeElement = function changeElement(elem, newdata) {
+    if (elem.tagName == "INPUT") {
+        elem.value = newdata;
+    } else if (elem.tagName == "SELECT") {
+        var options = elem.options;
+        var index = -1;
+        for (var i = 0; i < options.length; i++) {
+            if (options[i].value == newdata) {
+                index = i;
+                break;
             }
-            choices = choices.concat({"choice_list_name": "_yesno", "data_value": "true", "display": {"text": "yes"}});
-            choices = choices.concat({"choice_list_name": "_yesno", "data_value": "false", "display": {"text": "no"}});
-            row_id = window.location.hash.substr(1);
-            if (row_id.length == 0) {
-                row_id = newGuid();
-                alert("No row id in uri, beginning new instance with id " + row_id);
+        }
+        if (index == -1) {
+            // !!! THIS IS BAD !!!
+            console.log("Couldn't figure out selected option for " + elem.getAttribute("data-dbcol"))
+        }
+        elem.selectedIndex = index;
+    } else if (elem.classList.contains("select-multiple")) {
+        if (!newdata || newdata.length == 0) {
+            newdata = [];
+        } else {
+            newdata = jsonParse(newdata);
+        }
+        var children = elem.getElementsByTagName("input");
+        for (var k = 0; k < children.length; k++) {
+            if (newdata.contains(children[k].value)) {
+                children[k].checked = true;
             }
-            odkData.getRows(table_id, row_id, function success(d) {
-                try {
-                    var cols = d.getColumns();
-                    var generator = function(i) { return ""; }
-                    if (d.getCount() == 0) {
-                        row_exists = false;
+        }
+    } else if (elem.classList.contains("select-one")) {
+        var children = elem.getElementsByTagName("input");
+        for (var k = 0; k < children.length; k++) {
+            if (newdata == children[k].value) {
+                children[k].checked = true;
+            }
+        }
+    } else if (elem.classList.contains("date")) {
+        var fields = elem.getElementsByTagName("select");
+        var total = newdata.split("-"); // total is now [YYYY, MM, DD plus some garbage]? I actually have no idea
+        total[2] = total[2].split("T")[0]; // should now be [YYYY, MM, DD]
+        for (var i = 0; i < fields.length; i++) {
+            total[i] = Number(total[i]).toString(); // "06" -> "6"
+            var field = fields[i]; // the select element for day, month or year
+            changeElement(field, total[i]);
+        }
+    } else {
+        alert("This shouldn't be possible, don't know how to update screen column " + elem.getAttribute("data-dbcol"));
+    }
+}
+var toArray = function toArray(i) {
+    return Array.prototype.slice.call(i, 0);
+}
+var noop = true;
+var updateOrInsert = function updateOrInsert() {
+    if (!row_exists) {
+        odkData.addRow(table_id, row_data, row_id, function(d) {
+            row_exists = true;
+        }, function(d) {
+            if (d.indexOf("ActionNotAuthorizedException") >= 0) {
+                alert("ActionNotAuthorizedException")
+            }
+            if (d.indexOf("is already present in table") >= 0) {
+                row_exists = true;
+                updateOrInsert();
+                return;
+            }
+            console.log("Unexpected error on ADD row");
+            noop = d;
+            if (!noop) noop = true;
+        });
+    } else {
+        odkData.updateRow(table_id, row_data, row_id, function(){}, function() {
+            alert("Unexpected failure to save row");
+            console.log(arguments);
+        });
+    }
+    // null -> will prompt to finish making changes on opening a tool
+    // INCOMPLETE -> saved incomplete, can resume editing later but won't be sync'd (?)
+    // var setTo = "INCOMPLETE"
+    var setTo = null;
+    // Escape the LIMIT 1
+    odkData.arbitraryQuery(table_id, "UPDATE " + table_id + " SET _savepoint_type = ? WHERE _id = ?;--", [setTo, row_id], 1000, 0, function success_callback(d) {
+        console.log("Set _savepoint_type to "+setTo+" successfully");
+    }, function failure(d) {
+        // TODO
+        alert(d);
+    });
+}
+var update = function update(delta) {
+    console.log("Update called " + delta);
+    // If we failed to load the data from the database in the first place,
+    if (noop) {
+        var error = "An error occured while loading the page. ";
+        if (noop !== true) {
+            error = error.concat(noop);
+        }
+        document.getElementById("odk-container").innerHTML = error;
+        return;
+    }
+    // EVENT LISTENER LOGIC
+    var elems = toArray(document.getElementsByTagName("select")).concat(toArray(document.getElementsByTagName("input")));
+    for (var i = 0; i < elems.length; i++) {
+        if (elems[i].getAttribute("data-has_event_listener") == "1") {
+            continue;
+        }
+        elems[i].addEventListener("blur", function() { update(0); });
+        if (elems[i].tagName == "SELECT") {
+            elems[i].addEventListener("change", function() { update(0); });
+        }
+        elems[i].setAttribute("data-has_event_listener", "1");
+    }
+
+    // TRANSLATION LOGIC
+    var elems = document.getElementsByClassName("translate");
+    var len = elems.length;
+    for (var i = 0; i < len; i++) {
+        var text = elems[0].innerText;
+        try {
+            var json = jsonParse(text);
+            elems[0].outerHTML = display(json);
+        } catch (e) {
+            console.log(e)
+            elems[0].outerHTML = "Error translating " + text; 
+        }
+    }
+
+    // SET UP SELECT ONE, SELECT MULTIPLE AVAILABLE CHOICES LOGIC
+    populate_choices(document.getElementsByTagName("select"), function(stuffs, select) {
+        for (var j = 0; j < stuffs.length; j++) {
+            var elem = document.createElement("option")
+            elem.setAttribute("value", stuffs[j][0]);
+            elem.innerHTML = stuffs[j][1];
+            select.appendChild(elem);
+        }
+    });
+    populate_choices(document.getElementsByClassName("select-multiple"), function(stuffs, select) {
+        for (var j = 0; j < stuffs.length; j++) {
+            var id = select.getAttribute("data-dbcol") + "_" + stuffs[j][0];
+            var elem = document.createElement("span")
+            var inner = document.createElement("input")
+            inner.type = "checkbox";
+            inner.setAttribute("value", stuffs[j][0]);
+            inner.setAttribute("id", id);
+            inner.setAttribute("name", select.getAttribute("data-dbcol"));
+            inner.addEventListener("change", function() {update(0);});
+            elem.appendChild(inner);
+            var label = document.createElement("label");
+            var n = document.createElement("span");
+            n.innerHTML = stuffs[j][1];
+            label.appendChild(n);
+            label.setAttribute("for", id);
+            elem.appendChild(label);
+            elem.appendChild(document.createElement("br"));
+            select.appendChild(elem);
+        }
+    });
+    populate_choices(document.getElementsByClassName("select-one"), function(stuffs, select) {
+        for (var j = 0; j < stuffs.length; j++) {
+            var id = select.getAttribute("data-dbcol") + "_" + stuffs[j][0];
+            var elem = document.createElement("span")
+            var inner = document.createElement("input")
+            inner.type = "radio";
+            inner.setAttribute("value", stuffs[j][0]);
+            inner.setAttribute("id", id);
+            inner.setAttribute("name", select.getAttribute("data-dbcol"));
+            inner.addEventListener("change", function() {update(0);});
+            elem.appendChild(inner);
+            var label = document.createElement("label");
+            var n = document.createElement("span");
+            n.innerHTML = stuffs[j][1];
+            label.appendChild(n);
+            label.setAttribute("for", id);
+            elem.appendChild(label);
+            elem.appendChild(document.createElement("br"));
+            select.appendChild(elem);
+        }
+    });
+
+    // DATA UPDATE LOGIC
+    var num_updated = 0;
+    var to_set = [];
+    var elems = document.getElementsByClassName("prompt");
+    for (var i = 0; i < elems.length; i++) {
+        var elem = elems[i];
+        var col = elem.getAttribute("data-dbcol");
+        if (elem.getAttribute("data-populated") == "loading") {
+            // if it's a select one or select multiple, and it doesn't have any choices yet, don't touch it
+            continue;
+        } else if (elem.getAttribute("data-data_populated") == "loading") {
+            continue;
+        } else if (elem.getAttribute("data-data_populated") == "done") {
+            var newdata = screen_data(col);
+            if (newdata != null) {
+                newdata = newdata.toString();
+            }
+            if (row_data[col] != newdata) {
+                num_updated++;
+                row_data[col] = newdata;
+                console.log("Updating database value for " + col + " to screen value " + row_data[col]);
+            }
+        } else {
+            to_set = to_set.concat(col);
+        }
+    }
+    // ASSIGN LOGIC
+    var elems = document.getElementsByClassName("assign");
+    for (var i = 0; i < elems.length; i++) {
+        var elem = elems[i];
+        var col = elem.getAttribute("data-dbcol");
+        if (row_data[col] == "") {
+            row_data[col] = eval(elem.getAttribute("data-calculation")).toString()
+            num_updated++;
+        }
+    }
+    if (to_set.length > 0) {
+        for (var i = 0; i < to_set.length; i++) {
+            var col = to_set[i];
+            var elems = document.getElementsByClassName("prompt");
+            for (var j = 0; j < elems.length; j++) {
+                var elem = elems[j];
+                if (elem.getAttribute("data-dbcol") == col) {
+                    console.log("Updating " + col + " to saved value " + row_data[col]);
+                    changeElement(elem, row_data[col]);
+                    if (row_data[col] !== null && screen_data(col) != row_data[col]) {
+                        noop = "Unexpected failure to set screen value of " + col + ". Tried to set it to " + row_data[col] + " but it came out as " + screen_data(col);
+                        update(0);
+                        return;
                     } else {
-                        row_exists = true;
-                        generator = function(i) { return d.getData(0, cols[i]); }
+                        elem.setAttribute("data-data_populated", "done");
                     }
-                    for (var i = 0; i < cols.length; i++) {
-                        if (cols[i][0] != "_") {
-                            row_data[cols[i]] = generator(i);
-                        }
-                    }
-                    //row_data["_savepoint_type"] = "INCOMPLETE";
-                    noop = false;
-                } catch (e) {
-                    noop = e.toString();
                 }
-                update(1);
-            }, function failure(d) {
-                noop = d;
-                if (!d) noop = true;
-                update(1); // Display the error
-            });
-        };
+            }
+        }
+        //update(0);
+        //return;
+    }
+
+
+    // VALIDATION LOGIC
+    var valid = true;
+    var elems = document.getElementsByClassName("prompt");
+    for (var i = 0; i < elems.length; i++) {
+        var this_valid = true;
+        var col = elems[i].getAttribute("data-dbcol");
+        if (elems[i].getAttribute("data-validate") == "double") {
+            var num = Number(elems[i].value);
+            if (isNaN(num) || !elems[i].validity.valid) {
+                this_valid = false;
+            }
+        }
+        if (elems[i].getAttribute("data-validate") == "integer") {
+            var num = Number(elems[i].value);
+            if (isNaN(num) || (num | 0) != num || !elems[i].validity.valid) {
+                this_valid = false;
+            }
+        }
+        if (elems[i].getAttribute("data-required") != null) {
+            var entered = screen_data(col);
+            if (entered == null || entered.length == 0) {
+                this_valid = false;
+            }
+        }
+        if (elems[i].getAttribute("data-constraint") != null) {
+            if (!eval(elems[i].getAttribute("data-constraint"))) {
+                this_valid = false;
+            }
+        }
+        if (!this_valid) {
+            valid = false;
+            elems[i].style.backgroundColor = "pink";
+            if (elems[i].getAttribute("data-constraint_message") != null) {
+                // TODO
+            }
+        } else {
+            elems[i].style.backgroundColor = ""; // Default
+        }
+    }
+    if (!valid) {
+        document.getElementById("next").disabled = true;
+        document.getElementById("back").disabled = true;
+        document.getElementById("finalize").disabled = true;
+        delta = 0;
+    }
+
+    // DATABASE UPDATE
+    if (num_updated > 0 && valid) {
+        updateOrInsert()
+    }
+
+    // IF STATEMENTS LOGIC
+    var spans = document.getElementsByClassName("validate");
+    for (var i = 0; i < spans.length; i++) {
+        var rule = spans[i].getAttribute("data-validate-rule");
+        if (eval(rule)) {
+            spans[i].style.display = "block";
+        } else {
+            spans[i].style.display = "none";
+        }
+    }
+
+    // ENABLE/DISABLE NEXT/BACK/FINALIZE BUTTON LOGIC
+    if (!valid) return; // buttons have already been disabled
+    global_screen_idx += delta;
+    odkCommon.setSessionVariable(table_id + ":" + row_id + ":global_screen_idx", global_screen_idx);
+    if (global_screen_idx <= 0) {
+        global_screen_idx = 0;
+        document.getElementById("back").disabled = true;
+    } else {
+        document.getElementById("back").disabled = false;
+    }
+    if (global_screen_idx >= screens.length - 1) {
+        global_screen_idx = screens.length - 1;
+        document.getElementById("next").disabled = true;
+        document.getElementById("finalize").style.display = "inline-block";
+        document.getElementById("finalize").disabled = false;
+    } else {
+        document.getElementById("finalize").style.display = "none";
+        document.getElementById("next").disabled = false;
+    }
+    if (delta != 0) {
+        var container = document.getElementById("odk-container");
+        container.innerHTML = screens[global_screen_idx];
+        update(0);
+    }
+}
+var finalize = function finalize() {  
+    //row_data["_savepoint_type"] = "COMPLETE";
+    // Escape the LIMIT 1
+    odkData.arbitraryQuery(table_id, "UPDATE " + table_id + " SET _savepoint_type = ? WHERE _id = ?;--", ["COMPLETE", row_id], 1000, 0, function success_callback(d) {
+        console.log("Set _savepoint_type to COMPLETE successfully");
+        window.history.back();
+    }, function failure(d) {
+        // TODO
+        alert(d);
+        if (d) {
+            noop = d
+        } else {
+            noop = true
+        }
+    });
+    update(0);
+};
+var row_exists = true;
+var ol = function onLoad() {
+    document.getElementById("odk-toolbar").innerHTML = "<button id='back' onClick='update(-1)'>Back</button><button id='next' onClick='update(1)'>Next</button><button id='finalize' style='display: none;' onClick='finalize()'>Finalize</button>"
+    var str = function str(i) { return Number(i).toString(); };
+    for (var i = 1; i <= 31; i++) {
+        choices = choices.concat({"choice_list_name": "_day", "data_value": str(i), "display": {"text": str(i)}})
+    }
+    for (var i = 1; i <= 12; i++) {
+        choices = choices.concat({"choice_list_name": "_month", "data_value": str(i), "display": {"text": str(i)}})
+    }
+    for (var i = 2020; i >= 1940; i--) {
+        choices = choices.concat({"choice_list_name": "_year", "data_value": str(i), "display": {"text": str(i)}})
+    }
+    choices = choices.concat({"choice_list_name": "_yesno", "data_value": "true", "display": {"text": "yes"}});
+    choices = choices.concat({"choice_list_name": "_yesno", "data_value": "false", "display": {"text": "no"}});
+    row_id = window.location.hash.substr(1);
+    if (row_id.length == 0) {
+        row_id = newGuid();
+        alert("No row id in uri, beginning new instance with id " + row_id);
+    }
+    global_screen_idx = Number(odkCommon.getSessionVariable(table_id + ":" + row_id + ":global_screen_idx"));
+    if (isNaN(global_screen_idx)) {
+        global_screen_idx = 0;
+    }
+    global_screen_idx -= 1;
+    odkData.getRows(table_id, row_id, function success(d) {
+        try {
+            var cols = d.getColumns();
+            var generator = function(i) {
+                //if (defaults[i] != undefined) {
+                    //return defaults[i];
+                //}
+                return null;
+            }
+            if (d.getCount() == 0) {
+                row_exists = false;
+            } else {
+                row_exists = true;
+                generator = function(i) { return d.getData(0, cols[i]); }
+            }
+            for (var i = 0; i < cols.length; i++) {
+                if (cols[i][0] != "_") {
+                    row_data[cols[i]] = generator(i);
+                }
+            }
+            //row_data["_savepoint_type"] = "INCOMPLETE";
+            console.log(row_data);
+            noop = false;
+        } catch (e) {
+            noop = e.toString();
+        }
+        update(1);
+    }, function failure(d) {
+        noop = d;
+        if (!d) noop = true;
+        update(1); // Display the error
+    });
+};
     </script>
 </head>
 <body onLoad='ol();'>
@@ -809,9 +844,13 @@ for table in tables:
                 #print("Not copying file " + f)
                 continue
             #subprocess.check_call(["cp", "-rv", f, table + "/" + fn])
-            output = subprocess.check_output(["adb", "shell", "ln", "-s", "/sdcard/opendatakit/default/config/tables/" + table + "/forms/" + table + "/" + fn, "/sdcard/opendatakit/default/config/assets/formgen/" + table + "/" + fn])
+            src = "/sdcard/opendatakit/default/config/tables/" + table + "/forms/" + table + "/" + fn
+            dest_folder = "/sdcard/opendatakit/default/config/assets/formgen/" + table + "/"
+            dest = dest_folder + fn
+            subprocess.check_call(["adb", "shell", "mkdir", "-p", dest_folder])
+            output = subprocess.check_output(["adb", "shell", "ln", "-s", src, dest])
             if "no such file or directory" in output.decode('utf-8').lower():
-                print("Failed to link " + f + " - " + output.decode("utf-8"))
+                print("Failed to link " + dest + " -> " + src + ": " + output.decode("utf-8"))
                 print("Did you adbpush after switch app-designer branches?")
                 raise Exception();
     except:
