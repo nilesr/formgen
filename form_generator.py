@@ -148,11 +148,11 @@ for table in tables:
                     screen.append("<select data-values-list=\"_yesno\" " + attrs + _class + "></select>")
                 elif item["type"] == "date":
                     screen.append("<span " + attrs + "class=\"date "+wrapped_class+"\">" )
-                    screen.append("<select data-values-list=\"_day\"></select>")
+                    screen.append("<select data-values-list=\"_year\"></select>")
                     screen.append(" / ")
                     screen.append("<select data-values-list=\"_month\"></select>")
                     screen.append(" / ")
-                    screen.append("<select data-values-list=\"_year\"></select>")
+                    screen.append("<select data-values-list=\"_day\"></select>")
                     screen.append("</span>")
                 elif item["type"] == "assign":
                     # The only one that's not a prompt
@@ -266,10 +266,9 @@ for table in tables:
                             var field = fields[j]; // the select element for day, month or year
                             total[j] = field.selectedOptions[0].value;
                         }
-                        // TODO make an actual decision here
-                        // fields on the screen are in the order DD/MM/YYYY
-                        // but return here as MM/DD/YYYY
-                        return total[1] + "/" + total[0] + "/" + total[2];
+                        // fields on the screen are in the order YYYY/MM/DD
+                        // but return here as YYYY-MM-DDT00:00:00.000000000 for storage in the database
+                        return total[0] + "-" + total[1] + "-" + total[2] + "T00:00:00.000000000";
                     } else {
                         alert("Unknown prompt type!");
                         return "ERROR";
@@ -458,19 +457,12 @@ for table in tables:
                 }
             } else if (elem.classList.contains("date")) {
                 var fields = elem.getElementsByTagName("select");
-                var total = newdata.split("/"); // total is now [MM, DD, YYYY]? I actually have no idea
-                // Swap to [DD, MM, YYYY], the order in which the fields are in on the screen
-                var temp = total[0]
-                total[0] = total[1]
-                total[1] = temp;
+                var total = newdata.split("-"); // total is now [YYYY, MM, DD plus some garbage]? I actually have no idea
+                total[2] = total[2].split("T")[0]; // should now be [YYYY, MM, DD]
                 for (var i = 0; i < fields.length; i++) {
                     var field = fields[i]; // the select element for day, month or year
                     changeElement(field, total[i]);
                 }
-                // TODO make an actual decision here
-                // fields on the screen are in the order DD/MM/YYYY
-                // but return here as MM/DD/YYYY
-                return total[1] + "/" + total[0] + "/" + total[2];
             } else {
                 alert("This shouldn't be possible, don't know how to update screen column " + elem.getAttribute("data-dbcol"));
             }
