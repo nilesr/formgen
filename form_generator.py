@@ -1,7 +1,6 @@
 import json, sys, os, glob, traceback, subprocess
 # TODO items
 # Must have before release!
-# 	- need extra code for loading date to screen from database
 # 	- Some css would be nice
 # 	- A way to view the data, a list with add/edit buttons
 #   - Save row without finalizing it or provide defaults that won't cause number format exceptions
