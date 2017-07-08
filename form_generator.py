@@ -809,7 +809,11 @@ for table in tables:
                 #print("Not copying file " + f)
                 continue
             #subprocess.check_call(["cp", "-rv", f, table + "/" + fn])
-            subprocess.check_call(["adb", "shell", "ln", "-s", "/sdcard/opendatakit/default/config/tables/" + table + "/forms/" + table + "/" + fn, "/sdcard/opendatakit/default/config/assets/formgen/" + table + "/" + fn])
+            output = subprocess.check_output(["adb", "shell", "ln", "-s", "/sdcard/opendatakit/default/config/tables/" + table + "/forms/" + table + "/" + fn, "/sdcard/opendatakit/default/config/assets/formgen/" + table + "/" + fn])
+            if "no such file or directory" in output.decode('utf-8').lower():
+                print("Failed to link " + f + " - " + output.decode("utf-8"))
+                print("Did you adbpush after switch app-designer branches?")
+                raise Exception();
     except:
         if failed:
             print("Skipping " + table)
