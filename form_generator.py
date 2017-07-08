@@ -1,6 +1,7 @@
 import json, sys, os, glob, traceback, subprocess
 # TODO items
 # Must have before release!
+#   - Store dates in database correctly
 # 	- Some css would be nice
 # 	- A way to view the data, a list with add/edit buttons
 #   - Save row without finalizing it or provide defaults that won't cause number format exceptions
@@ -14,10 +15,35 @@ import json, sys, os, glob, traceback, subprocess
 # 	- geopoint (could be hard)
 # 	- send_sms
 # 	- read_only_image
-# 	- datetime
+# 	- datetime, time
 # 	- user_branch
 # 	- signature
 # 	- barcode
+# Things that ARE supported
+#   - If statements for displaying/not displaying prompts
+#       - can be arbitrarily nested
+#       - does some basic optimization so things in an 'if false' or 'if 0' won't even be put in the output file
+#   - Csv queries
+#       - With callbacks written in the xlsx (even the ones that use underscore)
+#   - Cross table queries
+#       - Can pull instance name from another form (done at compile time not runtime)
+#   - Begin screen and end screen clauses
+#   - Translation (almost) - done on the browser side
+#   - Validation constraints
+#       - Numeric data type validation
+#       - Javascript based (i.e. "selected(data('acknowledged') === 'yes')" or "data('age') > 18", etc...)
+#       - Required field constraints
+#       - Won't let you next, back, finalize or save to the database until validation passes for the current screen
+#   - Basic data types, text/string, integer, number/decimal
+#   - Select one, select one dropdown (actually implemented as very different widgets)
+#   - Select multiple, select multiple inline
+#   - Select one grid, select one with other
+#   - acknowledge (alias for select_one with yes/no options)
+#   - date
+#   - assign, with javascript expressions in xlsx, evaluated at start of form
+#   - save on prompt value change but also on next/back/finalize
+#   - Auto generate row id and insert new row if no row id given in hash
+#   - Automatically load prompt values from database abd save new values to database only when changed on the screen
 def die():
     global failed
     failed = True
@@ -462,6 +488,8 @@ for table in tables:
                         alert("ActionNotAuthorizedException")
                     }
                     console.log("Unexpected error on ADD row");
+                    noop = d;
+                    if (!noop) noop = true;
                 });
             } else {
                 odkData.updateRow(table_id, row_data, row_id, function(){}, function() {
@@ -469,6 +497,16 @@ for table in tables:
                     console.log(arguments);
                 });
             }
+            // null -> will prompt to finish making changes on opening a tool
+            // INCOMPLETE -> saved incomplete, can resume editing later but won't be sync'd
+            // var setTo = "INCOMPLETE"
+            var setTo = null;
+            odkData.arbitraryQuery(table_id, "UPDATE " + table_id + " SET _savepoint_type = ? WHERE row_id = ?", [set_to, row_id], 1000, 0, function success_callback(d) {
+                console.log("Set _savepoint_type to "+set_to+" successfully");
+            }, function failure(d) {
+                // TODO
+                alert(d);
+            });
         }
         var update = function update(delta) {
             console.log("Update called " + delta);
@@ -648,7 +686,13 @@ for table in tables:
                         if (elem.getAttribute("data-dbcol") == col) {
                             console.log("Updating " + col + " to saved value " + row_data[col]);
                             changeElement(elem, row_data[col]);
-                            elem.setAttribute("data-data_populated", "done");
+                            if (screen_data(col) != row_data[col]) {
+                                noop = "Unexpected failure to set screen value of " + col + ". Tried to set it to " + row_data[col] + " but it came out as " + screen_data(col);
+                                update(0);
+                                return;
+                            } else {
+                                elem.setAttribute("data-data_populated", "done");
+                            }
                         }
                     }
                 }
@@ -696,6 +740,12 @@ for table in tables:
         }
         var finalize = function finalize() {  
             //row_data["_savepoint_type"] = "COMPLETE";
+            odkData.arbitraryQuery(table_id, "UPDATE " + table_id + " SET _savepoint_type = ? WHERE row_id = ?", ["COMPLETE", row_id], 1000, 0, function success_callback(d) {
+                console.log("Set _savepoint_type to COMPLETE successfully");
+            }, function failure(d) {
+                // TODO
+                alert(d);
+            });
             update(0);
             window.history.back();
         };
