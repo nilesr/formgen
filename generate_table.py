@@ -2,7 +2,7 @@ import json, sys, os, glob
 sys.path.append(".")
 import utils
 cols = {}
-tables = [os.path.basename(x) for x in glob.glob("/home/niles/Documents/odk/app-designer/app/config/tables/*")]
+tables = get_tables();
 for table in tables:
     cols[table] = utils.yank_instance_col(table, table)
 basehtml = """
@@ -22,10 +22,15 @@ var newGuid = function newGuid() {
     return (S4() + S4() + "-" + S4() + "-4" + S4().substr(0,3) + "-" + S4() + "-" + S4() + S4() + S4()).toLowerCase();
 }
 var add = function() {
-    document.location.href = "/default/config/assets/formgen/"+table_id+"#" + newGuid();
+    if (allowed_tables.indexOf(table_id) >= 0) {
+        document.location.href = "/default/config/assets/formgen/"+table_id+"#" + newGuid();
+    } else {
+        odkTables.addRowWithSurveyDefault(null, table_id));
+    }
 }
 var table_id = "";
 var display_cols = """ + json.dumps(cols) + """
+var allowed_tables = """ + json.dumps(utils.get_allowed_tables()) + """
 var display_col = "";
 var limit = 20;
 var offset = 0;
@@ -116,7 +121,11 @@ var doSearch = function doSearch() {
             _delete.innerText = "Delete";
             (function(edit, _delete, i, d) {
                 edit.addEventListener("click", function() {
-                    document.location.href = "/default/config/assets/formgen/"+table_id+"#" + d.getData(i, "_id");
+                    if (allowed_tables.indexOf(table_id) >= 0) {
+                        document.location.href = "/default/config/assets/formgen/"+table_id+"#" + d.getData(i, "_id");
+                    } else {
+                        odkTables.editRowWithSurveyDefault(null, table_id, d.getData(i, "_id"));
+                    }
                 });
                 _delete.addEventListener("click", function() {
                     if (!confirm("Please confirm deletion of row: " + d.getData(i, "_id"))) {

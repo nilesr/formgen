@@ -1,5 +1,7 @@
-import subprocess, glob, os
-tables = [os.path.basename(x) for x in glob.glob("/home/niles/Documents/odk/app-designer/app/config/tables/*")]
+import subprocess, glob, os, sys
+sys.path.append(".")
+import utils
+tables = utils.get_tables();
 for table in tables:
     subprocess.call(["adb", "pull", "/sdcard/opendatakit/default/config/tables/" + table + "/properties.csv", "properties.csv"])
     props = open("properties.csv", "r").read().split("\n")

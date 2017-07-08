@@ -4,7 +4,7 @@ import utils
 # TODO items
 # Must have before release!
 # 	- Some css would be nice
-# 	- Pagination, searching
+# 	- odkTables.addRowWithSurveyDefault, editRowWithSurveyDefault use dispach struct to know to refresh page when done
 #   - Permissions!
 #   - geopoint/doAction
 # Other things not implemented
@@ -55,7 +55,7 @@ def falsey(r):
     if r.endswith(";"):
         r = r[:-1].strip()
     return r == "0" or r == "false";
-tables = [os.path.basename(x) for x in glob.glob("/home/niles/Documents/odk/app-designer/app/config/tables/*")]
+tables = utils.get_tables()
 for table in tables:
     global failed
     failed = False
