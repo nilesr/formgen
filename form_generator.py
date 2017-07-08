@@ -5,7 +5,6 @@ import utils
 # Must have before release!
 # 	- Some css would be nice
 # 	- A way to view the data, a list with add/edit buttons
-#   - Save global screen idx to session and when resuming (if resuming), load it with default zero, subtract one then update(1)
 #   - geopoint/doAction
 # Other things not implemented
 # 	- Text notification with validation fail message
@@ -70,12 +69,9 @@ for table in tables:
             #print(item)
             if "clause" in item:
                 clause = item["clause"].split("//")[0].strip();
-                if clause == "begin screen":
+                if clause in ["begin screen", "end screen"]:
                     if len(screen) > 0:
                         screens.append("".join(screen))
-                    screen = []
-                elif clause == "end screen":
-                    screens.append("".join(screen))
                     screen = []
                 elif clause == "if":
                     rules.insert(0, item["condition"])
@@ -125,7 +121,7 @@ for table in tables:
                     screen.append("<input type=\"number\" data-validate=\"integer\" " + attrs + _class + " />")
                     #defaults[item["name"]] = 0.0;
                 elif item["type"] == "number" or item["type"] == "decimal":
-                    screen.append("<input type=\"number\" data-validate=\"double\" " + attrs + _class + " />")
+                    screen.append("<input type=\"number\" step=\"any\" data-validate=\"double\" " + attrs + _class + " />")
                     #defaults[item["name"]] = 0;
                 elif item["type"] == "image":
                     screen.append("TODO")
@@ -155,7 +151,9 @@ for table in tables:
                     assigns.append("<span class=\"assign\" "+attrs+"></span>")
                 else:
                     print("bad type " + item["type"]); die()
-                screen.append("<br /><br />")
+                # prevent an empty screen for pages with only assigns on them
+                if len(screen) > 0:
+                    screen.append("<br /><br />")
                 if len(rules) > 0:
                     for rule in rules:
                         screen.append("</span>")
@@ -228,6 +226,9 @@ var newGuid = function newGuid() {
 }
 
 var selected = function selected(id, value) {
+    if (id == null) {
+        return value == null || value.length == 0;
+    }
     if (typeof(id) == typeof([])) {
         for (var i = 0; i < id.length; i++) {
             if (id[i] == value) return true;
@@ -448,7 +449,7 @@ var changeElement = function changeElement(elem, newdata) {
         }
         var children = elem.getElementsByTagName("input");
         for (var k = 0; k < children.length; k++) {
-            if (newdata.contains(children[k].value)) {
+            if (newdata.indexOf(children[k].value) >= 0) {
                 children[k].checked = true;
             }
         }
@@ -750,6 +751,8 @@ var update = function update(delta) {
 }
 var finalize = function finalize() {  
     //row_data["_savepoint_type"] = "COMPLETE";
+    odkCommon.setSessionVariable(table_id + ":" + row_id + ":global_screen_idx", undefined);
+    update(0);
     // Escape the LIMIT 1
     odkData.arbitraryQuery(table_id, "UPDATE " + table_id + " SET _savepoint_type = ? WHERE _id = ?;--", ["COMPLETE", row_id], 1000, 0, function success_callback(d) {
         console.log("Set _savepoint_type to COMPLETE successfully");
@@ -763,7 +766,6 @@ var finalize = function finalize() {
             noop = true
         }
     });
-    update(0);
 };
 var row_exists = true;
 var ol = function onLoad() {
@@ -848,11 +850,9 @@ var ol = function onLoad() {
             dest_folder = "/sdcard/opendatakit/default/config/assets/formgen/" + table + "/"
             dest = dest_folder + fn
             subprocess.check_call(["adb", "shell", "mkdir", "-p", dest_folder])
-            output = subprocess.check_output(["adb", "shell", "ln", "-s", src, dest])
-            if "no such file or directory" in output.decode('utf-8').lower():
-                print("Failed to link " + dest + " -> " + src + ": " + output.decode("utf-8"))
-                print("Did you adbpush after switch app-designer branches?")
-                raise Exception();
+            #print("Linking " + src + " to " + dest)
+            #subprocess.check_call(["adb", "shell", "ln", "-s", src, dest])
+            subprocess.check_call(["adb", "shell", "cp", "-rv", src, dest])
     except:
         if failed:
             print("Skipping " + table)

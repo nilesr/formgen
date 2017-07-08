@@ -31,12 +31,13 @@ var display_col = "";
 var ol = function ol() {
     table_id = document.location.hash.slice(1);
     display_col = display_cols[table_id];
-    var list = document.getElementById("list");
     if (table_id.length == 0) {
         list.innerText = "No table specified!";
         // TODO - redirect to tables.html
         return;
     }
+    document.getElementById("table_id").innerText = table_id;
+    var list = document.getElementById("list");
 
     // Escape the LIMIT 1
     odkData.arbitraryQuery(table_id, "SELECT * FROM "+table_id, [], 1000, 0, function(d) {
@@ -62,7 +63,7 @@ var ol = function ol() {
         </script>
     </head>
     <body onLoad="ol();">
-        <div id="header">Refrigerators<button onClick='add();'>Add</button></div>
+        <div id="header"><button onClick='window.history.back();'>Back</button><span id="table_id"></span><button onClick='add();'>Add</button></div>
         <div id="list"></div>
     </body>
 </html>
