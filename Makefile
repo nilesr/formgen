@@ -2,6 +2,7 @@ all:
 	python3 form_generator.py
 	python3 generate_table.py
 	python3 generate_tables.py
+	python3 update_props_csv.py
 deploy:
 	adb shell rm -rf /sdcard/opendatakit/default/config/assets/formgen||:
 	adb shell mkdir -p /sdcard/opendatakit/default/config/assets/formgen||:
