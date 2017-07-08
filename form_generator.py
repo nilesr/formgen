@@ -806,7 +806,7 @@ for table in tables:
         for f in glob.glob("/home/niles/Documents/odk/app-designer/app/config/tables/" + table + "/forms/" + table + "/*"):
             fn = os.path.basename(f);
             if fn in ["formDef.json", "properties.csv", "definition.csv", "customStyles.css"] or fn.endswith(".xls") or fn.endswith(".xlsx"):
-                print("Not copying file " + f)
+                #print("Not copying file " + f)
                 continue
             #subprocess.check_call(["cp", "-rv", f, table + "/" + fn])
             subprocess.check_call(["adb", "shell", "ln", "-s", "/sdcard/opendatakit/default/config/tables/" + table + "/forms/" + table + "/" + fn, "/sdcard/opendatakit/default/config/assets/formgen/" + table + "/" + fn])
