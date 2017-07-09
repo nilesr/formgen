@@ -5,10 +5,10 @@ import utils
 # Must have before release!
 # 	- Some css would be nice
 #   - Permissions?
-#   - image/geopoint doAction "Application not installed" bug - ANDROIDCOMMON BUG
-#   - Fix odkTables.editRowWithSurveyDefault() - SURVEY BUG
 #   - data() on a select_multiple is probably broken (for validation)
+#   - configure to work when set as list view/detail view file
 # Other things not implemented
+#   - Fix odkTables.editRowWithSurveyDefault() - SURVEY BUG
 #   - Handle doAction in generate_table.py to call update_total_rows again
 # 	- Text notification with validation fail message
 # 	- Real translation
@@ -121,8 +121,8 @@ for table in tables:
                     screen.append("<input type=\"text\" " + attrs + _class + " />")
                 elif item["type"] == "image":
                     # NO DBCOL!
-                    screen.append("<button onClick='doAction({dbcol: \""+item["name"]+"\", type: \"image\"}, \"org.opendatakit.survey.activities.MediaChooseImageActivity\", {});' data-dbcol='"+item["name"]+"'>Choose Picture</button>")
-                    screen.append("<button onClick='doAction({dbcol: \""+item["name"]+"\", type: \"image\"}, \"org.opendatakit.survey.activities.MediaCaptureImageActivity\", {});' data-dbcol='"+item["name"]+"'>Take Picture</button>")
+                    screen.append("<button onClick='doAction({dbcol: \""+item["name"]+"\", type: \"image\"}, \"org.opendatakit.survey.activities.MediaChooseImageActivity\", makeIntent(survey, \"org.opendatakit.survey.activities.MediaChooseImageActivity\", \""+item["name"]+"\"));' data-dbcol='"+item["name"]+"'>Choose Picture</button>")
+                    screen.append("<button onClick='doAction({dbcol: \""+item["name"]+"\", type: \"image\"}, \"org.opendatakit.survey.activities.MediaCaptureImageActivity\", makeIntent(survey, \"org.opendatakit.survey.activities.MediaCaptureImageActivity\", \""+item["name"]+"\"));' data-dbcol='"+item["name"]+"'>Take Picture</button>")
                     for suffix in ["uriFragment", "contentType"]:
                         column_id = item["name"] + "_" + suffix
                         dbcol = "data-dbcol=\""+column_id+"\"";
@@ -131,10 +131,10 @@ for table in tables:
                         screen.append("<br />")
                         #screen.append("<label for='"+column_id+"'>"+suffix[0].upper() + suffix[1:] +": </label>")
                         screen.append("<input type=\"text\" disabled=true id='"+column_id+"' " + _class + attrs + " />")
-                    screen.append("<img style='display: none;' id='image-"+item["name"]+"' />")
+                    screen.append("<img style='display: none;' class='image' data-dbcol='"+item["name"]+"' />")
                 elif item["type"] == "geopoint":
                     # NO DBCOL!
-                    screen.append("<button class='geopoint' onClick='doAction({dbcol: \""+item["name"]+"\", type: \"geopoint\"}, \"org.opendatakit.survey.activities.GeoPointActivity\", {});' data-dbcol='"+item["name"]+"'>Record location</button>")
+                    screen.append("<button class='geopoint' onClick='doAction({dbcol: \""+item["name"]+"\", type: \"geopoint\"}, \"org.opendatakit.survey.activities.GeoPointActivity\", makeIntent(survey, \"org.opendatakit.survey.activities.GeoPointActivity\"));' data-dbcol='"+item["name"]+"'>Record location</button>")
                     for suffix in ["latitude", "longitude", "altitude", "accuracy"]:
                         column_id = item["name"] + "_" + suffix
                         dbcol = "data-dbcol=\""+column_id+"\"";
@@ -330,6 +330,7 @@ var jsonParse = function jsonParse(text) {
         return text;
     }
 }
+var survey = "org.opendatakit.survey"
 var global_screen_idx = -1;
 var do_xhr = function do_xhr(choice_id, filename, callback) {
     var xhr = new XMLHttpRequest();
@@ -536,6 +537,15 @@ var changeElement = function changeElement(elem, newdata) {
 var toArray = function toArray(i) {
     return Array.prototype.slice.call(i, 0);
 }
+var makeIntent = function makeIntent(package, activity, optional_dbcol) {
+    // TODO, MediaImageCaptureActivity wants uriFragmentNewFileBase in extras
+    var i = {action: "android.intent.action.MAIN", componentPackage: package, componentActivity: activity, extras: {tableId: table_id, instanceId: row_id}};
+    //i.extras.uriFragmentNewFileBase: "opendatakit-macro(uriFragmentNewInstanceFile)";
+    if (optional_dbcol != undefined && optional_dbcol != null) {
+        i.extras["uriFragmentNewFileBase"] = optional_dbcol;
+    }
+    return i;
+}
 var noop = true;
 var updateOrInsert = function updateOrInsert() {
     if (!row_exists) {
@@ -590,6 +600,8 @@ var update = function update(delta) {
             break;
         } else {
             console.log(a);
+            console.log(a.jsonValue);
+            console.log(a.jsonValue.result);
             var s = a["dispatchStruct"];
             if (s != undefined && s != null && s.type != undefined) {
                 if (s.type == "geopoint") {
@@ -599,32 +611,33 @@ var update = function update(delta) {
                         var suffixes = ["latitude", "longitude", "altitude", "accuracy"];
                         for (var i = 0; i < suffixes.length; i++) {
                             var suffix = suffixes[i];
-                            var shp_result = screen_has_prompt(a.dbcol + "_" + suffix)
+                            var shp_result = screen_has_prompt(s.dbcol + "_" + suffix)
                             // Returned via intent extras, one double for each suffix with the same suffix names I use here
                             if (shp_result[0]) {
-                                changeElement(shp_result[1], "TODO get from intent");
+                                changeElement(shp_result[1], a.jsonValue.result[suffix]);
                             } else {
-                                row_data[a.dbcol + "_" + suffix] = "TODO get from intent";
+                                row_data[s.dbcol + "_" + suffix] = a.jsonValue.result[suffix];
                             }
                         }
                     }
                 } else if (s.type == "image") {
                     if (a.jsonValue.status == 0) {
                         // cancelled
-                    } else {
+                    } else if (a.jsonValue.result != undefined) {
                         var suffixes = ["uriFragment", "contentType"];
                         for (var i = 0; i < suffixes.length; i++) {
                             var suffix = suffixes[i];
-                            var shp_result = screen_has_prompt(a.dbcol + "_" + suffix)
+                            if (a.jsonValue.result[suffix] == undefined) continue;
+                            var shp_result = screen_has_prompt(s.dbcol + "_" + suffix);
                             // Returned via intent extras, one double for each suffix with the same suffix names I use here
                             if (shp_result[0]) {
                                 changeElement(shp_result[1], a.jsonValue.result[suffix]);
                             } else {
-                                row_data[a.dbcol + "_" + suffix] = a.jsonValue.result[suffix];
+                                row_data[s.dbcol + "_" + suffix] = a.jsonValue.result[suffix];
                             }
                         }
-                        document.getElementById("image-" + a.dbcol).src = row_data[a.dbcol + "_uriFragment"];
-                        document.getElementById("image-" + a.dbcol).style.display = "block";
+                    } else {
+                        console.log("No result in result object!");
                     }
                 } else {
                     alert("Unknown type in dispach struct!")
@@ -728,7 +741,7 @@ var update = function update(delta) {
         textbox.type = "text";
         textbox.id = id + "_tag"
         textbox.setAttribute("name", select.getAttribute("data-dbcol"));
-        textbox.addEventListener("blur", function() {update(0);});
+        textbox.addEventListener("blur", function() {document.getElementById(select.getAttribute("data-dbcol") + "__other").checked = true; update(0);});
         elem.appendChild(radio);
         elem.appendChild(textbox);
         select.appendChild(elem);
@@ -854,6 +867,21 @@ var update = function update(delta) {
         }
     }
 
+    // DISPLAY IMAGES
+    var elems = document.getElementsByClassName("image");
+    for (var i = 0; i < elems.length; i++) {
+        var elem = elems[i];
+        var dbcol = elem.getAttribute("data-dbcol") + "_uriFragment";
+        if (data(dbcol) == null || data(dbcol) == undefined || data(dbcol).trim().length == 0) {
+            continue;
+        }
+        var newsrc = odkCommon.getRowFileAsUrl(table_id, row_id, data(dbcol));
+        if (elem.src != newsrc) {
+            elem.src = newsrc;
+            elem.style.display = "block";
+        }
+    }
+
     // ENABLE/DISABLE NEXT/BACK/FINALIZE BUTTON LOGIC
     if (!valid) return; // buttons have already been disabled
     global_screen_idx += delta;
@@ -942,7 +970,7 @@ var page_back = function page_back() {
 var row_exists = true;
 var doAction = function doAction(dStruct, act, intent) {
     var result = odkCommon.doAction(dStruct, act, intent);
-    if ("result" == "OK" || "result" == "IGNORED") {
+    if (result == "OK" || result == "IGNORED") {
         return;
     }
     alert("Error launching " + act + ": " + result);
