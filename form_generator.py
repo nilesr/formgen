@@ -4,9 +4,10 @@ import utils
 # TODO items
 # Must have before release!
 # 	- Some css would be nice
-# 	- odkTables.addRowWithSurveyDefault, editRowWithSurveyDefault use dispach struct to know to refresh page when done
 #   - Permissions!
 #   - geopoint/doAction
+#   - Handle doAction in generate_table.py to call update_total_rows again
+#   - test edit row with survey if not in allowed tables list
 # Other things not implemented
 # 	- Text notification with validation fail message
 # 	- Real translation
@@ -119,7 +120,7 @@ for table in tables:
                     screen.append("<input type=\"text\" " + attrs + _class + " />")
                 elif item["type"] == "geopoint":
                     # NO DBCOL!
-                    screen.append("<button class='geopoint' data-dbcol='"+item["name"]+"'>Record location</button>")
+                    screen.append("<button class='geopoint' onClick='odkCommon.doAction({dbcol: \""+item["name"]+"\", type: \"geopoint\"}, \"org.opendatakit.survey.activities.GeoPointActivity\", {});' data-dbcol='"+item["name"]+"'>Record location</button>")
                     for suffix in ["latitude", "longitude", "altitude", "accuracy"]:
                         column_id = item["name"] + "_" + suffix
                         dbcol = "data-dbcol=\""+column_id+"\"";
@@ -194,8 +195,6 @@ for table in tables:
     <title>OpenDataKit Common Javascript Framework</title>
     <script type="text/javascript" src="../../../../system/js/odkCommon.js"></script>
     <script type="text/javascript" src="../../../../system/js/odkData.js"></script>
-    <!-- One of these will work -->
-    <script type="text/javascript" src="../../../../system/libs/underscore.1.4.4.js"></script> <!-- cold-chain zips -->
     <script type="text/javascript" src="../../../../system/libs/underscore.1.8.3.js"></script> <!-- development zips -->
     <!--
         <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
@@ -390,7 +389,7 @@ var get_choices = function get_choices(which, not_first_time) {
                 do_xhr(which, filename, queries[j].callback);
                 return [false]
             }
-            return [false, ["TODO", "Unknown query type"]]
+            return [false, ["TODO", "Unknown query type " + queries[j].query_type]]
         }
     }
 }
@@ -553,6 +552,37 @@ var update = function update(delta) {
         document.getElementById("odk-container").innerHTML = error;
         return;
     }
+    // DOACTION RESULT LOGIC
+    while (true) {
+        var a = odkCommon.viewFirstQueuedAction();
+        if (a == null) {
+            break;
+        } else {
+            console.log(a);
+            var s = a["dispatchStruct"];
+            if (s != undefined && s != null && s.type != undefined) {
+                if (s.type == "geopoint") {
+                    if (a.jsonValue.status == 0) {
+                        alert("Error, location providers are disabled.")
+                    } else {
+                        var suffixes = ["latitude", "longitude", "altitude", "accuracy"];
+                        for (var i = 0; i < suffixes.length; i++) {
+                            var suffix = suffixes[i];
+                            var shp_result = screen_has_prompt(a.dbcol + "_" + suffix)
+                            if (shp_result[0]) {
+                                changeElement(shp_result[1], "TODO get from intent");
+                            } else {
+                                row_data[a.dbcol + "_" + suffix] = "TODO get from intent";
+                            }
+                        }
+                    }
+                } else {
+                    alert("Unknown type in dispach struct!")
+                }
+            }
+            odkCommon.removeFirstQueuedAction();
+        }
+    }
     // EVENT LISTENER LOGIC
     var elems = toArray(document.getElementsByTagName("select")).concat(toArray(document.getElementsByTagName("input")));
     for (var i = 0; i < elems.length; i++) {
@@ -677,7 +707,7 @@ var update = function update(delta) {
                 if (elem.getAttribute("data-dbcol") == col) {
                     console.log("Updating " + col + " to saved value " + row_data[col]);
                     var loading = changeElement(elem, row_data[col]);
-                    if (row_data[col] !== null && screen_data(col) != row_data[col] && !loading && screen_has_prompt(col)) {
+                    if (row_data[col] !== null && screen_data(col) != row_data[col] && !loading && screen_has_prompt(col)[0]) {
                         // This can happen when the database says a select one should be set to "M55" or something, but that's not one of the possible options.
                         //noop = "Unexpected failure to set screen value of " + col + ". Tried to set it to " + row_data[col] + " but it came out as " + screen_data(col);
                         console.log("Unexpected failure to set screen value of " + col + ". Tried to set it to " + row_data[col] + " but it came out as " + screen_data(col));
@@ -786,10 +816,10 @@ var screen_has_prompt = function screen_has_prompt(id) {
     var elems = document.getElementsByClassName("prompt");
     for (var i = 0; i < elems.length; i++) {
         if (elems[i].getAttribute("data-dbcol") == id) {
-            return true;
+            return [true, elems[i]];
         }
     }
-    return false;
+    return [false, null];
 }
 var finalize = function finalize() {  
     //row_data["_savepoint_type"] = "COMPLETE";
@@ -798,7 +828,7 @@ var finalize = function finalize() {
     // Escape the LIMIT 1
     odkData.arbitraryQuery(table_id, "UPDATE " + table_id + " SET _savepoint_type = ? WHERE _id = ?;--", ["COMPLETE", row_id], 1000, 0, function success_callback(d) {
         console.log("Set _savepoint_type to COMPLETE successfully");
-        window.history.back();
+        page_back();
     }, function failure(d) {
         // TODO
         alert(d);
@@ -814,17 +844,21 @@ var cancel = function cancel() {
         if (row_exists && confirm("Are you sure? All entered data will be deleted.")) {
             // Escape the LIMIT 1
             odkData.arbitraryQuery(table_id, "DELETE FROM " + table_id + " WHERE _id = ?;--", [row_id], 100, 0, function() {
-                window.history.back();
+                page_back();
             }, function(err) {
                 alert("Unexpected error deleting row " + JSON.stringify(err));
-                window.history.back();
+                page_back();
             });
         } else {
-            window.history.back();
+            page_back();
         }
     } else {
-        window.history.back();
+        page_back();
     }
+}
+var page_back = function page_back() {
+    //window.history.back();
+    odkCommon.closeWindow(-1, null);
 }
 var row_exists = true;
 var ol = function onLoad() {
@@ -886,7 +920,19 @@ var ol = function onLoad() {
             noop = e.toString();
         }
         update(1);
+        /*
+        odkCommon.registerListener(function doaction_listener() {
+            var a = odkCommon.viewFirstQueuedAction();
+            if (a != null) {
+                console.log(a);
+                update(0);
+            } else {
+                odkCommon.removeFirstQueuedAction();
+            }
+        });
+        */
     }, function failure(d) {
+        console.log(d);
         noop = d;
         if (!d) noop = true;
         update(1); // Display the error

@@ -1,4 +1,4 @@
-import json, os, subprocess
+import json, os, subprocess, glob
 def yank_instance_col(table, form):
     formDef = json.loads(open("/home/niles/Documents/odk/app-designer/app/config/tables/" + table + "/forms/" + form + "/formDef.json", "r").read())
     try:
@@ -13,7 +13,7 @@ def yank_instance_col(table, form):
 def get_allowed_tables():
     result = []
     for table in get_tables():
-        if subprocess.check_output(["adb", "shell", "test -d /sdcard/opendatakit/default/config/assets/formgen/" + table + " && echo yes || echo no"]).decode("utf-8").trim() == "yes":
+        if subprocess.check_output(["adb", "shell", "test -d /sdcard/opendatakit/default/config/assets/formgen/" + table + " && echo yes || echo no"]).decode("utf-8").strip() == "yes":
             result.append(table)
     return result
 def get_tables():

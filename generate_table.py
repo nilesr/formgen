@@ -2,18 +2,18 @@ import json, sys, os, glob
 sys.path.append(".")
 import utils
 cols = {}
-tables = get_tables();
+tables = utils.get_tables();
 for table in tables:
     cols[table] = utils.yank_instance_col(table, table)
 basehtml = """
 <!doctype html>
 <html>
     <head>
+        <style>input {font-size: 16px;}</style>
         <meta http-equiv="content-type" content="text/html; charset=UTF-8">
-        <!--
-            <script type="text/javascript" src="/default/system/js/odkCommon.js"></script>
-        -->
+        <script type="text/javascript" src="/default/system/js/odkCommon.js"></script>
         <script type="text/javascript" src="/default/system/js/odkData.js"></script>
+        <script type="text/javascript" src="/default/system/tables/js/odkTables.js"></script>
         <script>
 var S4 = function S4() {
     return (((1+Math.random())*0x10000)|0).toString(16).substring(1); 
@@ -21,11 +21,19 @@ var S4 = function S4() {
 var newGuid = function newGuid() {
     return (S4() + S4() + "-" + S4() + "-4" + S4().substr(0,3) + "-" + S4() + "-" + S4() + S4() + S4()).toLowerCase();
 }
+var page_go = function page_go(location) {
+    //document.location.href = location;
+    odkTables.launchHTML(null, location);
+}
+var page_back = function page_back() {
+    //window.history.back();
+    odkCommon.closeWindow(-1, null);
+}
 var add = function() {
     if (allowed_tables.indexOf(table_id) >= 0) {
-        document.location.href = "/default/config/assets/formgen/"+table_id+"#" + newGuid();
+        page_go("config/assets/formgen/"+table_id+"#" + newGuid());
     } else {
-        odkTables.addRowWithSurveyDefault(null, table_id));
+        odkTables.addRowWithSurveyDefault(null, table_id);
     }
 }
 var table_id = "";
@@ -39,6 +47,23 @@ var total_rows = 0;
 var ol = function ol() {
     table_id = document.location.hash.slice(1);
     display_col = display_cols[table_id];
+    search = odkCommon.getSessionVariable(table_id + ":search");
+    limit = Number(odkCommon.getSessionVariable(table_id + ":limit", limit));
+    if (isNaN(limit)) limit = 20;
+    var children = document.getElementById("limit").children;
+    var res = 0;
+    for (var i = 0; i < children.length; i++) {
+        if (children[i].value == limit.toString()) {
+            res = i;
+            break;
+        }
+    }
+    document.getElementById("limit").selectedIndex = res;
+    offset = Number(odkCommon.getSessionVariable(table_id + ":offset"));
+    if (isNaN(offset)) offset = 0;
+    if (search != undefined && search != null && search.length > 0) {
+        document.getElementById("search-box").value = search;
+    }
     if (table_id.length == 0) {
         list.innerText = "No table specified!";
         // TODO - redirect to tables.html
@@ -46,6 +71,13 @@ var ol = function ol() {
     }
     document.getElementById("table_id").innerText = table_id;
     update_total_rows();
+}
+var newLimit = function newLimit() {
+    var newlimit = Number(document.getElementById("limit").selectedOptions[0].value);
+    if (!isNaN(newlimit)) {
+        limit = newlimit;
+    }
+    doSearch();
 }
 var cached_search = null;
 var update_total_rows = function update_total_rows(force) {
@@ -92,15 +124,17 @@ var make_query = function make_query(search, limit, offset) {
     }
     //sql = sql.concat(" LIMIT " + limit + " OFFSET " + offset);
     //sql = sql.concat(" OFFSET " + offset);
-    offset = Math.max(offset, 0);
     return [where, query_args, null, null, null, null, limit, offset, false];
 }
 var doSearch = function doSearch() {
+    offset = Math.max(offset, 0);
     document.getElementById("prev").disabled = offset <= 0
     document.getElementById("next").disabled = offset + limit >= total_rows
     var list = document.getElementById("list");
     var search = document.getElementById("search-box").value;
-
+    odkCommon.setSessionVariable(table_id + ":search", search);
+    odkCommon.setSessionVariable(table_id + ":limit", limit);
+    odkCommon.setSessionVariable(table_id + ":offset", offset);
     //query(tableId, whereClause, sqlBindParams, groupBy, having, orderByElementKey, orderByDirection, limit, offset, includeKVS, success, fail)
     //odkData.arbitraryQuery(table_id, sql, query_args, limit, offset, function(d) {
     //odkData.query(table_id, where, query_args, null, null, null, null, limit, offset, false, function success(d) {
@@ -111,7 +145,7 @@ var doSearch = function doSearch() {
         } else {
             list.innerHTML = "";
         }
-        document.getElementById("navigation-text").innerText = "Showing rows " + (offset+1) + "-" + (offset+d.getCount()) + " of " + total_rows;
+        document.getElementById("navigation-text").innerText = "Showing rows " + (offset+(total_rows == 0 ? 0 :1)) + "-" + (offset+d.getCount()) + " of " + total_rows;
         for (var i = 0; i < d.getCount(); i++) {
             var span = document.createElement("div");
             span.innerText = d.getData(i, display_col);
@@ -122,7 +156,7 @@ var doSearch = function doSearch() {
             (function(edit, _delete, i, d) {
                 edit.addEventListener("click", function() {
                     if (allowed_tables.indexOf(table_id) >= 0) {
-                        document.location.href = "/default/config/assets/formgen/"+table_id+"#" + d.getData(i, "_id");
+                        page_go("config/assets/formgen/"+table_id+"#" + d.getData(i, "_id"));
                     } else {
                         odkTables.editRowWithSurveyDefault(null, table_id, d.getData(i, "_id"));
                     }
@@ -153,7 +187,7 @@ var doSearch = function doSearch() {
     </head>
     <body onLoad="ol();">
         <div id="header">
-            <button onClick='window.history.back();'>Back</button>
+            <button onClick='page_back();'>Back</button>
             <span id="table_id"></span>
             <button onClick='add();'>Add row</button>
         </div>
@@ -161,6 +195,12 @@ var doSearch = function doSearch() {
             <button disabled=true id='prev' onClick='prev();'>Previous page</button>
             <span id="navigation-text">Loading...</span>
             <button disabled=true id='next' onClick='next();'>Next page</button>
+            <select id="limit" onChange='newLimit();'>
+                <option value="20">20</option>
+                <option value="50">50</option>
+                <option value="100">100</option>
+                <option value="1000">1000</option>
+            </select>
         </div>
         <div id="search">
             <input type='text' id='search-box' onblur='offset=0; update_total_rows(false)' />
