@@ -119,12 +119,19 @@ var display_col = "";
 var limit = 20;
 var offset = 0;
 var total_rows = 0;
+var try_more_cols = false;
 
 var ol = function ol() {
     table_id = document.location.hash.slice(1);
     display_subcol = [];
+    display_col = null;
     """ + customJsOl + """
-    display_col = display_cols[table_id];
+    if (display_col == null) {
+        display_col = display_cols[table_id];
+    }
+    if (display_col == undefined) {
+        display_col = "_id"; // BAD IDEA
+    }
     search = odkCommon.getSessionVariable(table_id + ":search");
     limit = Number(odkCommon.getSessionVariable(table_id + ":limit", limit));
     if (isNaN(limit)) limit = 20;
@@ -196,9 +203,21 @@ var make_query = function make_query(search, limit, offset) {
     //var sql = "SELECT * FROM " + table_id;
     var where = null
     if (search != null && search.length > 0) {
+        var cols = [display_col]
+        if (try_more_cols) {
+            for (var i = 0; i < display_subcol.length; i++) {
+                cols = cols.concat(display_subcol[i][1]);
+            }
+        }
         //sql = sql.concat(" WHERE " + display_col + " LIKE ?")
-        where = display_col + " LIKE ?";
-        query_args = query_args.concat("%" + search + "%");
+        where = ""
+        for (var i = 0; i < cols.length; i++) {
+            if (i != 0) {
+                where += " OR "
+            }
+            where += cols[i] + " LIKE ?"
+            query_args = query_args.concat("%" + search + "%");
+        }
     }
     //sql = sql.concat(" LIMIT " + limit + " OFFSET " + offset);
     //sql = sql.concat(" OFFSET " + offset);
@@ -214,15 +233,19 @@ var doSearch = function doSearch() {
     odkCommon.setSessionVariable(table_id + ":limit", limit);
     odkCommon.setSessionVariable(table_id + ":offset", offset);
     //query(tableId, whereClause, sqlBindParams, groupBy, having, orderByElementKey, orderByDirection, limit, offset, includeKVS, success, fail)
-    //odkData.arbitraryQuery(table_id, sql, query_args, limit, offset, function(d) {
-    //odkData.query(table_id, where, query_args, null, null, null, null, limit, offset, false, function success(d) {
     var the_query = make_query(search, limit, offset);
     odkData.query(table_id, the_query[0], the_query[1], the_query[2], the_query[3], the_query[4], the_query[5], the_query[6], the_query[7], the_query[8], function success(d) {
         if (d.getCount() == 0) {
-            list.innerText = "No results";
-        } else {
-            list.innerHTML = "";
+            if (!try_more_cols) {
+                try_more_cols = true;
+                update_total_rows(true)
+            } else {
+                list.innerText = "No results";
+            }
+            return;
         }
+        list.innerHTML = "";
+        try_more_cols = false;
         document.getElementById("navigation-text").innerText = "Showing rows " + (offset+(total_rows == 0 ? 0 :1)) + "-" + (offset+d.getCount()) + " of " + total_rows;
         for (var i = 0; i < d.getCount(); i++) {
             var li = document.createElement("div");
