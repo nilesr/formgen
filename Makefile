@@ -6,6 +6,7 @@ all:
 	python3 generate_table.py # reads the list of folders in config/assets/formgen/ OFF THE DEVICE, so we push forms first
 	python3 generate_tables.py
 	#python3 update_props_csv.py
+	python3 custom.py
 	find . -maxdepth 1 -mindepth 1 -type f -exec adb push \{\} /sdcard/opendatakit/default/config/assets/\{\} \;
 deploy:
 	make all

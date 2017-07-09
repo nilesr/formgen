@@ -131,7 +131,7 @@ for table in tables:
                         screen.append("<br />")
                         #screen.append("<label for='"+column_id+"'>"+suffix[0].upper() + suffix[1:] +": </label>")
                         screen.append("<input type=\"text\" disabled=true id='"+column_id+"' " + _class + attrs + " />")
-                    screen.append("<img style='display: none;' class='image' data-dbcol='"+item["name"]+"' />")
+                    screen.append("<img style='display: none; width: 50%;' class='image' data-dbcol='"+item["name"]+"' />")
                 elif item["type"] == "geopoint":
                     # NO DBCOL!
                     screen.append("<button class='geopoint' onClick='doAction({dbcol: \""+item["name"]+"\", type: \"geopoint\"}, \"org.opendatakit.survey.activities.GeoPointActivity\", makeIntent(survey, \"org.opendatakit.survey.activities.GeoPointActivity\"));' data-dbcol='"+item["name"]+"'>Record location</button>")
@@ -214,6 +214,7 @@ for table in tables:
         <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
         <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/underscore.js/1.5.1/underscore-min.js"></script>
     -->
+    <link rel="stylesheet" href="../../assets/pure-base-forms-buttons.css" />
     <noscript>This page requires javascript and a Chrome or WebKit browser</noscript>
     <script>
 var display = function display(thing) {
@@ -255,9 +256,14 @@ var selected = function selected(id, value) {
     if (id == null) {
         return value == null || value.length == 0;
     }
-    if (typeof(id) == typeof([])) {
-        for (var i = 0; i < id.length; i++) {
-            if (id[i] == value) return true;
+    if (id.indexOf("[") == 0) {
+        try {
+            id = jsonParse(id);
+            for (var i = 0; i < id.length; i++) {
+                if (id[i] == value) return true;
+            }
+        } catch (e) {
+            // keep going
         }
     }
     return id == value
@@ -472,6 +478,9 @@ var changeElement = function changeElement(elem, newdata) {
             // for acknowledges
             newdata = newdata.toString();
         }
+        if (newdata != null) {
+            newdata = newdata.trim();
+        }
         if (newdata == null || newdata.trim().length == 0) {
             // we won't be able to find null in the options list
             return false;
@@ -479,7 +488,9 @@ var changeElement = function changeElement(elem, newdata) {
         var options = elem.options;
         var index = -1;
         for (var i = 0; i < options.length; i++) {
-            if (options[i].value != null && options[i].value.trim() == newdata.trim()) {
+            var val = options[i].value
+            if (val != null) val = val.trim()
+            if (val == newdata || (newdata == "1" && val == "true") || (newdata == "0" && val == "false")) {
                 index = i;
                 break;
             }
@@ -542,7 +553,11 @@ var makeIntent = function makeIntent(package, activity, optional_dbcol) {
     var i = {action: "android.intent.action.MAIN", componentPackage: package, componentActivity: activity, extras: {tableId: table_id, instanceId: row_id}};
     //i.extras.uriFragmentNewFileBase: "opendatakit-macro(uriFragmentNewInstanceFile)";
     if (optional_dbcol != undefined && optional_dbcol != null) {
-        i.extras["uriFragmentNewFileBase"] = optional_dbcol;
+        // This will fail when making a new selection with a SQLiteError - android.database.sqlite.SQLiteConstraintException: column _data is not unique (code 19)
+        // column _data is set to /storage/emulated/0/opendatakit/default/data/tables/:table_id/instances/:row_id/:db_col.jpg
+        // so just pass a new uuid instead
+        //i.extras["uriFragmentNewFileBase"] = optional_dbcol;
+        i.extras["uriFragmentNewFileBase"] = newGuid();
     }
     return i;
 }
@@ -767,6 +782,9 @@ var update = function update(delta) {
             }
             if (row_data[col] != newdata) {
                 num_updated++;
+                // fix acknowledges
+                if (newdata == "true") newdata = "1";
+                if (newdata == "false") newdata = "0";
                 row_data[col] = newdata;
                 console.log("Updating database value for " + col + " to screen value " + row_data[col]);
             }
@@ -787,11 +805,14 @@ var update = function update(delta) {
                     }
                     console.log("Updating " + col + " to saved value " + row_data[col]);
                     var loading = changeElement(elem, row_data[col]);
-                    if (row_data[col] !== null && screen_data(col) != row_data[col] && !loading && screen_has_prompt(col)[0]) {
+                    var sdat = screen_data(col);
+                    if (sdat == "true") sdat = "1"
+                    if (sdat == "false") sdat = "0"
+                    if (row_data[col] !== null && sdat != row_data[col] && !loading && screen_has_prompt(col)[0]) {
                         // This can happen when the database says a select one should be set to "M55" or something, but that's not one of the possible options.
-                        //noop = "Unexpected failure to set screen value of " + col + ". Tried to set it to " + row_data[col] + " but it came out as " + screen_data(col);
-                        console.log("Unexpected failure to set screen value of " + col + ". Tried to set it to " + row_data[col] + " ("+typeof(row_data[col])+") but it came out as " + screen_data(col) + " ("+typeof(screen_data(col))+")");
-                        row_data[col] = screen_data(col);
+                        //noop = "Unexpected failure to set screen value of " + col + ". Tried to set it to " + row_data[col] + " but it came out as " + sdat;
+                        console.log("Unexpected failure to set screen value of " + col + ". Tried to set it to " + row_data[col] + " ("+typeof(row_data[col])+") but it came out as " + sdat + " ("+typeof(sdat)+")");
+                        row_data[col] = sdat;
                         //update(0);
                         //return;
                     } else {
@@ -1052,7 +1073,7 @@ var ol = function onLoad() {
 };
     </script>
 </head>
-<body onLoad='ol();'>
+<body onLoad='ol();' class='pure-form'>
     <div class="odk-toolbar" id="odk-toolbar">
         <button id='cancel' onClick='cancel()' disabled=true>Loading...</button>
         <button id='back' onClick='update(-1)'>Back</button>

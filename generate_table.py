@@ -5,16 +5,90 @@ cols = {}
 tables = utils.get_tables();
 for table in tables:
     cols[table] = utils.yank_instance_col(table, table)
-basehtml = """
+def make(filename, customHtml, customCss, customJsOl, customJsSearch, customJsGeneric):
+    basehtml = """
 <!doctype html>
 <html>
     <head>
-        <style>input {font-size: 16px;}</style>
+        <style>
+        body {
+            margin: 0 0 0 0;
+            font-family: Roboto;
+        }
+        input, button {font-size: 16px;}
+        #header {
+            padding: 8px 8px 8px 8px;
+            text-align: center;
+            width: calc(100% - 16px);
+            font-size: 150%;
+            color: navyblue;
+            height: 20%;
+        }
+        #back {float: left}
+        #add {float: right}
+        #list {
+            padding: 8px 5% 8px 5%;
+        }
+        .buttons {
+            float: right;
+            display: inline-block;
+        }
+        .li {
+            /*min-height: 36px;*/
+            width: 100%;
+            /*margin-bottom: 10px;*/ /* put some space between the list elements */
+        }
+        .displays {
+            display: inline-block;
+            float: left;
+        }
+        .main-display {
+            font-size: 150%;
+        }
+        .sub-display {
+            /*font-size: 75%;*/ /* a bit small */
+        }
+        #navigation {
+            padding: 8px 8px 8px 8px;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+        #next {
+            float: right;
+        }
+        #prev {
+            float: left;
+        }
+        #search {
+            text-align: center;
+        }
+        .status {
+            /*
+            width: 95%;
+            */
+            height: 10px;
+            border-style: none;
+            margin-top: 22;
+            margin-bottom: 18;
+        }
+        .status[data-status="COMPLETE"] {
+            background-color: #38c0f4; /* Blue */
+        }
+        .status[data-status="INCOMPLETE"] {
+            background-color: #F7C64A; /* Kournikova */
+        }
+        .status[data-status="null"] {
+            background-color: red;
+        }
+        """ + customCss + """
+        </style>
         <meta http-equiv="content-type" content="text/html; charset=UTF-8">
         <script type="text/javascript" src="/default/system/js/odkCommon.js"></script>
         <script type="text/javascript" src="/default/system/js/odkData.js"></script>
         <script type="text/javascript" src="/default/system/tables/js/odkTables.js"></script>
+        <!--<link rel="stylesheet" href="../assets/pure-base-forms-buttons.css" />-->
         <script>
+        
 var S4 = function S4() {
     return (((1+Math.random())*0x10000)|0).toString(16).substring(1); 
 }
@@ -48,6 +122,8 @@ var total_rows = 0;
 
 var ol = function ol() {
     table_id = document.location.hash.slice(1);
+    display_subcol = [];
+    """ + customJsOl + """
     display_col = display_cols[table_id];
     search = odkCommon.getSessionVariable(table_id + ":search");
     limit = Number(odkCommon.getSessionVariable(table_id + ":limit", limit));
@@ -149,8 +225,35 @@ var doSearch = function doSearch() {
         }
         document.getElementById("navigation-text").innerText = "Showing rows " + (offset+(total_rows == 0 ? 0 :1)) + "-" + (offset+d.getCount()) + " of " + total_rows;
         for (var i = 0; i < d.getCount(); i++) {
-            var span = document.createElement("div");
-            span.innerText = d.getData(i, display_col);
+            var li = document.createElement("div");
+            var displays = document.createElement("span");
+            displays.classList.add("displays");
+            var mainDisplay = document.createElement("div")
+            mainDisplay.classList.add("main-display");
+            mainDisplay.innerText = d.getData(i, display_col);
+            displays.appendChild(mainDisplay)
+            var subDisplay = null;
+            for (var j = 0; j < display_subcol.length; j++) {
+                if (subDisplay == null) {
+                    subDisplay = document.createElement("div")
+                    subDisplay.classList.add("sub-display");
+                }
+                subDisplay.appendChild(document.createTextNode(display_subcol[j][0]))
+                subDisplay.appendChild(document.createTextNode(d.getData(i, display_subcol[j][1])))
+                //subDisplay.innerText = d.getData(i, display_subcol[j][1]);
+                if (display_subcol[j][2]) {
+                    displays.appendChild(subDisplay)
+                    subDisplay = null;
+                }
+            }
+            if (subDisplay != null) {
+                displays.appendChild(subDisplay)
+            }
+            li.appendChild(displays);
+            li.classList.add("li");
+            li.style.display = "inline-block";
+            var buttons = document.createElement("div");
+            buttons.classList.add("buttons");
             var edit = document.createElement("button");
             edit.innerText = "Edit";
             var _delete = document.createElement("button");
@@ -177,41 +280,49 @@ var doSearch = function doSearch() {
                     });
                 });
             })(edit, _delete, i, d);
-            span.appendChild(edit);
-            span.appendChild(_delete);
-            //span.appendChild(document.createElement("br"));
-            span.style.width = "100%";
-            list.appendChild(span);
+            """ + customJsSearch + """
+            buttons.appendChild(edit);
+            buttons.appendChild(_delete);
+            li.appendChild(buttons)
+            var hr = document.createElement("hr")
+            hr.classList.add("status");
+            hr.setAttribute("data-status", d.getData(i, "_savepoint_type"))
+            list.appendChild(li);
+            list.appendChild(hr);
+
         }
     }, function(d) {
         alert("Failure! " + d);
     });
 }
+""" + customJsGeneric + """
         </script>
     </head>
-    <body onLoad="ol();">
+    <body class="pure-form" onLoad="ol();">
         <div id="header">
-            <button onClick='page_back();'>Back</button>
+            <button id='back' onClick='page_back();'>Back</button>
             <span id="table_id"></span>
-            <button onClick='add();'>Add row</button>
+            <button id='add' onClick='add();'>Add row</button>
         </div>
         <div id="navigation">
             <button disabled=true id='prev' onClick='prev();'>Previous page</button>
-            <span id="navigation-text">Loading...</span>
-            <button disabled=true id='next' onClick='next();'>Next page</button>
             <select id="limit" onChange='newLimit();'>
                 <option value="20">20</option>
                 <option value="50">50</option>
                 <option value="100">100</option>
                 <option value="1000">1000</option>
             </select>
+            <span id="navigation-text">Loading...</span>
+            <button disabled=true id='next' onClick='next();'>Next page</button>
         </div>
         <div id="search">
             <input type='text' id='search-box' onblur='offset=0; update_total_rows(false)' />
             <button onClick='offset=0; update_total_rows(false);'>Search</button>
         </div>
         <div id="list">Loading...</div>
+        """ + customHtml + """
     </body>
-</html>
-"""
-open("table.html", "w").write(basehtml)
+</html>"""
+    open(filename, "w").write(basehtml)
+if __name__ == "__main__":
+    make("table.html", "", "", "", "", "");
