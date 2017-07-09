@@ -6,7 +6,7 @@ cd ~/Documents || exit
 git subtree split --prefix=odk/formgen -b formgen
 git remote add tmp "$tmp"
 git push tmp formgen:master
-git branch -d formgen
+git branch -D formgen
 git remote remove tmp
 tmp2="$(mktemp -d /tmp/gitpush.XXXXXX)"
 cd "$tmp2" || exit

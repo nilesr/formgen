@@ -4,15 +4,15 @@ import utils
 # TODO items
 # Must have before release!
 # 	- Some css would be nice
-#   - Permissions!
-#   - geopoint/doAction
-#   - Handle doAction in generate_table.py to call update_total_rows again
-#   - test edit row with survey if not in allowed tables list
+#   - Permissions?
+#   - image/geopoint doAction "Application not installed" bug - ANDROIDCOMMON BUG
+#   - Fix odkTables.editRowWithSurveyDefault() - SURVEY BUG
+#   - data() on a select_multiple is probably broken (for validation)
 # Other things not implemented
+#   - Handle doAction in generate_table.py to call update_total_rows again
 # 	- Text notification with validation fail message
 # 	- Real translation
 # 	- bargraph, linegraph, piechart
-# 	- image (EASY!)
 # 	- goto (EASY!)
 # 	- sections (could be hard)
 # 	- send_sms
@@ -21,6 +21,7 @@ import utils
 # 	- user_branch
 # 	- signature
 # 	- barcode
+#   - customPromptTypes.js (could be easy-ish if I only support intent buttons, and I can check the prompt_types sheet to make sure it exists)
 # Things that ARE supported
 #   - If statements for displaying/not displaying prompts
 #       - can be arbitrarily nested
@@ -33,16 +34,16 @@ import utils
 #   - Translation (almost) - done on the browser side
 #   - Validation constraints
 #       - Numeric data type validation
-#       - Javascript based (i.e. "selected(data('acknowledged') === 'yes')" or "data('age') > 18", etc...)
+#       - Javascript based (i.e. "selected(data('acknowledged'), 'yes')" or "data('age') > 18", etc...)
 #       - Required field constraints
 #       - Won't let you next, back, finalize or save to the database until validation passes for the current screen
 #   - Basic data types, text/string, integer, number/decimal
 #   - Select one, select one dropdown (actually implemented as very different widgets)
 #   - Select multiple, select multiple inline
-#   - Select one grid, select one with other
+#   - Select one grid, select one with other (needs a little more testing)
 #   - acknowledge (alias for select_one with yes/no options)
 #   - date
-#   - assign, with javascript expressions in xlsx, evaluated at start of form
+#   - assign, with javascript expressions in xlsx, evaluated at end of form
 #   - save on prompt value change but also on next/back/finalize
 #   - Auto generate row id and insert new row if no row id given in hash
 #   - Automatically load prompt values from database abd save new values to database only when changed on the screen
@@ -118,9 +119,22 @@ for table in tables:
                     pass
                 elif item["type"] == "text" or item["type"] == "string":
                     screen.append("<input type=\"text\" " + attrs + _class + " />")
+                elif item["type"] == "image":
+                    # NO DBCOL!
+                    screen.append("<button onClick='doAction({dbcol: \""+item["name"]+"\", type: \"image\"}, \"org.opendatakit.survey.activities.MediaChooseImageActivity\", {});' data-dbcol='"+item["name"]+"'>Choose Picture</button>")
+                    screen.append("<button onClick='doAction({dbcol: \""+item["name"]+"\", type: \"image\"}, \"org.opendatakit.survey.activities.MediaCaptureImageActivity\", {});' data-dbcol='"+item["name"]+"'>Take Picture</button>")
+                    for suffix in ["uriFragment", "contentType"]:
+                        column_id = item["name"] + "_" + suffix
+                        dbcol = "data-dbcol=\""+column_id+"\"";
+                        attrs = " ".join([dbcol, required, calculation, hint, constraint, constraint_message])
+                        if suffix == "contentType": attrs += " style='display: none;' "
+                        screen.append("<br />")
+                        #screen.append("<label for='"+column_id+"'>"+suffix[0].upper() + suffix[1:] +": </label>")
+                        screen.append("<input type=\"text\" disabled=true id='"+column_id+"' " + _class + attrs + " />")
+                    screen.append("<img style='display: none;' id='image-"+item["name"]+"' />")
                 elif item["type"] == "geopoint":
                     # NO DBCOL!
-                    screen.append("<button class='geopoint' onClick='odkCommon.doAction({dbcol: \""+item["name"]+"\", type: \"geopoint\"}, \"org.opendatakit.survey.activities.GeoPointActivity\", {});' data-dbcol='"+item["name"]+"'>Record location</button>")
+                    screen.append("<button class='geopoint' onClick='doAction({dbcol: \""+item["name"]+"\", type: \"geopoint\"}, \"org.opendatakit.survey.activities.GeoPointActivity\", {});' data-dbcol='"+item["name"]+"'>Record location</button>")
                     for suffix in ["latitude", "longitude", "altitude", "accuracy"]:
                         column_id = item["name"] + "_" + suffix
                         dbcol = "data-dbcol=\""+column_id+"\"";
@@ -136,13 +150,13 @@ for table in tables:
                 elif item["type"] == "number" or item["type"] == "decimal":
                     screen.append("<input type=\"number\" step=\"any\" data-validate=\"double\" " + attrs + _class + " />")
                     #defaults[item["name"]] = 0;
-                elif item["type"] == "image":
-                    screen.append("TODO")
-                elif item["type"] == "select_multiple" or item["type"] == "select_multiple_inline":
+                elif item["type"] in ["select_multiple", "select_multiple_inline"]:
                     screen.append("<br /><span style='display: inline-block;' data-values-list=\""+item["values_list"]+"\" class=\"select-multiple "+wrapped_class+"\"" + attrs + "></span>")
                     #defaults[item["name"]] = []
-                elif item["type"] in ["select_one", "select_one_grid", "select_one_with_other"]:
+                elif item["type"] in ["select_one", "select_one_grid"]:
                     screen.append("<br /><span style='display: inline-block;' data-values-list=\""+item["values_list"]+"\" class=\"select-one "+wrapped_class+"\"" + attrs + "></span>")
+                elif item["type"] == "select_one_with_other":
+                    screen.append("<br /><span style='display: inline-block;' data-values-list=\""+item["values_list"]+"\" class=\"select-one-with-other "+wrapped_class+"\"" + attrs + "></span>")
                 elif item["type"] == "select_one_dropdown":
                     screen.append("<select data-values-list=\""+item["values_list"]+"\"")
                     if "choice_filter" in item:
@@ -171,7 +185,7 @@ for table in tables:
                     for rule in rules:
                         screen.append("</span>")
         if len(screen) > 0: screens.append("".join(screen));
-        screens[0] += "".join(assigns)
+        screens[-1] += "".join(assigns)
 
         queries = "[]";
         choices = "[]"
@@ -274,11 +288,15 @@ var screen_data = function screen_data(id) {
                     }
                 }
                 return JSON.stringify(result);
-            } else if (elems[i].classList.contains("select-one")) {
+            } else if (elems[i].classList.contains("select-one") || elems[i].classList.contains("select-one-with-other")) {
                 var subs = elems[i].getElementsByTagName("input");
                 for (var j = 0; j < subs.length; j++) {
                     if (subs[j].checked) {
-                        return subs[j].value.trim();
+                        if (subs[j].value.trim() == "_other") {
+                            return document.getElementById(elems[i].getAttribute("data-dbcol") + "_" + "_other" + "_tag").value;
+                        } else {
+                            return subs[j].value.trim();
+                        }
                     }
                 }
                 return null;
@@ -449,6 +467,10 @@ var changeElement = function changeElement(elem, newdata) {
     if (elem.tagName == "INPUT") {
         elem.value = newdata;
     } else if (elem.tagName == "SELECT") {
+        if (typeof(newdata) == "boolean") {
+            // for acknowledges
+            newdata = newdata.toString();
+        }
         if (newdata == null || newdata.trim().length == 0) {
             // we won't be able to find null in the options list
             return false;
@@ -481,12 +503,21 @@ var changeElement = function changeElement(elem, newdata) {
                 children[k].checked = true;
             }
         }
-    } else if (elem.classList.contains("select-one")) {
+    } else if (elem.classList.contains("select-one") || elem.classList.contains("select-one-with-other")) {
         var children = elem.getElementsByTagName("input");
+        var found = false;
         for (var k = 0; k < children.length; k++) {
             if (newdata == children[k].value) {
                 children[k].checked = true;
+                found = true;
             }
+            if (newdata == null) { // if we're setting this field to null, uncheck everything
+                children[k].checked = false;
+            }
+        }
+        if (!found && elem.classList.contains("select-one-with-other")) {
+            document.getElementById(elem.getAttribute("data-dbcol") + "_" + "_other" + "_tag").value = newdata;
+            document.getElementById(elem.getAttribute("data-dbcol") + "_" + "_other").checked = true;
         }
     } else if (elem.classList.contains("date")) {
         var fields = elem.getElementsByTagName("select");
@@ -531,8 +562,8 @@ var updateOrInsert = function updateOrInsert() {
     }
     // null -> will prompt to finish making changes on opening a tool
     // INCOMPLETE -> saved incomplete, can resume editing later but won't be sync'd (?)
-    // var setTo = "INCOMPLETE"
-    var setTo = null;
+    var setTo = "INCOMPLETE"
+    // var setTo = null;
     // Escape the LIMIT 1
     odkData.arbitraryQuery(table_id, "UPDATE " + table_id + " SET _savepoint_type = ? WHERE _id = ?;--", [setTo, row_id], 1000, 0, function success_callback(d) {
         console.log("Set _savepoint_type to "+setTo+" successfully");
@@ -569,12 +600,31 @@ var update = function update(delta) {
                         for (var i = 0; i < suffixes.length; i++) {
                             var suffix = suffixes[i];
                             var shp_result = screen_has_prompt(a.dbcol + "_" + suffix)
+                            // Returned via intent extras, one double for each suffix with the same suffix names I use here
                             if (shp_result[0]) {
                                 changeElement(shp_result[1], "TODO get from intent");
                             } else {
                                 row_data[a.dbcol + "_" + suffix] = "TODO get from intent";
                             }
                         }
+                    }
+                } else if (s.type == "image") {
+                    if (a.jsonValue.status == 0) {
+                        // cancelled
+                    } else {
+                        var suffixes = ["uriFragment", "contentType"];
+                        for (var i = 0; i < suffixes.length; i++) {
+                            var suffix = suffixes[i];
+                            var shp_result = screen_has_prompt(a.dbcol + "_" + suffix)
+                            // Returned via intent extras, one double for each suffix with the same suffix names I use here
+                            if (shp_result[0]) {
+                                changeElement(shp_result[1], a.jsonValue.result[suffix]);
+                            } else {
+                                row_data[a.dbcol + "_" + suffix] = a.jsonValue.result[suffix];
+                            }
+                        }
+                        document.getElementById("image-" + a.dbcol).src = row_data[a.dbcol + "_uriFragment"];
+                        document.getElementById("image-" + a.dbcol).style.display = "block";
                     }
                 } else {
                     alert("Unknown type in dispach struct!")
@@ -635,12 +685,13 @@ var update = function update(delta) {
             n.innerHTML = stuffs[j][1];
             label.appendChild(n);
             label.setAttribute("for", id);
+            label.id = id + "_tag";
             elem.appendChild(label);
             elem.appendChild(document.createElement("br"));
             select.appendChild(elem);
         }
     });
-    populate_choices(document.getElementsByClassName("select-one"), function(stuffs, select) {
+    var pop_choices_for_select_one = function(stuffs, select) {
         for (var j = 0; j < stuffs.length; j++) {
             var id = select.getAttribute("data-dbcol") + "_" + stuffs[j][0];
             var elem = document.createElement("span")
@@ -656,11 +707,33 @@ var update = function update(delta) {
             n.innerHTML = stuffs[j][1];
             label.appendChild(n);
             label.setAttribute("for", id);
+            label.id = id + "_tag";
             elem.appendChild(label);
             elem.appendChild(document.createElement("br"));
             select.appendChild(elem);
         }
+    };
+    populate_choices(document.getElementsByClassName("select-one-with-other"), function(stuffs, select) {
+        pop_choices_for_select_one(stuffs, select);
+
+        var elem = document.createElement("span")
+        var id = select.getAttribute("data-dbcol") + "_" + "_other";
+        var radio = document.createElement("input")
+        radio.type = "radio";
+        radio.setAttribute("value", "_other");
+        radio.id = id
+        radio.setAttribute("name", select.getAttribute("data-dbcol"));
+        radio.addEventListener("change", function() {update(0);});
+        textbox = document.createElement("input");
+        textbox.type = "text";
+        textbox.id = id + "_tag"
+        textbox.setAttribute("name", select.getAttribute("data-dbcol"));
+        textbox.addEventListener("blur", function() {update(0);});
+        elem.appendChild(radio);
+        elem.appendChild(textbox);
+        select.appendChild(elem);
     });
+    populate_choices(document.getElementsByClassName("select-one"), pop_choices_for_select_one);
 
     // DATA UPDATE LOGIC
     var num_updated = 0;
@@ -688,16 +761,6 @@ var update = function update(delta) {
             to_set = to_set.concat(col);
         }
     }
-    // ASSIGN LOGIC
-    var elems = document.getElementsByClassName("assign");
-    for (var i = 0; i < elems.length; i++) {
-        var elem = elems[i];
-        var col = elem.getAttribute("data-dbcol");
-        if (row_data[col] == "") {
-            row_data[col] = eval(elem.getAttribute("data-calculation")).toString()
-            num_updated++;
-        }
-    }
     if (to_set.length > 0) {
         for (var i = 0; i < to_set.length; i++) {
             var col = to_set[i];
@@ -705,12 +768,16 @@ var update = function update(delta) {
             for (var j = 0; j < elems.length; j++) {
                 var elem = elems[j];
                 if (elem.getAttribute("data-dbcol") == col) {
+                    if (typeof(row_data[col]) == "boolean") {
+                        // this fixes acknowledges, otherwise we would changeElement to true (boolean) then screen_data would return true (string)
+                        row_data[col] = row_data[col].toString();
+                    }
                     console.log("Updating " + col + " to saved value " + row_data[col]);
                     var loading = changeElement(elem, row_data[col]);
                     if (row_data[col] !== null && screen_data(col) != row_data[col] && !loading && screen_has_prompt(col)[0]) {
                         // This can happen when the database says a select one should be set to "M55" or something, but that's not one of the possible options.
                         //noop = "Unexpected failure to set screen value of " + col + ". Tried to set it to " + row_data[col] + " but it came out as " + screen_data(col);
-                        console.log("Unexpected failure to set screen value of " + col + ". Tried to set it to " + row_data[col] + " but it came out as " + screen_data(col));
+                        console.log("Unexpected failure to set screen value of " + col + ". Tried to set it to " + row_data[col] + " ("+typeof(row_data[col])+") but it came out as " + screen_data(col) + " ("+typeof(screen_data(col))+")");
                         row_data[col] = screen_data(col);
                         //update(0);
                         //return;
@@ -822,8 +889,18 @@ var screen_has_prompt = function screen_has_prompt(id) {
     return [false, null];
 }
 var finalize = function finalize() {  
-    //row_data["_savepoint_type"] = "COMPLETE";
-    odkCommon.setSessionVariable(table_id + ":" + row_id + ":global_screen_idx", undefined);
+    // ASSIGN LOGIC
+    // ASSUMES ALL THE ASSIGNS ARE ON THE LAST PAGE!
+    var elems = document.getElementsByClassName("assign");
+    for (var i = 0; i < elems.length; i++) {
+        var elem = elems[i];
+        var col = elem.getAttribute("data-dbcol");
+        if (row_data[col] == "") {
+            row_data[col] = eval(elem.getAttribute("data-calculation")).toString()
+            //num_updated++;
+        }
+    }
+    odkCommon.setSessionVariable(table_id + ":" + row_id + ":global_screen_idx", 0);
     update(0);
     // Escape the LIMIT 1
     odkData.arbitraryQuery(table_id, "UPDATE " + table_id + " SET _savepoint_type = ? WHERE _id = ?;--", ["COMPLETE", row_id], 1000, 0, function success_callback(d) {
@@ -841,14 +918,16 @@ var finalize = function finalize() {
 };
 var cancel = function cancel() {
     if (!opened_for_edit) {
-        if (row_exists && confirm("Are you sure? All entered data will be deleted.")) {
-            // Escape the LIMIT 1
-            odkData.arbitraryQuery(table_id, "DELETE FROM " + table_id + " WHERE _id = ?;--", [row_id], 100, 0, function() {
-                page_back();
-            }, function(err) {
-                alert("Unexpected error deleting row " + JSON.stringify(err));
-                page_back();
-            });
+        if (row_exists) {
+            if (confirm("Are you sure? All entered data will be deleted.")) {
+                // Escape the LIMIT 1
+                odkData.arbitraryQuery(table_id, "DELETE FROM " + table_id + " WHERE _id = ?;--", [row_id], 100, 0, function() {
+                    page_back();
+                }, function(err) {
+                    alert("Unexpected error deleting row " + JSON.stringify(err));
+                    page_back();
+                });
+            }
         } else {
             page_back();
         }
@@ -861,6 +940,13 @@ var page_back = function page_back() {
     odkCommon.closeWindow(-1, null);
 }
 var row_exists = true;
+var doAction = function doAction(dStruct, act, intent) {
+    var result = odkCommon.doAction(dStruct, act, intent);
+    if ("result" == "OK" || "result" == "IGNORED") {
+        return;
+    }
+    alert("Error launching " + act + ": " + result);
+}
 var ol = function onLoad() {
     var str = function str(i) { return Number(i).toString(); };
     for (var i = 1; i <= 31; i++) {
@@ -920,7 +1006,6 @@ var ol = function onLoad() {
             noop = e.toString();
         }
         update(1);
-        /*
         odkCommon.registerListener(function doaction_listener() {
             var a = odkCommon.viewFirstQueuedAction();
             if (a != null) {
@@ -930,7 +1015,6 @@ var ol = function onLoad() {
                 odkCommon.removeFirstQueuedAction();
             }
         });
-        */
     }, function failure(d) {
         console.log(d);
         noop = d;

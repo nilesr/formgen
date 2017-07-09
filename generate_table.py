@@ -33,7 +33,9 @@ var add = function() {
     if (allowed_tables.indexOf(table_id) >= 0) {
         page_go("config/assets/formgen/"+table_id+"#" + newGuid());
     } else {
-        odkTables.addRowWithSurveyDefault(null, table_id);
+        // TODO
+        //odkTables.addRowWithSurveyDefault(null, table_id);
+        odkTables.addRowWithSurvey(null, table_id, table_id, null, null);
     }
 }
 var table_id = "";
@@ -158,7 +160,9 @@ var doSearch = function doSearch() {
                     if (allowed_tables.indexOf(table_id) >= 0) {
                         page_go("config/assets/formgen/"+table_id+"#" + d.getData(i, "_id"));
                     } else {
-                        odkTables.editRowWithSurveyDefault(null, table_id, d.getData(i, "_id"));
+                        // TODO
+                        //odkTables.editRowWithSurveyDefault(null, table_id, d.getData(i, "_id"));
+                        odkTables.editRowWithSurvey(null, table_id, d.getData(i, "_id"), table_id, null, null);
                     }
                 });
                 _delete.addEventListener("click", function() {
