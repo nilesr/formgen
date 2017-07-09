@@ -17,3 +17,5 @@ deploy: all
 clean:
 	find . -maxdepth 1 -mindepth 1 -type d -exec rm -rf \{\} \;
 	rm table.html tables.html ||:
+gitpush:
+	./gitpush.sh
