@@ -23,14 +23,16 @@ make_table("Tea_houses.html", "", "", """
 """, "", "")
 
 
+# Cold chain demo
 make_table("refrigerator_types_list.html", "", "", """
         display_subcol = [["Manufacturer: ", "manufacturer", true]];
+        allowed_group_bys = [["manufacturer", "Manufacturer"]]
         display_col = "catalog_id"
         table_id = "refrigerator_types";
 """, "", "")
+
 make_table("refrigerators_list.html", "", "", """
         global_join = "refrigerator_types ON refrigerators.model_row_id = refrigerator_types._id INNER JOIN health_facility ON refrigerators.facility_row_id = health_facility._id"
-        //display_subcol = [["", "model_row_id", false], [", Healthcare Facility: ", "facility_row_id", true]];
         display_subcol = [["", "model_id", true], ["Healthcare Facility: ", "facility_name", true]];
         display_col = "refrigerator_id"
         table_id = "refrigerators";

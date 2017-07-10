@@ -112,6 +112,7 @@ var table_id = "";
 var display_cols = """ + json.dumps(cols) + """
 var allowed_tables = """ + json.dumps(utils.get_allowed_tables()) + """
 var localized_tables = """ + json.dumps(utils.get_localized_tables()) + """;
+var allowed_group_bys = null;
 var global_join = "";
 var display_col = "";
 var cols = [];
@@ -383,14 +384,30 @@ var doSearch = function doSearch() {
 }
 var groupBy = function groupBy() {
     var list = document.getElementById("group-by-list");
-    for (var i = 0; i < cols.length; i++) {
-        var child = document.createElement("option");
-        child.value = cols[i];
-        child.innerText = cols[i];
-        list.appendChild(child);
-        if (global_group_by == cols[i]) {
-            list.selectedOptions = [child];
+    if (allowed_group_bys == null) {
+        for (var i = 0; i < cols.length; i++) {
+            var child = document.createElement("option");
+            child.value = cols[i];
+            child.innerText = cols[i];
+            list.appendChild(child);
+            if (global_group_by == cols[i]) {
+                list.selectedOptions = [child];
+            }
         }
+    } else {
+        for (var i = 0; i < allowed_group_bys.length; i++) {
+            var child = document.createElement("option");
+            child.value = allowed_group_bys[i][0];
+            child.innerText = allowed_group_bys[i][1];
+            list.appendChild(child);
+            if (global_group_by == cols[i]) {
+                list.selectedOptions = [child];
+            }
+        }
+    }
+    if (list.children.length == 1) {
+        list.selectedOptions = [list.children[0]];
+        groupByGo();
     }
     if (global_where_clause != null && global_where_clause != undefined && global_where_clause.trim().length > 0) {
         document.getElementById("group-by").style.display = "none";
