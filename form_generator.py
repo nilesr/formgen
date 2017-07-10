@@ -157,12 +157,12 @@ for table in tables:
                     screen.append("<input type=\"number\" step=\"any\" data-validate=\"double\" " + attrs + _class + " />")
                     #defaults[item["name"]] = 0;
                 elif item["type"] in ["select_multiple", "select_multiple_inline"]:
-                    screen.append("<br /><span style='display: inline-block;' data-values-list=\""+item["values_list"]+"\" class=\"select-multiple "+wrapped_class+"\"" + attrs + "></span>")
+                    screen.append("<br /><div style='display: inline-block;' data-values-list=\""+item["values_list"]+"\" class=\"select-multiple "+wrapped_class+"\"" + attrs + "></div>")
                     #defaults[item["name"]] = []
                 elif item["type"] in ["select_one", "select_one_grid"]:
-                    screen.append("<br /><span style='display: inline-block;' data-values-list=\""+item["values_list"]+"\" class=\"select-one "+wrapped_class+"\"" + attrs + "></span>")
+                    screen.append("<br /><div style='display: inline-block;' data-values-list=\""+item["values_list"]+"\" class=\"select-one "+wrapped_class+"\"" + attrs + "></div>")
                 elif item["type"] == "select_one_with_other":
-                    screen.append("<br /><span style='display: inline-block;' data-values-list=\""+item["values_list"]+"\" class=\"select-one-with-other "+wrapped_class+"\"" + attrs + "></span>")
+                    screen.append("<br /><div style='display: inline-block;' data-values-list=\""+item["values_list"]+"\" class=\"select-one-with-other "+wrapped_class+"\"" + attrs + "></div>")
                 elif item["type"] == "select_one_dropdown":
                     screen.append("<select data-values-list=\""+item["values_list"]+"\"")
                     if "choice_filter" in item:
@@ -207,7 +207,73 @@ for table in tables:
 <!doctype html>
 <html>
 <head>
-    <style>input {font-size: 16px;}</style>
+    <style>
+    
+    input {
+        font-size: 16px;
+    }
+    input[type="number"], input[type="text"] {
+        /*border-radius: 3px; */
+        /*border-type: inset;*/ /* ugly */
+        /*display: block;*/
+        /*height: 34px;*/
+        padding: 6px 6px;
+        color: #333;
+        margin-left: 8px;
+        line-height: 1.4;
+        color: #555;
+        background-color: white;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+    }
+    body {
+        margin: 0 0 0 0;
+        font-family: Roboto;
+        /*font-size: 120%;*/
+    }
+    #odk-toolbar {
+        padding: 8px 8px 8px 8px;
+        width: calc(100% - 16px);
+        font-size: 150%;
+        min-height: 40px;
+    }
+    #odk-container {
+        padding: 8px 5% 8px 5%;
+    }
+    #back, #cancel {
+        float: left;
+    }
+    
+    #next, #finalize {
+        float: right;
+    }
+    button {
+        border-color: #ccc;
+        padding: 10px 16px;
+        line-height: 1.333;
+        border-radius: 6px;
+        border-style: solid;
+        background-color: #eee;
+        border-width: 1px;
+    }
+    label, input[type="radio"] {
+        padding-top: 5px;
+        padding-bottom: 5px;
+        display: inline-block;
+    }
+    .select-one > div:first-child, .select-multiple > div:first-child {
+        border-top: none !important;
+    }
+    .select-one > div, .select-multiple > div {
+        border-top: 1px solid grey;
+    }
+    .select-one, .select-multiple {
+        border: 1px solid grey;
+        border-radius: 10px;
+        min-width: 50%;
+        background-color: lightgrey;
+    }
+    </style>
     <meta http-equiv="content-type" content="text/html; charset=UTF-8">
     <!--
         <meta content='width=device-width; initial-scale=1.0; maximum-scale=1.0; user-scalable=0;' name='viewport' />
@@ -736,7 +802,8 @@ var update = function update(delta) {
     populate_choices(document.getElementsByClassName("select-multiple"), function(stuffs, select) {
         for (var j = 0; j < stuffs.length; j++) {
             var id = select.getAttribute("data-dbcol") + "_" + stuffs[j][0];
-            var elem = document.createElement("span")
+            var elem = document.createElement("div")
+            //elem.classList.add("option")
             var inner = document.createElement("input")
             inner.type = "checkbox";
             inner.setAttribute("value", stuffs[j][0]);
@@ -745,20 +812,23 @@ var update = function update(delta) {
             inner.addEventListener("change", function() {update(0);});
             elem.appendChild(inner);
             var label = document.createElement("label");
+            label.setAttribute("for", id);
             var n = document.createElement("span");
+            n.style.width = "100%";
             n.innerHTML = stuffs[j][1];
             label.appendChild(n);
-            label.setAttribute("for", id);
             label.id = id + "_tag";
             elem.appendChild(label);
-            elem.appendChild(document.createElement("br"));
+            //elem.appendChild(document.createElement("br"));
             select.appendChild(elem);
+            label.style.width = (elem.clientWidth - inner.clientWidth - 1).toString() + "px"
         }
     });
     var pop_choices_for_select_one = function(stuffs, select) {
         for (var j = 0; j < stuffs.length; j++) {
             var id = select.getAttribute("data-dbcol") + "_" + stuffs[j][0];
-            var elem = document.createElement("span")
+            var elem = document.createElement("div")
+            //elem.classList.add("option")
             var inner = document.createElement("input")
             inner.type = "radio";
             inner.setAttribute("value", stuffs[j][0]);
@@ -768,19 +838,22 @@ var update = function update(delta) {
             elem.appendChild(inner);
             var label = document.createElement("label");
             var n = document.createElement("span");
+            n.style.width = "100%";
             n.innerHTML = stuffs[j][1];
             label.appendChild(n);
             label.setAttribute("for", id);
             label.id = id + "_tag";
             elem.appendChild(label);
-            elem.appendChild(document.createElement("br"));
+            //elem.appendChild(document.createElement("br"));
             select.appendChild(elem);
+            label.style.width = (elem.clientWidth - inner.clientWidth - 1).toString() + "px"
         }
     };
     populate_choices(document.getElementsByClassName("select-one-with-other"), function(stuffs, select) {
         pop_choices_for_select_one(stuffs, select);
 
-        var elem = document.createElement("span")
+        var elem = document.createElement("div")
+        //elem.classList.add("option")
         var id = select.getAttribute("data-dbcol") + "_" + "_other";
         var radio = document.createElement("input")
         radio.type = "radio";
@@ -952,11 +1025,13 @@ var update = function update(delta) {
     if (global_screen_idx >= screens.length - 1) {
         global_screen_idx = screens.length - 1;
         document.getElementById("next").disabled = true;
-        document.getElementById("finalize").style.display = "inline-block";
+        document.getElementById("next").style.display = "none";
+        document.getElementById("finalize").style.display = "block";
         document.getElementById("finalize").disabled = false;
     } else {
         document.getElementById("finalize").style.display = "none";
         document.getElementById("next").disabled = false;
+        document.getElementById("next").style.display = "block";
     }
     if (delta != 0) {
         var container = document.getElementById("odk-container");

@@ -273,9 +273,13 @@ var doSearch = function doSearch() {
                     subDisplay = document.createElement("div")
                     subDisplay.classList.add("sub-display");
                 }
-                subDisplay.appendChild(document.createTextNode(display_subcol[j][0]))
-                if (display_subcol[j][1] != null) {
-                    subDisplay.appendChild(document.createTextNode(d.getData(i, display_subcol[j][1])))
+                if (typeof(display_subcol[j][0]) == "string") {
+                    subDisplay.appendChild(document.createTextNode(display_subcol[j][0]))
+                    if (display_subcol[j][1] != null) {
+                        subDisplay.appendChild(document.createTextNode(d.getData(i, display_subcol[j][1])))
+                    }
+                } else {
+                    subDisplay.appendChild(document.createTextNode(display_subcol[j][0](subDisplay, d.getData(i, display_subcol[j][1]))))
                 }
                 //subDisplay.innerText = d.getData(i, display_subcol[j][1]);
                 if (display_subcol[j][2]) {

@@ -16,6 +16,7 @@ def make_detail(filename, customHtml, customCss, customJsOl, customJsSearch, cus
 # Can set display_subcol if you want more things displayed
 # example from Tea_houses
 # display_subcol = [["Specialty: ", "State", true], ["", "District", false], [", ", "Neighborhood", true]];
+# Tip - if you set "allowed_tables = []" in make_table, it will open/edit in survey instead of formgen no matter what
 make_table("Tea_houses.html", "", "", """
         display_subcol = [["Specialty: ", "State", true], ["", "District", false], [", ", "Neighborhood", true]];
         table_id = "Tea_houses";
@@ -32,7 +33,13 @@ make_table("refrigerators.html", "", "", """
 make_table("plot.html", "", """
         #table_id {display: none;}
 """, """
-        display_subcol = [["", "planting", false], [", ","plot_size", false], [" hectares", null, true]];
+        var planting_callback = function planting_callback(elem, val) {
+            if (val == null || val.trim().length == 0) {
+                return "Not planting";
+            }
+            return val[0].toUpperCase() + val.substr(1);
+        }
+        display_subcol = [[planting_callback, "planting", false], [", ","plot_size", false], [" hectares", null, true]];
         table_id = "plot";
 """, "", "")
 
