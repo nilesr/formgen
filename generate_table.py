@@ -8,6 +8,7 @@ for table in tables:
 def make(filename, customHtml, customCss, customJsOl, customJsSearch, customJsGeneric):
     basehtml = """
 <!doctype html>
+""" + utils.warning + """
 <html>
     <head>
         <style>
@@ -117,8 +118,8 @@ var add = function() {
         page_go("config/assets/formgen/"+table_id+"#" + newGuid());
     } else {
         // TODO
-        //odkTables.addRowWithSurveyDefault(null, table_id);
-        odkTables.addRowWithSurvey(null, table_id, table_id, null, null);
+        //odkTables.addRowWithSurveyDefault({}, table_id);
+        odkTables.addRowWithSurvey({}, table_id, table_id, null, null);
     }
 }
 var table_id = "";
@@ -160,10 +161,18 @@ var ol = function ol() {
     }
     if (table_id.length == 0) {
         list.innerText = "No table specified!";
-        // TODO - redirect to tables.html
+        document.location.href = "/default/config/assets/tables.html"
         return;
     }
-    document.getElementById("table_id").innerText = table_id;
+    document.getElementById("table_id").innerText = table_id; // TODO TRANSLATE!
+    odkCommon.registerListener(function doaction_listener() {
+        var a = odkCommon.viewFirstQueuedAction();
+        if (a != null) {
+            // may have added a new row
+            update_total_rows(true);
+            odkCommon.removeFirstQueuedAction();
+        }
+    });
     update_total_rows();
 }
 var newLimit = function newLimit() {
@@ -305,14 +314,13 @@ var doSearch = function doSearch() {
                         page_go("config/assets/formgen/"+table_id+"#" + d.getData(i, "_id"));
                     } else {
                         // TODO
-                        //odkTables.editRowWithSurveyDefault(null, table_id, d.getData(i, "_id"));
-                        odkTables.editRowWithSurvey(null, table_id, d.getData(i, "_id"), table_id, null, null);
+                        //odkTables.editRowWithSurveyDefault({}, table_id, d.getData(i, "_id"));
+                        odkTables.editRowWithSurvey({}, table_id, d.getData(i, "_id"), table_id, null, null);
                     }
                 });
                 displays.addEventListener("click", function() {
-                    if (allowed_tables.indexOf(table_id) >= 0) {
-                        page_go("config/assets/detail.html#"+table_id+"/"+d.getData(i, "_id"));
-                    }
+                    //page_go("config/assets/detail.html#"+table_id+"/"+d.getData(i, "_id"));
+                    odkTables.openDetailView(null, table_id, d.getData(i, "_id"));
                 });
                 _delete.addEventListener("click", function() {
                     if (!confirm("Please confirm deletion of row: " + d.getData(i, "_id"))) {

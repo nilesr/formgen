@@ -11,6 +11,7 @@ def entry(x):
     return r;
 basehtml = """
 <!doctype html>
+""" + utils.warning + """
 <html>
     <head>
         <script type="text/javascript" src="/default/system/js/odkCommon.js"></script>

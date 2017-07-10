@@ -3,16 +3,15 @@ sys.path.append(".")
 import utils
 # TODO items
 # Must have before release!
-#   - detail views
+# 	- Text notification with validation fail message
+#   - Group by/more filtering options in generate_table
 #   - fix translation bugs (may have to pull in handlebars)
 #   - add text in survey geopoint activity dialog to indicate that no location has been recieved yet
 #   - Permissions?
 #   - Can finalize a totally empty form, row never gets inserted
-# 	- Text notification with validation fail message
 # Other things not implemented
-#   - Figure out when to calculate assigns
+#   - Figure out when to calculate assigns (and implement calculates object)
 #   - query filters
-#   - Easy to add group by support to generate_table
 #   - Fix odkTables.editRowWithSurveyDefault() - SURVEY BUG
 #   - Handle doAction in generate_table.py to call update_total_rows(true)
 # 	- linegraph, piechart
@@ -25,6 +24,7 @@ import utils
 # 	- signature
 # 	- barcode
 #   - customPromptTypes.js (could be easy-ish if I only support intent buttons, and I can check the prompt_types sheet to make sure it exists)
+#   - Maybe automatically generate map view files?
 # Things that ARE supported
 #   - If statements for displaying/not displaying prompts
 #       - can be arbitrarily nested
@@ -217,6 +217,7 @@ for table in tables:
             choices = json.dumps(formDef["xlsx"]["choices"]);
         basehtml = """
 <!doctype html>
+""" + utils.warning + """
 <html>
 <head>
     <style>
@@ -300,6 +301,8 @@ for table in tables:
     <script>
 var possible_wrapped = ["prompt", "title"]; // used in both display and fake_translate
 var display = function display(thing) {
+    // REMOVE THIS LINE BEFORE SHIPPING TO ANOTHER COUNTRY
+    return fake_translate(thing);
     for (var i = 0; i < possible_wrapped.length; i++) {
         if (thing[possible_wrapped[i]] != undefined) {
             return display(thing[possible_wrapped[i]])
@@ -519,7 +522,7 @@ var get_choices = function get_choices(which, not_first_time) {
             result = result.concat(0);
             var displayed = choices[j].display;
             if (choices[j].notranslate == undefined) {
-                displayed = dislay(choices[j].display)
+                displayed = display(choices[j].display)
             } else {
                 displayed = fake_translate(choices[j].display);
                 //console.log("Translation skipped for " + displayed)
@@ -1227,9 +1230,8 @@ var ol = function onLoad() {
             var a = odkCommon.viewFirstQueuedAction();
             if (a != null) {
                 console.log(a);
-                update(0);
-            } else {
                 odkCommon.removeFirstQueuedAction();
+                update(0);
             }
         });
     }, function failure(d) {

@@ -6,8 +6,8 @@ def make_table(filename, customHtml, customCss, customJsOl, customJsSearch, cust
     generate_table.make(filename, customHtml, customCss, customJsOl, customJsSearch, customJsGeneric)
     subprocess.call(["adb", "push", filename, "/sdcard/opendatakit/default/config/assets/" + filename])
     os.remove(filename);
-def make_detail(filename, customHtml, customCss, customJsOl, customJsSearch, customJsGeneric):
-    generate_detail.make(filename, customHtml, customCss, customJsOl, customJsSearch, customJsGeneric)
+def make_detail(filename, customHtml, customCss, customJsOl, customJsGeneric):
+    generate_detail.make(filename, customHtml, customCss, customJsOl, customJsGeneric)
     subprocess.call(["adb", "push", filename, "/sdcard/opendatakit/default/config/assets/" + filename])
     os.remove(filename);
 # in customJsOl
@@ -44,7 +44,11 @@ make_table("plot.html", "", """
 """, "", "")
 
 
-make_detail("Tea_houses_detail.html", "", "", """
-// TODO!!
+make_detail("Tea_houses_detail.html", "", "", "", "")
+make_detail("exampleForm_detail.html", "", "", "", "")
+make_table("exampleForm_list.html", "", "", """
+        display_subcol = [["", "rating", false], ["/10", null, true]];
+        display_col = "name"
+        table_id = "exampleForm";
 """, "", "")
 
