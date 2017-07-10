@@ -1,3 +1,15 @@
+import json, sys
+sys.path.append(".")
+import utils
+conn = utils.opendb()
+c = conn.cursor()
+global_col_localize_names = {}
+for row in c.execute("SELECT _table_id, _aspect, _value FROM _key_value_store_active WHERE _partition = ? AND _key = ?;", ["Column", "display_name"]):
+    if not row[0] in global_col_localize_names:
+        global_col_localize_names[row[0]] = {}
+    global_col_localize_names[row[1]] = row[2]
+basejs = """
+var global_col_localize_names = """ + json.dumps(global_col_localize_names) + """;
 window.odkCommonDefinitions = {_tokens: {}};
 var possible_wrapped = ["prompt", "title"]; // used in both display and fake_translate
 window.fake_translate = function(thing) {
@@ -97,4 +109,14 @@ window.jsonParse = function jsonParse(text) {
         return JSON.parse(text); // MAY STILL THROW AN EXCEPTION
     }
 };
-
+window.displayCol = function constructSimpleDisplayName(table_id, name) {
+    if (table_id in global_col_localize_names) {
+        if (name in global_col_localize_names[table_id]) {
+            return display(global_col_localize_names[table_id][name]);
+        }
+    }
+    if (name[0] == "_") return name;
+    name = name.replace(/_/g, " "); // can't just replace("_", " ") or it will only hit the first instance
+};
+"""
+open("formgen_common.js", "w").write(basejs)

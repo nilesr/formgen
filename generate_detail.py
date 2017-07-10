@@ -76,6 +76,7 @@ var update_callback = function update_callback(d) {
     if (d.getCount() == 0) {
         ul.innerText = "Row not found!";
     }
+    var pending_media = {}
     for (var i = 0; i < d.getColumns().length; i++) {
         var col = d.getColumns()[i];
         var val = d.getData(0, col);
@@ -102,7 +103,35 @@ var update_callback = function update_callback(d) {
                 li.appendChild(document.createTextNode(found[1](li, val)));
             }
         } else {
-            li.appendChild(document.createTextNode(col + ": " + val));
+            var checkMedia = false;
+            if (col.split("_", 2)[1] == "contentType") {
+                pending_media["contentType"] == val;
+                checkMedia = true;
+            } else if (col.split("_", 2)[1] == "uriFragment") { 
+                pending_media["uriFragment"] == val;
+                checkMedia = true;
+            } 
+            if (checkMedia and "contentType" in pending_media and "uriFragment" in pending_media) {
+                var type = pending_media["contentType"].split("/")[0];
+                var src = odkCommon.getRowFileAsUrl(table_id, row_id, pending_media["uriFragment"]);
+                if (type == "audio" || type == "video") {
+                    var elem = document.createElement(type);
+                    var source = document.createElement("source");
+                    source.src = src;
+                    elem.appendChild(source)
+                    li.appendChild(elem)
+                } else if (type == "image") {
+                    var elem = document.createElement("img");
+                    elem.src = src;
+                    li.appendChild(elem)
+                } else {
+                    checkMedia = false;
+                }
+                pending_media = {}
+            } 
+            if (!checkMedia) {
+                li.appendChild(document.createTextNode(displayCol(table_id, col) + ": " + val));
+            }
         }
         if (col != main_col) {
             ul.appendChild(li);

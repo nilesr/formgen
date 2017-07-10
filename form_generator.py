@@ -9,7 +9,7 @@ import utils
 #   - Can finalize a totally empty form, row never gets inserted
 #   - Make serious improvements to detail views, like displaying images instead of dbcol_uriFragment and dbcol_contentType - LOCALIZE COLUMN IDS!
 #   - Display sync state in table, sync state and savepoint type in detail
-#   - Make group by configurable in custom.py, maybe a preset list of group by options with display names for them, and automatically select it if there's only one thing. If not specified in customJsOl just generate it the way we currently do
+#   - TEST allowed_group_bys value in table
 #   - Launching table.html via tables.html or specifying table_id in the hash is now broken
 #   - take picture is broken
 #   - query filters

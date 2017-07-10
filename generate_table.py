@@ -388,7 +388,7 @@ var groupBy = function groupBy() {
         for (var i = 0; i < cols.length; i++) {
             var child = document.createElement("option");
             child.value = cols[i];
-            child.innerText = cols[i];
+            child.innerText = displayCol(table_id, cols[i]);
             list.appendChild(child);
             if (global_group_by == cols[i]) {
                 list.selectedOptions = [child];
@@ -483,7 +483,7 @@ var clean_href = function clean_href() {
             <button id="group-by-go" style='display: none;' onClick="groupByGo();">Go</button>
             <button disabled=true id='prev' onClick='prev();'>Previous page</button>
             <select id="limit" onChange='newLimit();'>
-                <option value="2">2 (debug)</option>
+                <!--<option value="2">2 (debug)</option>-->
                 <option value="20">20</option>
                 <option value="50">50</option>
                 <option value="100">100</option>
