@@ -3,19 +3,19 @@ sys.path.append(".")
 import utils
 # TODO items
 # Must have before release!
-# 	- Better css for survey form
 #   - detail views
 #   - fix translation bugs (may have to pull in handlebars)
 #   - add text in survey geopoint activity dialog to indicate that no location has been recieved yet
 #   - Permissions?
 #   - Can finalize a totally empty form, row never gets inserted
+# 	- Text notification with validation fail message
 # Other things not implemented
+#   - Figure out when to calculate assigns
+#   - query filters
 #   - Easy to add group by support to generate_table
 #   - Fix odkTables.editRowWithSurveyDefault() - SURVEY BUG
-#   - Handle doAction in generate_table.py to call update_total_rows again
-# 	- Text notification with validation fail message
-# 	- Real translation
-# 	- bargraph, linegraph, piechart
+#   - Handle doAction in generate_table.py to call update_total_rows(true)
+# 	- linegraph, piechart
 # 	- goto (EASY!)
 # 	- sections (could be hard)
 # 	- send_sms
@@ -25,7 +25,6 @@ import utils
 # 	- signature
 # 	- barcode
 #   - customPromptTypes.js (could be easy-ish if I only support intent buttons, and I can check the prompt_types sheet to make sure it exists)
-#   - video (both display and prompt type)
 # Things that ARE supported
 #   - If statements for displaying/not displaying prompts
 #       - can be arbitrarily nested
@@ -53,6 +52,7 @@ import utils
 #   - Automatically load prompt values from database abd save new values to database only when changed on the screen
 #   - Uses finalized/incomplete properly
 #   - translation
+#   - barcode, image, video, audio
 def die():
     global failed
     failed = True
@@ -125,10 +125,13 @@ for table in tables:
                     pass
                 elif item["type"] == "text" or item["type"] == "string":
                     screen.append("<input type=\"text\" " + attrs + _class + " />")
-                elif item["type"] == "image":
+                elif item["type"] in ["image", "audio", "video"]:
                     # NO DBCOL!
-                    screen.append("<button onClick='doAction({dbcol: \""+item["name"]+"\", type: \"image\"}, \"org.opendatakit.survey.activities.MediaChooseImageActivity\", makeIntent(survey, \"org.opendatakit.survey.activities.MediaChooseImageActivity\", \""+item["name"]+"\"));' data-dbcol='"+item["name"]+"'>Choose Picture</button>")
-                    screen.append("<button onClick='doAction({dbcol: \""+item["name"]+"\", type: \"image\"}, \"org.opendatakit.survey.activities.MediaCaptureImageActivity\", makeIntent(survey, \"org.opendatakit.survey.activities.MediaCaptureImageActivity\", \""+item["name"]+"\"));' data-dbcol='"+item["name"]+"'>Take Picture</button>")
+                    hrtype = item["type"][0].upper() + item["type"][1:]
+                    for action in ["Choose", "Capture"]:
+                        act = "org.opendatakit.survey.activities.Media" + action + hrtype + "Activity"
+                        # like MediaChooseImageActivity or MediaCaptureVideoActivity
+                        screen.append("<button onClick='doAction({dbcol: \""+item["name"]+"\", type: \"image\"}, \""+act+"\", makeIntent(survey, \""+act+"\", \""+item["name"]+"\"));' data-dbcol='"+item["name"]+"'>" + action + " " + ("Picture" if hrtype == "Image" else hrtype) + "</button>")
                     for suffix in ["uriFragment", "contentType"]:
                         column_id = item["name"] + "_" + suffix
                         dbcol = "data-dbcol=\""+column_id+"\"";
@@ -137,7 +140,12 @@ for table in tables:
                         screen.append("<br />")
                         #screen.append("<label for='"+column_id+"'>"+suffix[0].upper() + suffix[1:] +": </label>")
                         screen.append("<input type=\"text\" disabled=true id='"+column_id+"' " + _class + attrs + " />")
-                    screen.append("<img style='display: none; width: 50%;' class='image' data-dbcol='"+item["name"]+"' />")
+                    if hrtype == "Image":
+                        screen.append("<img style='display: none; width: 50%;' class='image' data-dbcol='"+item["name"]+"' />")
+                    elif hrtype == "Audio":
+                        screen.append("<audio style='display: none;' class='image audio' data-dbcol='"+item["name"]+"'></audio>")
+                    elif hrtype == "Video":
+                        screen.append("<video style='display: none;' class='image video' data-dbcol='"+item["name"]+"'></video>")
                 elif item["type"] == "geopoint":
                     # NO DBCOL!
                     screen.append("<button class='geopoint' onClick='doAction({dbcol: \""+item["name"]+"\", type: \"geopoint\"}, \"org.opendatakit.survey.activities.GeoPointActivity\", makeIntent(survey, \"org.opendatakit.survey.activities.GeoPointActivity\"));' data-dbcol='"+item["name"]+"'>Record location</button>")
@@ -148,6 +156,10 @@ for table in tables:
                         screen.append("<br />")
                         screen.append("<label for='"+column_id+"'>"+suffix[0].upper() + suffix[1:] +": </label>")
                         screen.append("<input type=\"text\" disabled=true id='"+column_id+"' " + _class + attrs + " />")
+                elif item["type"] == "geopoint":
+                    screen.append("<button class='geopoint' onClick='doAction({dbcol: \""+item["name"]+"\", type: \"geopoint\"}, \"com.google.zxing.client.android.SCAN\", {});' data-dbcol='"+item["name"]+"'>Scan barcode</button>")
+                    screen.append("<br />")
+                    screen.append("<input type=\"text\" disabled=true id='"+column_id+"' " + _class + attrs + " />")
                 elif item["type"] in ["linegraph", "bargraph", "piechart"]:
                     screen.append("TODO")
                 elif item["type"] == "integer":
@@ -212,20 +224,6 @@ for table in tables:
     input {
         font-size: 16px;
     }
-    input[type="number"], input[type="text"] {
-        /*border-radius: 3px; */
-        /*border-type: inset;*/ /* ugly */
-        /*display: block;*/
-        /*height: 34px;*/
-        padding: 6px 6px;
-        color: #333;
-        margin-left: 8px;
-        line-height: 1.4;
-        color: #555;
-        background-color: white;
-        border: 1px solid #ccc;
-        border-radius: 4px;
-    }
     body {
         margin: 0 0 0 0;
         font-family: Roboto;
@@ -247,6 +245,20 @@ for table in tables:
     #next, #finalize {
         float: right;
     }
+    input[type="number"], input[type="text"] {
+        /*border-radius: 3px; */
+        /*border-type: inset;*/ /* ugly */
+        /*display: block;*/
+        /*height: 34px;*/
+        padding: 6px 6px;
+        color: #333;
+        margin-left: 8px;
+        line-height: 1.4;
+        color: #555;
+        background-color: white;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+    }
     button {
         border-color: #ccc;
         padding: 10px 16px;
@@ -261,13 +273,10 @@ for table in tables:
         padding-bottom: 5px;
         display: inline-block;
     }
-    .select-one > div:first-child, .select-multiple > div:first-child {
-        border-top: none !important;
-    }
-    .select-one > div, .select-multiple > div {
+    .select-one > div:not(:first-child), .select-multiple > div:not(:first-child), .select-one-with-other > div:not(:first-child) {
         border-top: 1px solid grey;
     }
-    .select-one, .select-multiple {
+    .select-one, .select-multiple, .select-one-with-other {
         border: 1px solid grey;
         border-radius: 10px;
         min-width: 50%;
@@ -289,8 +298,8 @@ for table in tables:
     -->
     <noscript>This page requires javascript and a Chrome or WebKit browser</noscript>
     <script>
+var possible_wrapped = ["prompt", "title"]; // used in both display and fake_translate
 var display = function display(thing) {
-    var possible_wrapped = ["prompt", "title"];
     for (var i = 0; i < possible_wrapped.length; i++) {
         if (thing[possible_wrapped[i]] != undefined) {
             return display(thing[possible_wrapped[i]])
@@ -299,30 +308,33 @@ var display = function display(thing) {
     var id = newGuid();
     window.odkCommonDefinitions._tokens[id] = thing;
     console.log("Translating " + JSON.stringify(window.odkCommonDefinitions._tokens[id]));
-    var result = null;
-    var correct_field = null;
+    var result = "";
+    var found = false;
     for (var i = 0; i < odkCommon.i18nFieldNames.length; i++) {
         var field = odkCommon.i18nFieldNames[i];
-        result = odkCommon.localizeTokenField(odkCommon.getPreferredLocale(), id, field);
+        this_result = odkCommon.localizeTokenField(odkCommon.getPreferredLocale(), id, field);
         //console.log(result);
-        if (result != null && result != undefined && result.trim().length > 0) {
-            correct_field = field;
-            break;
+        if (this_result != null && this_result != undefined && this_result.trim().length > 0) {
+            found = true;
+            if (field == "text") {
+                result += this_result;
+            }
+            if (field == "audio") {
+                result += "<audio controls='controls'><source src='" + this_result + "' /></audio>";
+            }
+            if (field == "video") {
+                result += "<video controls='controls'><source src='" + this_result + "' /></video>";
+            }
+            if (field == "image") {
+                result += "<img src='" + this_result + "' />";
+            }
+
         }
     }
-    if (correct_field == null) {
+    if (!found) {
         return "Couldn't translate " + JSON.stringify(thing);
     }
     odkCommonDefinitions[id] = null; // let it be garbage collected
-    if (correct_field == "text") {
-        return result;
-    }
-    if (correct_field == "audio") {
-        return "<audio controls='controls'><source src='" + result + "' /></audio";
-    }
-    if (correct_field == "image") {
-        return "<img src='" + result + "' />";
-    }
     // Must be video, TODO
     return result;
 }
@@ -454,9 +466,10 @@ var do_xhr = function do_xhr(choice_id, filename, callback) {
                     if (cs[j][0] = '"' && cs[j][cs[j].length - 1] == '"') {
                         cs[j] = cs[j].substr(1, cs[j].length - 2);
                     }
-                    cols[j] = cols[j].trim();
-                    if (cols[j].length > 0) {
-                        choice[cols[j]] = cs[j];
+                    cols[j] = cols[j].trim().replace("\\r", "");
+                    var this_col = cs[j].trim().replace("\\r", "");
+                    if (cols[j].length > 0 && this_col.length > 0) {
+                        choice[cols[j]] = this_col
                         valid = true;
                     }
                 }
@@ -469,6 +482,7 @@ var do_xhr = function do_xhr(choice_id, filename, callback) {
                 var new_choices = eval(callback);
                 for (var i = 0; i < new_choices.length; i++) {
                     new_choices[i]["choice_list_name"] = choice_id;
+                    new_choices[i]["notranslate"] = "fake";
                 }
                 //console.log(new_choices);
                 choices = choices.concat(new_choices);
@@ -482,6 +496,18 @@ var do_xhr = function do_xhr(choice_id, filename, callback) {
     xhr.open("GET", filename, true);
     xhr.send();
 }
+var fake_translate = function(thing) {
+    //console.log("Fake translating " + thing);
+    if (thing == undefined) return "Error translating " + thing;
+    if (typeof(thing) == "string") return thing;
+    var possible_wrapped_full = possible_wrapped.concat(odkCommon.i18nFieldNames).concat("default").concat("_");
+    for (var i = 0; i < possible_wrapped_full.length; i++) {
+        if (thing[possible_wrapped_full[i]] != undefined) {
+            return fake_translate(thing[possible_wrapped_full[i]]);
+        }
+    }
+    return "Error translating " + JSON.stringify(thing);
+}
 var get_choices = function get_choices(which, not_first_time) {
     // first thing in the returned array is a boolean, true if the results are all there, false if they will be added to choices later
     var found = false;
@@ -492,8 +518,11 @@ var get_choices = function get_choices(which, not_first_time) {
             // concat on a list will merge them
             result = result.concat(0);
             var displayed = choices[j].display;
-            if (which != "_year" && which != "_month" && which != "_day") {
-                displayed = display(choices[j].display)
+            if (choices[j].notranslate == undefined) {
+                displayed = dislay(choices[j].display)
+            } else {
+                displayed = fake_translate(choices[j].display);
+                //console.log("Translation skipped for " + displayed)
             }
             result[result.length - 1] = [choices[j].data_value, displayed];
             result[0] = true; // we found at least one thing
@@ -534,7 +563,7 @@ var start_get_rows = function start_get_rows(which, query) {
             //console.log(query.yanked_col);
             var text = d.getData(i, query.yanked_col);
             var val = d.getData(i, "_id")
-            choices[choices.length - 1] = {"choice_list_name": which, "data_value": val, "display": {"text": text}};
+            choices[choices.length - 1] = {"choice_list_name": which, "data_value": val, "display": text, notranslate: true};
             //console.log(choices[choices.length - 1]);
         }
         update(0);
@@ -752,6 +781,20 @@ var update = function update(delta) {
                             } else {
                                 row_data[s.dbcol + "_" + suffix] = a.jsonValue.result[suffix];
                             }
+                        }
+                    } else {
+                        console.log("No result in result object!");
+                    }
+                } else if (s.type == "barcode") { // TOTALLY UNTESTED
+                    if (a.jsonValue.status == 0) {
+                        // cancelled
+                    } else if (a.jsonValue.result != undefined) {
+                        var suffixes = ["uriFragment", "contentType"];
+                        var shp_result = screen_has_prompt(s.dbcol);
+                        if (shp_result[0]) {
+                            changeElement(shp_result[1], a.jsonValue.result.SCAN_RESULT_BYTES);
+                        } else {
+                            row_data[s.dbcol] = a.jsonValue.result.SCAN_RESULT_BYTES;
                         }
                     } else {
                         console.log("No result in result object!");
@@ -1007,7 +1050,19 @@ var update = function update(delta) {
         }
         var newsrc = odkCommon.getRowFileAsUrl(table_id, row_id, data(dbcol));
         if (elem.src != newsrc) {
-            elem.src = newsrc;
+            if (elem.classList.contains("audio")) {
+                elem.innerHTML = "";
+                var newsource = document.createElement("source");
+                newsource.src = newsrc
+                elem.appendChild(newsource)
+            } else if (elem.classList.contains("video")) {
+                elem.innerHTML = "";
+                var newsource = document.createElement("source");
+                newsource.src = newsrc
+                elem.appendChild(newsource)
+            } else {
+                elem.src = newsrc;
+            }
             elem.style.display = "block";
         }
     }
@@ -1111,13 +1166,13 @@ var ol = function onLoad() {
     if (has_dates) {
         // won't be localized, so we can set display to i instead of {text: i}
         for (var i = 1; i <= 31; i++) {
-            choices = choices.concat({"choice_list_name": "_day", "data_value": i.toString(), "display": i.toString()})
+            choices = choices.concat({choice_list_name: "_day", data_value: i.toString(), display: i.toString(), notranslate: true})
         }
         for (var i = 1; i <= 12; i++) {
-            choices = choices.concat({"choice_list_name": "_month", "data_value": i.toString(), "display": i.toString()})
+            choices = choices.concat({choice_list_name: "_month", data_value: i.toString(), display: i.toString(), notranslate: true})
         }
         for (var i = 2020; i >= 1940; i--) {
-            choices = choices.concat({"choice_list_name": "_year", "data_value": i.toString(), "display": i.toString()})
+            choices = choices.concat({choice_list_name: "_year", data_value: i.toString(), display: i.toString(), notranslate: true})
         }
     }
     choices = choices.concat({"choice_list_name": "_yesno", "data_value": "true", "display": {"text": "yes"}});
