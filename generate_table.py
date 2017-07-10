@@ -97,22 +97,8 @@ def make(filename, customHtml, customCss, customJsOl, customJsSearch, customJsGe
         <script type="text/javascript" src="/default/system/js/odkCommon.js"></script>
         <script type="text/javascript" src="/default/system/js/odkData.js"></script>
         <script type="text/javascript" src="/default/system/tables/js/odkTables.js"></script>
+        <script type="text/javascript" src="formgen_common.js"></script>
         <script>
-        
-var S4 = function S4() {
-    return (((1+Math.random())*0x10000)|0).toString(16).substring(1); 
-}
-var newGuid = function newGuid() {
-    return (S4() + S4() + "-" + S4() + "-4" + S4().substr(0,3) + "-" + S4() + "-" + S4() + S4() + S4()).toLowerCase();
-}
-var page_go = function page_go(location) {
-    //document.location.href = location;
-    odkTables.launchHTML(null, location);
-}
-var page_back = function page_back() {
-    //window.history.back();
-    odkCommon.closeWindow(-1, null);
-}
 var add = function() {
     if (allowed_tables.indexOf(table_id) >= 0) {
         page_go("config/assets/formgen/"+table_id+"#" + newGuid());
@@ -125,14 +111,26 @@ var add = function() {
 var table_id = "";
 var display_cols = """ + json.dumps(cols) + """
 var allowed_tables = """ + json.dumps(utils.get_allowed_tables()) + """
+var localized_tables = """ + json.dumps(utils.get_localized_tables()) + """;
 var display_col = "";
+var cols = [];
 var limit = 20;
 var offset = 0;
 var total_rows = 0;
 var try_more_cols = false;
+var global_where_clause = null;
+var global_where_arg = null;
+var global_group_by = null;
 
 var ol = function ol() {
-    table_id = document.location.hash.slice(1);
+    var sections = document.location.hash.slice(0).split("/");
+    table_id = sections[0]
+    if (sections.length == 2) {
+        global_group_by = sections[1];
+    } else {
+        global_where_clause = sections[1]
+        global_where_arg = sections[2]
+    }
     display_subcol = [];
     display_col = null;
     """ + customJsOl + """
@@ -164,7 +162,7 @@ var ol = function ol() {
         document.location.href = "/default/config/assets/tables.html"
         return;
     }
-    document.getElementById("table_id").innerText = table_id; // TODO TRANSLATE!
+    document.getElementById("table_id").innerText = display(localized_tables[table_id]);
     odkCommon.registerListener(function doaction_listener() {
         var a = odkCommon.viewFirstQueuedAction();
         if (a != null) {
@@ -191,22 +189,14 @@ var update_total_rows = function update_total_rows(force) {
         return;
     }
     cached_search = search;
-    if (search != null && search.trim().length > 0) {
-        var the_query = make_query(search, 10000, 0);
-        odkData.arbitraryQuery(table_id, "SELECT COUNT(*) FROM " + table_id + " WHERE " + the_query[0], the_query[1], 10000, 0, function success(d) {
-            total_rows = d.getData(0, "COUNT(*)");
-            doSearch();
-        }, function(e) {
-            alert("Unexpected error " + e);
-        })
-    } else {
-        odkData.arbitraryQuery(table_id, "SELECT COUNT(*) FROM " + table_id, [], 10000, 0, function(d) {
-            total_rows = d.getData(0, "COUNT(*)");
-            doSearch();
-        }, function(e) {
-            alert("Unexpected error " + e);
-        });
-    }
+    var the_query = make_query(search, 10000, 0);
+    console.log(the_query);
+    odkData.arbitraryQuery(table_id, "SELECT COUNT(*) FROM " + table_id + (the_query[0] ? " WHERE " + the_query[0] : "") + (the_query[2] ? " GROUP BY " + the_query[2] : ""), the_query[1], the_query[6], the_query[7], function success(d) {
+        total_rows = d.getData(0, "COUNT(*)");
+        doSearch();
+    }, function(e) {
+        alert("Unexpected error " + e);
+    })
 }
 var next = function next() {
     offset += limit;
@@ -219,7 +209,7 @@ var prev = function next() {
 var make_query = function make_query(search, limit, offset) {
     var query_args = []
     //var sql = "SELECT * FROM " + table_id;
-    var where = null
+    var where = null;
     if (search != null && search.length > 0) {
         var cols = [display_col]
         if (try_more_cols) {
@@ -228,19 +218,30 @@ var make_query = function make_query(search, limit, offset) {
                 cols = cols.concat(display_subcol[i][1]);
             }
         }
-        //sql = sql.concat(" WHERE " + display_col + " LIKE ?")
-        where = ""
+        where = "("
         for (var i = 0; i < cols.length; i++) {
             if (i != 0) {
                 where += " OR "
             }
-            where += cols[i] + " LIKE ?"
+            where += cols[i] + " LIKE ? "
             query_args = query_args.concat("%" + search + "%");
         }
+        where += ")"
     }
-    //sql = sql.concat(" LIMIT " + limit + " OFFSET " + offset);
-    //sql = sql.concat(" OFFSET " + offset);
-    return [where, query_args, null, null, null, null, limit, offset, false];
+    if (global_where_clause != undefined && global_where_clause != null) {
+        if (where != null && where.trim() != "") {
+            where += " AND ";
+        }
+        if (where == null) where = "";
+        where += global_where_clause;
+        query_args = query_args.concat(global_where_arg);
+    }
+    var group_by = null;
+    if (global_group_by != undefined && global_group_by != null) {
+        group_by = global_group_by
+    }
+    //[whereClause, sqlBindParams, groupBy, having, orderByElementKey, orderByDirection, limit, offset, includeKVS]
+    return [where, query_args, group_by, null, null, null, limit, offset, false];
 }
 var doSearch = function doSearch() {
     offset = Math.max(offset, 0);
@@ -251,9 +252,22 @@ var doSearch = function doSearch() {
     odkCommon.setSessionVariable(table_id + ":search", search);
     odkCommon.setSessionVariable(table_id + ":limit", limit);
     odkCommon.setSessionVariable(table_id + ":offset", offset);
-    //query(tableId, whereClause, sqlBindParams, groupBy, having, orderByElementKey, orderByDirection, limit, offset, includeKVS, success, fail)
     var the_query = make_query(search, limit, offset);
-    odkData.query(table_id, the_query[0], the_query[1], the_query[2], the_query[3], the_query[4], the_query[5], the_query[6], the_query[7], the_query[8], function success(d) {
+    //odkData.query(table_id, the_query[0], the_query[1], the_query[2], the_query[3], the_query[4], the_query[5], the_query[6], the_query[7], the_query[8], function success(d) {
+    odkData.arbitraryQuery(table_id, "SELECT * FROM " + table_id + (the_query[0] ? " WHERE " + the_query[0] : "") + (the_query[2] ? " GROUP BY " + the_query[2] : ""), the_query[1], the_query[6], the_query[7], function success(d) {
+        if (cols.length == 0) {
+            for (var i = 0; i < d.getColumns().length; i++) {
+                var col = d.getColumns()[i];
+                if (col[0] != "_") {
+                    cols = cols.concat(col);
+                }
+            }
+            document.getElementById("group-by").disabled = false;
+            if ((global_group_by != null && global_group_by != undefined && global_group_by.trim().length > 0) || (global_where_clause != null && global_where_clause != undefined && global_where_clause.trim().length > 0)) {
+                //global_group_by = global_group_by.trim();
+                groupBy();
+            }
+        }
         if (d.getCount() == 0) {
             if (!try_more_cols) {
                 try_more_cols = true;
@@ -266,7 +280,9 @@ var doSearch = function doSearch() {
             list.innerHTML = "";
             try_more_cols = false;
         }
-        document.getElementById("navigation-text").innerText = "Showing rows " + (offset+(total_rows == 0 ? 0 :1)) + "-" + (offset+d.getCount()) + " of " + total_rows;
+        var display_total = Number(total_rows);
+        if (global_group_by != null && global_group_by != undefined && global_group_by.trim().length > 0) display_total -= 1
+        document.getElementById("navigation-text").innerText = "Showing rows " + (offset + (total_rows == 0 ? 0 : 1)) + "-" + (offset + d.getCount()) + " of " + display_total;
         for (var i = 0; i < d.getCount(); i++) {
             var li = document.createElement("div");
             var displays = document.createElement("span");
@@ -319,8 +335,12 @@ var doSearch = function doSearch() {
                     }
                 });
                 displays.addEventListener("click", function() {
-                    //page_go("config/assets/detail.html#"+table_id+"/"+d.getData(i, "_id"));
-                    odkTables.openDetailView(null, table_id, d.getData(i, "_id"));
+                    if (global_group_by == null || global_group_by == undefined || global_group_by.trim().length == 0) {
+                        //page_go("config/assets/detail.html#"+table_id+"/"+d.getData(i, "_id"));
+                        odkTables.openDetailView(null, table_id, d.getData(i, "_id"));
+                    } else {
+                        odkTables.launchHTML({}, clean_href() + "#" + table_id + "/" + global_group_by + " = ?/" + d.getData(i, global_group_by));
+                    }
                 });
                 _delete.addEventListener("click", function() {
                     if (!confirm("Please confirm deletion of row: " + d.getData(i, "_id"))) {
@@ -351,6 +371,76 @@ var doSearch = function doSearch() {
         alert("Failure! " + d);
     });
 }
+var groupBy = function groupBy() {
+    var list = document.getElementById("group-by-list");
+    for (var i = 0; i < cols.length; i++) {
+        var child = document.createElement("option");
+        child.value = cols[i];
+        child.innerText = cols[i];
+        list.appendChild(child);
+        if (global_group_by == cols[i]) {
+            list.selectedOptions = [child];
+        }
+    }
+    if (global_where_clause != null && global_where_clause != undefined && global_where_clause.trim().length > 0) {
+        document.getElementById("group-by").style.display = "none";
+        return;
+    }
+    if (global_group_by != null && global_group_by != undefined && global_group_by.trim().length > 0) {
+        document.getElementById("group-by").style.display = "none";
+        groupByGo()
+    } else {
+        list.style.display = "inline-block";
+        document.getElementById("group-by").style.display = "none";
+        document.getElementById("group-by-list").addEventListener("change", function() {
+            groupByGo();
+        });
+        //document.getElementById("group-by-go").style.display = "inline-block";
+    };
+}
+var groupByGo = function groupByGo() {
+    var go = true;
+    if (global_group_by != null && global_group_by != undefined && global_group_by.trim().length > 0) {
+        go = false;
+    } else {
+        var list = document.getElementById("group-by-list");
+        global_group_by = list.selectedOptions[0].value;
+    }
+    var _in = false;
+    if (display_col == global_group_by) {
+        _in = true;
+    } else {
+        for (var i = 0; i < display_subcol.length; i++) {
+            if (display_subcol[i][1] == global_group_by && display_subcol[i][0] != "Group by value: ") {
+                _in = true;
+                break;
+            }
+        }
+    }
+    if (display_subcol[display_subcol.length - 1][0] != "Group by value: ") {
+        display_subcol[display_subcol.length - 1][2] = true;
+        if (!_in) {
+            display_subcol = display_subcol.concat(0)
+            display_subcol[display_subcol.length - 1] = ["Group by value: ", global_group_by, true];
+        }
+    } else {
+        if (_in) {
+            display_subcol = display_subcol.reverse().slice(1).reverse()
+        } else {
+            display_subcol[display_subcol.length - 1][1] = global_group_by;
+        }
+    }
+    //window.location.hash = "#" + table_id + "/" + global_group_by
+    if (go) {
+        odkTables.launchHTML({}, clean_href() + "#" + table_id + "/" + global_group_by);
+        //update_total_rows(true);
+    }
+}
+var clean_href = function clean_href() {
+    var href = window.location.href.split("#")[0]
+    href = href.split("default", 2)[1]
+    return href;
+}
 """ + customJsGeneric + """
         </script>
     </head>
@@ -361,8 +451,12 @@ var doSearch = function doSearch() {
             <button id='add' onClick='add();'>Add row</button>
         </div>
         <div id="navigation">
+            <button id="group-by" onClick='groupBy();' style='font-size: small;' disabled>Group by</button>
+            <select id="group-by-list" style='display: none;'></select>
+            <button id="group-by-go" style='display: none;' onClick="groupByGo();">Go</button>
             <button disabled=true id='prev' onClick='prev();'>Previous page</button>
             <select id="limit" onChange='newLimit();'>
+                <option value="2">2 (debug)</option>
                 <option value="20">20</option>
                 <option value="50">50</option>
                 <option value="100">100</option>

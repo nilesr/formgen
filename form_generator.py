@@ -3,12 +3,12 @@ sys.path.append(".")
 import utils
 # TODO items
 # Must have before release!
-# 	- Text notification with validation fail message
-#   - Group by/more filtering options in generate_table
+#   - More filtering options in generate_table
 #   - fix translation bugs (may have to pull in handlebars)
-#   - add text in survey geopoint activity dialog to indicate that no location has been recieved yet
-#   - Permissions?
+#   - Check permissions?
 #   - Can finalize a totally empty form, row never gets inserted
+#   - Make serious improvements to detail views, like displaying images instead of dbcol_uriFragment and dbcol_contentType - LOCALIZE COLUMN IDS!
+#   - Display sync state in table, sync state and savepoint type in detail
 # Other things not implemented
 #   - Figure out when to calculate assigns (and implement calculates object)
 #   - query filters
@@ -24,7 +24,7 @@ import utils
 # 	- signature
 # 	- barcode
 #   - customPromptTypes.js (could be easy-ish if I only support intent buttons, and I can check the prompt_types sheet to make sure it exists)
-#   - Maybe automatically generate map view files?
+#   - Maybe automatically generate map view files? Much longer term goal
 # Things that ARE supported
 #   - If statements for displaying/not displaying prompts
 #       - can be arbitrarily nested
@@ -116,8 +116,8 @@ for table in tables:
                     if len(hint) == 0: required += "placeholder=\"Required field\"";
                 if "constraint" in item:
                     constraint = "data-constraint=\"" + item["constraint"] + "\""
-                if "constraint_message" in item:
-                    constraint_message = "data-constraint_message=\"" + item["constraint_message"] + "\""
+                if "display" in item and "constraint_message" in item["display"]:
+                    constraint_message = "data-constraint_message=\"" + json.dumps(item["display"]["constraint_message"]).replace("\"", "'") + "\""
                 attrs = " " + " ".join([dbcol, required, calculation, hint, constraint, constraint_message]) + " "
                 wrapped_class = "prompt"
                 _class = " class=\"prompt\" "
@@ -221,7 +221,6 @@ for table in tables:
 <html>
 <head>
     <style>
-    
     input {
         font-size: 16px;
     }
@@ -290,6 +289,7 @@ for table in tables:
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
     -->
     <title>OpenDataKit Common Javascript Framework</title>
+    <script type="text/javascript" src="../formgen_common.js"></script>
     <script type="text/javascript" src="../../../../system/js/odkCommon.js"></script>
     <script type="text/javascript" src="../../../../system/js/odkData.js"></script>
     <script type="text/javascript" src="../../../../system/libs/underscore.1.8.3.js"></script> <!-- development zips -->
@@ -299,49 +299,6 @@ for table in tables:
     -->
     <noscript>This page requires javascript and a Chrome or WebKit browser</noscript>
     <script>
-var possible_wrapped = ["prompt", "title"]; // used in both display and fake_translate
-var display = function display(thing) {
-    // REMOVE THIS LINE BEFORE SHIPPING TO ANOTHER COUNTRY
-    return fake_translate(thing);
-    for (var i = 0; i < possible_wrapped.length; i++) {
-        if (thing[possible_wrapped[i]] != undefined) {
-            return display(thing[possible_wrapped[i]])
-        }
-    }
-    var id = newGuid();
-    window.odkCommonDefinitions._tokens[id] = thing;
-    console.log("Translating " + JSON.stringify(window.odkCommonDefinitions._tokens[id]));
-    var result = "";
-    var found = false;
-    for (var i = 0; i < odkCommon.i18nFieldNames.length; i++) {
-        var field = odkCommon.i18nFieldNames[i];
-        this_result = odkCommon.localizeTokenField(odkCommon.getPreferredLocale(), id, field);
-        //console.log(result);
-        if (this_result != null && this_result != undefined && this_result.trim().length > 0) {
-            found = true;
-            if (field == "text") {
-                result += this_result;
-            }
-            if (field == "audio") {
-                result += "<audio controls='controls'><source src='" + this_result + "' /></audio>";
-            }
-            if (field == "video") {
-                result += "<video controls='controls'><source src='" + this_result + "' /></video>";
-            }
-            if (field == "image") {
-                result += "<img src='" + this_result + "' />";
-            }
-
-        }
-    }
-    if (!found) {
-        return "Couldn't translate " + JSON.stringify(thing);
-    }
-    odkCommonDefinitions[id] = null; // let it be garbage collected
-    // Must be video, TODO
-    return result;
-}
-window.odkCommonDefinitions = {_tokens: {}}
 var screens = """ + json.dumps(screens) + """;
 var choices = """ + choices + """;
 var queries = """ + queries + """;
@@ -499,18 +456,6 @@ var do_xhr = function do_xhr(choice_id, filename, callback) {
     xhr.open("GET", filename, true);
     xhr.send();
 }
-var fake_translate = function(thing) {
-    //console.log("Fake translating " + thing);
-    if (thing == undefined) return "Error translating " + thing;
-    if (typeof(thing) == "string") return thing;
-    var possible_wrapped_full = possible_wrapped.concat(odkCommon.i18nFieldNames).concat("default").concat("_");
-    for (var i = 0; i < possible_wrapped_full.length; i++) {
-        if (thing[possible_wrapped_full[i]] != undefined) {
-            return fake_translate(thing[possible_wrapped_full[i]]);
-        }
-    }
-    return "Error translating " + JSON.stringify(thing);
-}
 var get_choices = function get_choices(which, not_first_time) {
     // first thing in the returned array is a boolean, true if the results are all there, false if they will be added to choices later
     var found = false;
@@ -545,7 +490,7 @@ var get_choices = function get_choices(which, not_first_time) {
                 do_xhr(which, filename, queries[j].callback);
                 return [false]
             }
-            return [false, ["TODO", "Unknown query type " + queries[j].query_type]]
+            return [false, ["ERROR", "Unknown query type " + queries[j].query_type]]
         }
     }
 }
@@ -556,8 +501,11 @@ var start_get_rows = function start_get_rows(which, query) {
     }
     var selectionArgs = [];
     if (query.selectionArgs) {
-        // TODO wrap in try/catch
+        try {
         selectionArgs = jsonParse(query.selectionArgs);
+        } catch (e) {
+            console.log(e);
+        }
     }
     odkData.arbitraryQuery(query.linked_table_id, sql, selectionArgs, 1000, 0, function success_callback(d) {
         for (var i = 0; i < d.getCount(); i++) {
@@ -683,7 +631,6 @@ var toArray = function toArray(i) {
     return Array.prototype.slice.call(i, 0);
 }
 var makeIntent = function makeIntent(package, activity, optional_dbcol) {
-    // TODO, MediaImageCaptureActivity wants uriFragmentNewFileBase in extras
     var i = {action: "android.intent.action.MAIN", componentPackage: package, componentActivity: activity, extras: {tableId: table_id, instanceId: row_id}};
     //i.extras.uriFragmentNewFileBase: "opendatakit-macro(uriFragmentNewInstanceFile)";
     if (optional_dbcol != undefined && optional_dbcol != null) {
@@ -727,8 +674,7 @@ var updateOrInsert = function updateOrInsert() {
     odkData.arbitraryQuery(table_id, "UPDATE " + table_id + " SET _savepoint_type = ? WHERE _id = ?;--", [setTo, row_id], 1000, 0, function success_callback(d) {
         console.log("Set _savepoint_type to "+setTo+" successfully");
     }, function failure(d) {
-        // TODO
-        alert(d);
+        alert("Error saving row: " + d);
     });
 }
 var update = function update(delta) {
@@ -983,6 +929,10 @@ var update = function update(delta) {
 
     // VALIDATION LOGIC
     var valid = true;
+    var elems = document.getElementsByClassName("constraint-message");
+    for (var i = 0; i < elems.length; i++) {
+        elems[i].outerHTML = ""; // remove the element
+    }
     var elems = document.getElementsByClassName("prompt");
     for (var i = 0; i < elems.length; i++) {
         var this_valid = true;
@@ -1014,7 +964,10 @@ var update = function update(delta) {
             valid = false;
             elems[i].style.backgroundColor = "pink";
             if (elems[i].getAttribute("data-constraint_message") != null) {
-                // TODO
+                var message = document.createElement("div");
+                message.classList.add("constraint-message");
+                message.innerText = display(jsonParse(elems[i].getAttribute("data-constraint_message")));
+                elems[i].parentNode.insertBefore(message, elems[i].nextSibling);
             }
         } else {
             elems[i].style.backgroundColor = ""; // Default

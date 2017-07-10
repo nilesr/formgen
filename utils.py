@@ -1,15 +1,28 @@
 import json, os, subprocess, glob
-def yank_instance_col(table, form):
+def yank_instance_col(table, form): return yank_instance_setting(table, form, "instance_name", "_id");
+def yank_instance_setting(table, form, setting, default):
     formDef = json.loads(open("/home/niles/Documents/odk/app-designer/app/config/tables/" + table + "/forms/" + form + "/formDef.json", "r").read())
     try:
-        return [x for x in formDef["xlsx"]["settings"] if x["setting_name"] == "instance_name"][0]["value"]
+        return [x for x in formDef["xlsx"]["settings"] if x["setting_name"] == setting][0]["value"]
     except:
         pass
     try:
-        return formDef["xlsx"]["specification"]["settings"]["instance_name"]["value"]
+        return [x for x in formDef["xlsx"]["settings"] if x["setting_name"] == setting][0]["display"]
     except:
-        #print("ERROR could not yank instance col for " + table + "/" + form)
-        return "_id"
+        pass
+    try:
+        return formDef["xlsx"]["specification"]["settings"][setting]["value"]
+    except:
+        pass
+    try:
+        return formDef["xlsx"]["specification"]["settings"][setting]["display"]
+    except:
+        return default;
+def get_localized_tables():
+    result = {}
+    for table in get_tables():
+        result[table] = yank_instance_setting(table, table, "survey", table)
+    return result
 def get_allowed_tables():
     result = []
     for table in get_tables():

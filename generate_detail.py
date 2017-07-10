@@ -13,6 +13,7 @@ def make(filename, customHtml, customCss, customJsOl, customJsGeneric):
         <meta http-equiv="content-type" content="text/html; charset=UTF-8">
         <script type="text/javascript" src="/default/system/js/odkCommon.js"></script>
         <script type="text/javascript" src="/default/system/js/odkData.js"></script>
+        <script type="text/javascript" src="formgen_common.js"></script>
         <script type="text/javascript" src="/default/system/tables/js/odkTables.js"></script>
         <style>
 """ + customCss + """
