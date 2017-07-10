@@ -23,6 +23,7 @@ def make(filename, customHtml, customCss, customJsOl, customJsSearch, customJsGe
             font-size: 150%;
             color: navyblue;
             height: 20%;
+            min-height: 1em;
         }
         #back {float: left}
         #add {float: right}
@@ -32,6 +33,15 @@ def make(filename, customHtml, customCss, customJsOl, customJsSearch, customJsGe
         .buttons {
             float: right;
             display: inline-block;
+            /* test */
+            /*
+            position: relative;
+            top: 50%;
+            -webkit-transform: translateY(-50%);
+            transform: translateY(-50%);
+            */
+            height: 100%;
+            vertical-align: middle;
         }
         .li {
             /*min-height: 36px;*/
@@ -86,7 +96,6 @@ def make(filename, customHtml, customCss, customJsOl, customJsSearch, customJsGe
         <script type="text/javascript" src="/default/system/js/odkCommon.js"></script>
         <script type="text/javascript" src="/default/system/js/odkData.js"></script>
         <script type="text/javascript" src="/default/system/tables/js/odkTables.js"></script>
-        <!--<link rel="stylesheet" href="../assets/pure-base-forms-buttons.css" />-->
         <script>
         
 var S4 = function S4() {
@@ -206,6 +215,7 @@ var make_query = function make_query(search, limit, offset) {
         var cols = [display_col]
         if (try_more_cols) {
             for (var i = 0; i < display_subcol.length; i++) {
+                if (display_subcol[i][1] == null) continue;
                 cols = cols.concat(display_subcol[i][1]);
             }
         }
@@ -241,15 +251,17 @@ var doSearch = function doSearch() {
                 update_total_rows(true)
             } else {
                 list.innerText = "No results";
+                document.getElementById("navigation-text").innerText = ""
             }
-            return;
+        } else {
+            list.innerHTML = "";
+            try_more_cols = false;
         }
-        list.innerHTML = "";
-        try_more_cols = false;
         document.getElementById("navigation-text").innerText = "Showing rows " + (offset+(total_rows == 0 ? 0 :1)) + "-" + (offset+d.getCount()) + " of " + total_rows;
         for (var i = 0; i < d.getCount(); i++) {
             var li = document.createElement("div");
             var displays = document.createElement("span");
+            displays.style.lineHeight = "normal";
             displays.classList.add("displays");
             var mainDisplay = document.createElement("div")
             mainDisplay.classList.add("main-display");
@@ -262,7 +274,9 @@ var doSearch = function doSearch() {
                     subDisplay.classList.add("sub-display");
                 }
                 subDisplay.appendChild(document.createTextNode(display_subcol[j][0]))
-                subDisplay.appendChild(document.createTextNode(d.getData(i, display_subcol[j][1])))
+                if (display_subcol[j][1] != null) {
+                    subDisplay.appendChild(document.createTextNode(d.getData(i, display_subcol[j][1])))
+                }
                 //subDisplay.innerText = d.getData(i, display_subcol[j][1]);
                 if (display_subcol[j][2]) {
                     displays.appendChild(subDisplay)
@@ -291,6 +305,11 @@ var doSearch = function doSearch() {
                         odkTables.editRowWithSurvey(null, table_id, d.getData(i, "_id"), table_id, null, null);
                     }
                 });
+                displays.addEventListener("click", function() {
+                    if (allowed_tables.indexOf(table_id) >= 0) {
+                        page_go("config/assets/detail.html#"+table_id+"/"+d.getData(i, "_id"));
+                    }
+                });
                 _delete.addEventListener("click", function() {
                     if (!confirm("Please confirm deletion of row: " + d.getData(i, "_id"))) {
                         return;
@@ -311,6 +330,8 @@ var doSearch = function doSearch() {
             hr.classList.add("status");
             hr.setAttribute("data-status", d.getData(i, "_savepoint_type"))
             list.appendChild(li);
+            li.style.lineHeight = li.clientHeight.toString() + "px";
+            displays.style.width = (li.clientWidth - buttons.clientWidth - 10).toString() + "px";
             list.appendChild(hr);
 
         }
@@ -321,7 +342,7 @@ var doSearch = function doSearch() {
 """ + customJsGeneric + """
         </script>
     </head>
-    <body class="pure-form" onLoad="ol();">
+    <body onLoad="ol();">
         <div id="header">
             <button id='back' onClick='page_back();'>Back</button>
             <span id="table_id"></span>

@@ -3,11 +3,14 @@ sys.path.append(".")
 import utils
 # TODO items
 # Must have before release!
-# 	- Some css would be nice
+# 	- Better css for survey form
+#   - detail views
+#   - fix translation bugs (may have to pull in handlebars)
+#   - add text in survey geopoint activity dialog to indicate that no location has been recieved yet
 #   - Permissions?
-#   - data() on a select_multiple is probably broken (for validation)
-#   - configure to work when set as list view/detail view file
+#   - Can finalize a totally empty form, row never gets inserted
 # Other things not implemented
+#   - Easy to add group by support to generate_table
 #   - Fix odkTables.editRowWithSurveyDefault() - SURVEY BUG
 #   - Handle doAction in generate_table.py to call update_total_rows again
 # 	- Text notification with validation fail message
@@ -22,6 +25,7 @@ import utils
 # 	- signature
 # 	- barcode
 #   - customPromptTypes.js (could be easy-ish if I only support intent buttons, and I can check the prompt_types sheet to make sure it exists)
+#   - video (both display and prompt type)
 # Things that ARE supported
 #   - If statements for displaying/not displaying prompts
 #       - can be arbitrarily nested
@@ -48,6 +52,7 @@ import utils
 #   - Auto generate row id and insert new row if no row id given in hash
 #   - Automatically load prompt values from database abd save new values to database only when changed on the screen
 #   - Uses finalized/incomplete properly
+#   - translation
 def die():
     global failed
     failed = True
@@ -67,6 +72,7 @@ for table in tables:
         rules = []
         screen = []
         assigns = []
+        has_dates = False
         #defaults = {}
         for item in formDef["xlsx"]["survey"]:
             #print(item)
@@ -165,6 +171,7 @@ for table in tables:
                 elif item["type"] == "acknowledge":
                     screen.append("<select data-values-list=\"_yesno\" " + attrs + _class + "></select>")
                 elif item["type"] == "date":
+                    has_dates = True;
                     screen.append("<span " + attrs + "class=\"date "+wrapped_class+"\">" )
                     screen.append("<select data-values-list=\"_year\"></select>")
                     screen.append(" / ")
@@ -214,34 +221,52 @@ for table in tables:
         <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
         <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/underscore.js/1.5.1/underscore-min.js"></script>
     -->
-    <link rel="stylesheet" href="../../assets/pure-base-forms-buttons.css" />
     <noscript>This page requires javascript and a Chrome or WebKit browser</noscript>
     <script>
 var display = function display(thing) {
-    var res = ""
-    if (thing.text !== undefined) {
-        res += thing.text; // TODO localize
+    var possible_wrapped = ["prompt", "title"];
+    for (var i = 0; i < possible_wrapped.length; i++) {
+        if (thing[possible_wrapped[i]] != undefined) {
+            return display(thing[possible_wrapped[i]])
+        }
     }
-    if (thing.image != undefined) {
-        res += "<img src='" + thing.image + "'>";
+    var id = newGuid();
+    window.odkCommonDefinitions._tokens[id] = thing;
+    console.log("Translating " + JSON.stringify(window.odkCommonDefinitions._tokens[id]));
+    var result = null;
+    var correct_field = null;
+    for (var i = 0; i < odkCommon.i18nFieldNames.length; i++) {
+        var field = odkCommon.i18nFieldNames[i];
+        result = odkCommon.localizeTokenField(odkCommon.getPreferredLocale(), id, field);
+        //console.log(result);
+        if (result != null && result != undefined && result.trim().length > 0) {
+            correct_field = field;
+            break;
+        }
     }
-    if (thing.audio != undefined) {
-        res += "<audio controls='controls'><source src='" + thing.audio + "' /></audio>";
+    if (correct_field == null) {
+        return "Couldn't translate " + JSON.stringify(thing);
     }
-    if (res.length > 0) return res;
-    if (thing.prompt !== undefined) {
-        return display(thing.prompt);
+    odkCommonDefinitions[id] = null; // let it be garbage collected
+    if (correct_field == "text") {
+        return result;
     }
-    if (thing.title !== undefined) {
-        return display(thing.title);
+    if (correct_field == "audio") {
+        return "<audio controls='controls'><source src='" + result + "' /></audio";
     }
-    return "Couldn't translate " + JSON.stringify(thing);
+    if (correct_field == "image") {
+        return "<img src='" + result + "' />";
+    }
+    // Must be video, TODO
+    return result;
 }
+window.odkCommonDefinitions = {_tokens: {}}
 var screens = """ + json.dumps(screens) + """;
 var choices = """ + choices + """;
 var queries = """ + queries + """;
 var table_id = '""" + table + """';
 //var defaults = """ + json.dumps("""defaults""") + """
+var has_dates = """ + ("true" if has_dates else "false") + """
 var row_id = "";
 var opened_for_edit = false;
 var row_data = {};
@@ -311,7 +336,11 @@ var screen_data = function screen_data(id) {
                 var total = [0, 0, 0];
                 for (var j = 0; j < fields.length; j++) {
                     var field = fields[j]; // the select element for day, month or year
-                    total[j] = field.selectedOptions[0].value.trim();
+                    if (field.selectedOptions[0] == undefined) {
+                        total[j] = j == 0 ? "0000" : "00";
+                    } else {
+                        total[j] = field.selectedOptions[0].value.trim();
+                    }
                 }
                 // fields on the screen are in the order YYYY/MM/DD
                 // but return here as YYYY-MM-DDT00:00:00.000000000 for storage in the database
@@ -396,7 +425,11 @@ var get_choices = function get_choices(which, not_first_time) {
         if (choices[j].choice_list_name == which) {
             // concat on a list will merge them
             result = result.concat(0);
-            result[result.length - 1] = [choices[j].data_value, display(choices[j].display)];
+            var displayed = choices[j].display;
+            if (which != "_year" && which != "_month" && which != "_day") {
+                displayed = display(choices[j].display)
+            }
+            result[result.length - 1] = [choices[j].data_value, displayed];
             result[0] = true; // we found at least one thing
         }
     }
@@ -532,9 +565,12 @@ var changeElement = function changeElement(elem, newdata) {
             document.getElementById(elem.getAttribute("data-dbcol") + "_" + "_other").checked = true;
         }
     } else if (elem.classList.contains("date")) {
-        var fields = elem.getElementsByTagName("select");
-        var total = newdata.split("-"); // total is now [YYYY, MM, DD plus some garbage]? I actually have no idea
+        var total = ["-1", "-1", "-1"]
+        if (newdata != null) {
+            total = newdata.split("-"); // total is now [YYYY, MM, DD plus some garbage]? I actually have no idea
+        }
         total[2] = total[2].split("T")[0]; // should now be [YYYY, MM, DD]
+        var fields = elem.getElementsByTagName("select");
         for (var i = 0; i < fields.length; i++) {
             total[i] = Number(total[i]).toString(); // "06" -> "6"
             var field = fields[i]; // the select element for day, month or year
@@ -997,15 +1033,17 @@ var doAction = function doAction(dStruct, act, intent) {
     alert("Error launching " + act + ": " + result);
 }
 var ol = function onLoad() {
-    var str = function str(i) { return Number(i).toString(); };
-    for (var i = 1; i <= 31; i++) {
-        choices = choices.concat({"choice_list_name": "_day", "data_value": str(i), "display": {"text": str(i)}})
-    }
-    for (var i = 1; i <= 12; i++) {
-        choices = choices.concat({"choice_list_name": "_month", "data_value": str(i), "display": {"text": str(i)}})
-    }
-    for (var i = 2020; i >= 1940; i--) {
-        choices = choices.concat({"choice_list_name": "_year", "data_value": str(i), "display": {"text": str(i)}})
+    if (has_dates) {
+        // won't be localized, so we can set display to i instead of {text: i}
+        for (var i = 1; i <= 31; i++) {
+            choices = choices.concat({"choice_list_name": "_day", "data_value": i.toString(), "display": i.toString()})
+        }
+        for (var i = 1; i <= 12; i++) {
+            choices = choices.concat({"choice_list_name": "_month", "data_value": i.toString(), "display": i.toString()})
+        }
+        for (var i = 2020; i >= 1940; i--) {
+            choices = choices.concat({"choice_list_name": "_year", "data_value": i.toString(), "display": i.toString()})
+        }
     }
     choices = choices.concat({"choice_list_name": "_yesno", "data_value": "true", "display": {"text": "yes"}});
     choices = choices.concat({"choice_list_name": "_yesno", "data_value": "false", "display": {"text": "no"}});
@@ -1073,7 +1111,7 @@ var ol = function onLoad() {
 };
     </script>
 </head>
-<body onLoad='ol();' class='pure-form'>
+<body onLoad='ol();'>
     <div class="odk-toolbar" id="odk-toolbar">
         <button id='cancel' onClick='cancel()' disabled=true>Loading...</button>
         <button id='back' onClick='update(-1)'>Back</button>
