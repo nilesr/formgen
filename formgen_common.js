@@ -93,13 +93,8 @@ window.jsonParse = function jsonParse(text) {
     try {
         return JSON.parse(text);
     } catch (e) {
-        try {
-            text = text.replace(/\\'/g, '"');
-            return JSON.parse(text);
-        } catch (e) {
-            console.log(e);
-            return text;
-        }
+        text = text.replace(/\'/g, '"');
+        return JSON.parse(text); // MAY STILL THROW AN EXCEPTION
     }
 };
 

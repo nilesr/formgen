@@ -29,10 +29,11 @@ make_table("refrigerator_types_list.html", "", "", """
         table_id = "refrigerator_types";
 """, "", "")
 make_table("refrigerators_list.html", "", "", """
-        // TODO NEED TO MAKE A CROSS TABLE QUERY TO GET MODEL CATALOG ID
-        display_subcol = [["", "model_row_id", false], [", Healthcare Facility: ", "facility_row_id", true]];
+        global_join = "refrigerator_types ON refrigerators.model_row_id = refrigerator_types._id INNER JOIN health_facility ON refrigerators.facility_row_id = health_facility._id"
+        //display_subcol = [["", "model_row_id", false], [", Healthcare Facility: ", "facility_row_id", true]];
+        display_subcol = [["", "model_id", true], ["Healthcare Facility: ", "facility_name", true]];
         display_col = "refrigerator_id"
-        table_id = "refrigerator_types";
+        table_id = "refrigerators";
 """, "", "")
 
 

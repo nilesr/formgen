@@ -112,6 +112,7 @@ var table_id = "";
 var display_cols = """ + json.dumps(cols) + """
 var allowed_tables = """ + json.dumps(utils.get_allowed_tables()) + """
 var localized_tables = """ + json.dumps(utils.get_localized_tables()) + """;
+var global_join = "";
 var display_col = "";
 var cols = [];
 var limit = 20;
@@ -245,8 +246,12 @@ var make_query = function make_query(search, limit, offset) {
     if (global_group_by != undefined && global_group_by != null) {
         group_by = global_group_by
     }
-    //[whereClause, sqlBindParams, groupBy, having, orderByElementKey, orderByDirection, limit, offset, includeKVS]
-    return [where, query_args, group_by, null, null, null, limit, offset, false];
+    join = ""
+    if (global_join != null && global_join != undefined && global_join.trim().length > 0) {
+        join = global_join;
+    }
+    //[whereClause, sqlBindParams, groupBy, having, orderByElementKey, orderByDirection, limit, offset, includeKVS, (NOT IN odkData.query!!!) join]
+    return [where, query_args, group_by, null, null, null, limit, offset, false, join];
 }
 var doSearch = function doSearch() {
     offset = Math.max(offset, 0);
@@ -258,8 +263,8 @@ var doSearch = function doSearch() {
     odkCommon.setSessionVariable(table_id + ":limit", limit);
     odkCommon.setSessionVariable(table_id + ":offset", offset);
     var the_query = make_query(search, limit, offset);
-    //odkData.query(table_id, the_query[0], the_query[1], the_query[2], the_query[3], the_query[4], the_query[5], the_query[6], the_query[7], the_query[8], function success(d) {
-    odkData.arbitraryQuery(table_id, "SELECT * FROM " + table_id + (the_query[0] ? " WHERE " + the_query[0] : "") + (the_query[2] ? " GROUP BY " + the_query[2] : ""), the_query[1], the_query[6], the_query[7], function success(d) {
+    //odkData.query(table_id, the_query[0], the_query[1], the_query[2], the_query[3], the_query[4], the_query[5], the_query[6], the_query[7], the_query[8], function success(d) { // doesn't handle the_query[9] (join)
+    odkData.arbitraryQuery(table_id, "SELECT * FROM " + table_id + (the_query[0] ? " WHERE " + the_query[0] : "") + (the_query[2] ? " GROUP BY " + the_query[2] : "") + (the_query[9].length > 0 ? " JOIN " + the_query[9] : ""), the_query[1], the_query[6], the_query[7], function success(d) {
         if (cols.length == 0) {
             for (var i = 0; i < d.getColumns().length; i++) {
                 var col = d.getColumns()[i];
@@ -309,7 +314,7 @@ var doSearch = function doSearch() {
                         subDisplay.appendChild(document.createTextNode(d.getData(i, display_subcol[j][1])))
                     }
                 } else {
-                    subDisplay.appendChild(document.createTextNode(display_subcol[j][0](subDisplay, d.getData(i, display_subcol[j][1]))))
+                    subDisplay.appendChild(document.createTextNode(display_subcol[j][0](subDisplay, d.getData(i, display_subcol[j][1]), d, j)))
                 }
                 //subDisplay.innerText = d.getData(i, display_subcol[j][1]);
                 if (display_subcol[j][2]) {
@@ -422,12 +427,12 @@ var groupByGo = function groupByGo() {
             }
         }
     }
-    if (display_subcol[display_subcol.length - 1][0] != "Group by value: ") {
-        display_subcol[display_subcol.length - 1][2] = true;
-        if (!_in) {
+    if (display_subcol.length == 0 || display_subcol[display_subcol.length - 1][0] != "Group by value: ") {
+        if (!_in || display_subcol.length == 0) {
             display_subcol = display_subcol.concat(0)
             display_subcol[display_subcol.length - 1] = ["Group by value: ", global_group_by, true];
         }
+        display_subcol[display_subcol.length - 1][2] = true;
     } else {
         if (_in) {
             display_subcol = display_subcol.reverse().slice(1).reverse()

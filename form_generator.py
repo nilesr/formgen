@@ -11,9 +11,10 @@ import utils
 #   - Display sync state in table, sync state and savepoint type in detail
 #   - Make group by configurable in custom.py, maybe a preset list of group by options with display names for them, and automatically select it if there's only one thing. If not specified in customJsOl just generate it the way we currently do
 #   - Launching table.html via tables.html or specifying table_id in the hash is now broken
+#   - take picture is broken
+#   - query filters
 # Other things not implemented
 #   - Figure out when to calculate assigns (and implement calculates object)
-#   - query filters
 #   - Fix odkTables.editRowWithSurveyDefault() - SURVEY BUG
 #   - Handle doAction in generate_table.py to call update_total_rows(true)
 # 	- linegraph, piechart
@@ -495,9 +496,11 @@ var start_get_rows = function start_get_rows(which, query) {
     var selectionArgs = [];
     if (query.selectionArgs) {
         try {
-        selectionArgs = jsonParse(query.selectionArgs);
+            selectionArgs = jsonParse(query.selectionArgs);
         } catch (e) {
+            alert("Failed to start cross-table query: " + e);
             console.log(e);
+            return;
         }
     }
     odkData.arbitraryQuery(query.linked_table_id, sql, selectionArgs, 1000, 0, function success_callback(d) {
@@ -806,7 +809,7 @@ var update = function update(delta) {
             elem.appendChild(label);
             //elem.appendChild(document.createElement("br"));
             select.appendChild(elem);
-            label.style.width = (elem.clientWidth - inner.clientWidth - 1).toString() + "px"
+            label.style.width = (elem.clientWidth - inner.clientWidth - 10).toString() + "px"
         }
     });
     var pop_choices_for_select_one = function(stuffs, select) {
@@ -831,7 +834,7 @@ var update = function update(delta) {
             elem.appendChild(label);
             //elem.appendChild(document.createElement("br"));
             select.appendChild(elem);
-            label.style.width = (elem.clientWidth - inner.clientWidth - 1).toString() + "px"
+            label.style.width = (elem.clientWidth - inner.clientWidth - 10).toString() + "px"
         }
     };
     populate_choices(document.getElementsByClassName("select-one-with-other"), function(stuffs, select) {
