@@ -23,10 +23,16 @@ make_table("Tea_houses.html", "", "", """
 """, "", "")
 
 
-make_table("refrigerators.html", "", "", """
-        display_subcol = [["Condition: ", "refrigerator_condition", true]];
+make_table("refrigerator_types_list.html", "", "", """
+        display_subcol = [["Manufacturer: ", "manufacturer", true]];
+        display_col = "catalog_id"
+        table_id = "refrigerator_types";
+""", "", "")
+make_table("refrigerators_list.html", "", "", """
+        // TODO NEED TO MAKE A CROSS TABLE QUERY TO GET MODEL CATALOG ID
+        display_subcol = [["", "model_row_id", false], [", Healthcare Facility: ", "facility_row_id", true]];
         display_col = "refrigerator_id"
-        table_id = "refrigerators";
+        table_id = "refrigerator_types";
 """, "", "")
 
 

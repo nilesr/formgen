@@ -89,3 +89,17 @@ window.page_back = function page_back() {
     //window.history.back();
     odkCommon.closeWindow(-1, null);
 };
+window.jsonParse = function jsonParse(text) {
+    try {
+        return JSON.parse(text);
+    } catch (e) {
+        try {
+            text = text.replace(/\\'/g, '"');
+            return JSON.parse(text);
+        } catch (e) {
+            console.log(e);
+            return text;
+        }
+    }
+};
+

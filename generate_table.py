@@ -123,7 +123,7 @@ var global_where_arg = null;
 var global_group_by = null;
 
 var ol = function ol() {
-    var sections = document.location.hash.slice(0).split("/");
+    var sections = document.location.hash.substr(1).split("/");
     table_id = sections[0]
     if (sections.length == 2) {
         global_group_by = sections[1];
@@ -190,13 +190,18 @@ var update_total_rows = function update_total_rows(force) {
     }
     cached_search = search;
     var the_query = make_query(search, 10000, 0);
-    console.log(the_query);
-    odkData.arbitraryQuery(table_id, "SELECT COUNT(*) FROM " + table_id + (the_query[0] ? " WHERE " + the_query[0] : "") + (the_query[2] ? " GROUP BY " + the_query[2] : ""), the_query[1], the_query[6], the_query[7], function success(d) {
+    var success = function success(d) {
         total_rows = d.getData(0, "COUNT(*)");
         doSearch();
-    }, function(e) {
+    };
+    var failure = function failure(e) {
         alert("Unexpected error " + e);
-    })
+    };
+    if (global_group_by != null && global_group_by != undefined && global_group_by.trim().length > 0) {
+        odkData.arbitraryQuery(table_id, "SELECT COUNT(*) FROM (SELECT * FROM " + table_id + " GROUP BY " + the_query[2] + ")", the_query[1], the_query[6], the_query[7], success, failure);
+    } else {
+        odkData.arbitraryQuery(table_id, "SELECT COUNT(*) FROM " + table_id + (the_query[0] ? " WHERE " + the_query[0] : "") + (the_query[2] ? " GROUP BY " + the_query[2] : ""), the_query[1], the_query[6], the_query[7], success, failure);
+    }
 }
 var next = function next() {
     offset += limit;
@@ -281,7 +286,7 @@ var doSearch = function doSearch() {
             try_more_cols = false;
         }
         var display_total = Number(total_rows);
-        if (global_group_by != null && global_group_by != undefined && global_group_by.trim().length > 0) display_total -= 1
+        //if (global_group_by != null && global_group_by != undefined && global_group_by.trim().length > 0) display_total -= 1
         document.getElementById("navigation-text").innerText = "Showing rows " + (offset + (total_rows == 0 ? 0 : 1)) + "-" + (offset + d.getCount()) + " of " + display_total;
         for (var i = 0; i < d.getCount(); i++) {
             var li = document.createElement("div");

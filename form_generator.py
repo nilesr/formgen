@@ -9,6 +9,8 @@ import utils
 #   - Can finalize a totally empty form, row never gets inserted
 #   - Make serious improvements to detail views, like displaying images instead of dbcol_uriFragment and dbcol_contentType - LOCALIZE COLUMN IDS!
 #   - Display sync state in table, sync state and savepoint type in detail
+#   - Make group by configurable in custom.py, maybe a preset list of group by options with display names for them, and automatically select it if there's only one thing. If not specified in customJsOl just generate it the way we currently do
+#   - Launching table.html via tables.html or specifying table_id in the hash is now broken
 # Other things not implemented
 #   - Figure out when to calculate assigns (and implement calculates object)
 #   - query filters
@@ -289,7 +291,7 @@ for table in tables:
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
     -->
     <title>OpenDataKit Common Javascript Framework</title>
-    <script type="text/javascript" src="../formgen_common.js"></script>
+    <script type="text/javascript" src="../../formgen_common.js"></script>
     <script type="text/javascript" src="../../../../system/js/odkCommon.js"></script>
     <script type="text/javascript" src="../../../../system/js/odkData.js"></script>
     <script type="text/javascript" src="../../../../system/libs/underscore.1.8.3.js"></script> <!-- development zips -->
@@ -393,15 +395,6 @@ var screen_data = function screen_data(id) {
 }
 var data = function data(id) {
     return row_data[id];
-}
-var jsonParse = function jsonParse(text) {
-    try {
-        text = text.replace(/\\'/g, '"');
-        return JSON.parse(text);
-    } catch (e) {
-        console.log(e);
-        return text;
-    }
 }
 var survey = "org.opendatakit.survey"
 var global_screen_idx = -1;
