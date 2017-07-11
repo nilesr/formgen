@@ -1,19 +1,20 @@
-import json, sys, os, glob, traceback, subprocess
+import json, sys, os, glob, traceback, subprocess, random
 sys.path.append(".")
 import utils
 # TODO items
 # Must have before release!
-#   - More filtering options in generate_table
-#   - fix translation bugs (may have to pull in handlebars)
-#   - Check permissions?
-#   - Can finalize a totally empty form, row never gets inserted
-#   - Make serious improvements to detail views, like displaying images instead of dbcol_uriFragment and dbcol_contentType - LOCALIZE COLUMN IDS!
-#   - Display sync state in table, sync state and savepoint type in detail
+#   - Joins in 
 #   - TEST allowed_group_bys value in table
-#   - Launching table.html via tables.html or specifying table_id in the hash is now broken
-#   - take picture is broken
 #   - query filters
+#   - More filtering options in generate_table
+#   - Display sync state in table, sync state and savepoint type in detail
+#   - Can finalize a totally empty form, row never gets inserted
+#   - Check permissions?
+#   - make an easy way to parameterize things for cold chain demo, maybe hardcode empty html for different h4 sections, column ids, etc then getElementById.innerText set it in colmap
+#       - Will need to make it so if the colmap callback function returns null it doesn't add the node
+#   - Better documentation!
 # Other things not implemented
+#   - take picture is broken - SURVEY BUG
 #   - Figure out when to calculate assigns (and implement calculates object)
 #   - Fix odkTables.editRowWithSurveyDefault() - SURVEY BUG
 #   - Handle doAction in generate_table.py to call update_total_rows(true)
@@ -65,16 +66,19 @@ def falsey(r):
     if r.endswith(";"):
         r = r[:-1].strip()
     return r == "0" or r == "false";
+def genpart(): return hex(random.randint(0, 2**(8*2)))[2:]
 tables = utils.get_tables()
+def gensym(): return genpart() + genpart() + "-4" + genpart()[1:] + "-" + genpart() + "-" + genpart() + genpart() + genpart()
 for table in tables:
     global failed
     failed = False
     try:
-        formDef = json.loads(open("/home/niles/Documents/odk/app-designer/app/config/tables/" + table + "/forms/" + table + "/formDef.json", "r").read())
+        formDef = json.loads(open(utils.appdesigner + "/app/config/tables/" + table + "/forms/" + table + "/formDef.json", "r").read())
         screens = []
         rules = []
         screen = []
         assigns = []
+        tokens = {}
         has_dates = False
         #defaults = {}
         for item in formDef["xlsx"]["survey"]:
@@ -103,7 +107,10 @@ for table in tables:
                         screen.append("<span style='display: none;' class='validate' data-validate-rule=\"" + str(rule) + "\">")
                     if continue_out:
                         continue
-                if "display" in item: screen.append("<span class='translate'>" + json.dumps(item["display"]) + "</span> ")
+                if "display" in item:
+                    token = str(gensym())
+                    tokens[token] = item["display"]
+                    screen.append("<span class='translate'>" + token + "</span> ")
                 dbcol = ""
                 if "name" in item:
                     dbcol = "data-dbcol=\""+item["name"]+"\"";
@@ -113,14 +120,19 @@ for table in tables:
                 constraint = ""
                 constraint_message = ""
                 if "calculation" in item: calculation = "data-calculation=\"" + str(item["calculation"]) + "\"";
-                if "display" in item and type(item["display"]) == type([]) and "hint" in item["display"]: hint = "placeholder=\""+item["display"]["hint"]["text"]+"\""
+                if "display" in item and type(item["display"]) == type({}) and "hint" in item["display"]:
+                    token = gensym()
+                    tokens[token] = item["display"]["hint"]
+                    hint = "data-placeholder=\""+token+"\""
                 if "required" in item:
                     required = "data-required=\"required\" "
                     if len(hint) == 0: required += "placeholder=\"Required field\"";
                 if "constraint" in item:
                     constraint = "data-constraint=\"" + item["constraint"] + "\""
                 if "display" in item and "constraint_message" in item["display"]:
-                    constraint_message = "data-constraint_message=\"" + json.dumps(item["display"]["constraint_message"]).replace("\"", "'") + "\""
+                    token = gensym()
+                    tokens[token] = item["display"]["constraint_message"]
+                    constraint_message = "data-constraint_message=\"" + token + "\""
                 attrs = " " + " ".join([dbcol, required, calculation, hint, constraint, constraint_message]) + " "
                 wrapped_class = "prompt"
                 _class = " class=\"prompt\" "
@@ -307,6 +319,7 @@ var choices = """ + choices + """;
 var queries = """ + queries + """;
 var table_id = '""" + table + """';
 //var defaults = """ + json.dumps("""defaults""") + """
+var tokens = """ + json.dumps(tokens) + """
 var has_dates = """ + ("true" if has_dates else "false") + """
 var row_id = "";
 var opened_for_edit = false;
@@ -765,16 +778,23 @@ var update = function update(delta) {
     }
 
     // TRANSLATION LOGIC
+    var elems = document.getElementsByTagName("input");
+    for (var i = 0; i < elems.length; i++) {
+        if (elems[i].getAttribute("data-placeholder") != undefined && elems[i].getAttribute("data-placeholder").length > 0) {
+            elems[i].setAttribute("placeholder", display(tokens[elems[i].getAttribute("data-placeholder")]));
+            elems[i].setAttribute("data-placeholder", "");
+        }
+    }
     var elems = document.getElementsByClassName("translate");
-    var len = elems.length;
+    var len = elems.length; // IMPORTANT - DO NOT INLINE
     for (var i = 0; i < len; i++) {
-        var text = elems[0].innerText;
+        var text = tokens[elems[0].innerText];
         try {
-            var json = jsonParse(text);
-            elems[0].outerHTML = display(json);
+            // YES elems[0] NOT elems[i]
+            elems[0].outerHTML = display(text);
         } catch (e) {
             console.log(e)
-            elems[0].outerHTML = "Error translating " + text; 
+            elems[0].outerHTML = "Error translating " + JSON.stringify(text);
         }
     }
 
@@ -903,8 +923,8 @@ var update = function update(delta) {
                     console.log("Updating " + col + " to saved value " + row_data[col]);
                     var loading = changeElement(elem, row_data[col]);
                     var sdat = screen_data(col);
-                    if (sdat == "true") sdat = "1"
-                    if (sdat == "false") sdat = "0"
+                    //if (sdat == "true") sdat = "1"
+                    //if (sdat == "false") sdat = "0"
                     if (row_data[col] !== null && sdat != row_data[col] && !loading && screen_has_prompt(col)[0]) {
                         // This can happen when the database says a select one should be set to "M55" or something, but that's not one of the possible options.
                         //noop = "Unexpected failure to set screen value of " + col + ". Tried to set it to " + row_data[col] + " but it came out as " + sdat;
@@ -962,7 +982,7 @@ var update = function update(delta) {
             if (elems[i].getAttribute("data-constraint_message") != null) {
                 var message = document.createElement("div");
                 message.classList.add("constraint-message");
-                message.innerText = display(jsonParse(elems[i].getAttribute("data-constraint_message")));
+                message.innerText = display(tokens[elems[i].getAttribute("data-constraint_message")]);
                 elems[i].parentNode.insertBefore(message, elems[i].nextSibling);
             }
         } else {
@@ -1210,14 +1230,14 @@ var ol = function onLoad() {
             subprocess.check_call(["rm", "-rf", table])
         os.mkdir(table);
         open(table + "/index.html", "w").write(basehtml)
-        for f in glob.glob("/home/niles/Documents/odk/app-designer/app/config/tables/" + table + "/forms/" + table + "/*"):
+        for f in glob.glob(utils.appdesigner + "/app/config/tables/" + table + "/forms/" + table + "/*"):
             fn = os.path.basename(f);
             if fn in ["formDef.json", "properties.csv", "definition.csv", "customStyles.css"] or fn.endswith(".xls") or fn.endswith(".xlsx"):
                 #print("Not copying file " + f)
                 continue
             #subprocess.check_call(["cp", "-rv", f, table + "/" + fn])
-            src = "/sdcard/opendatakit/default/config/tables/" + table + "/forms/" + table + "/" + fn
-            dest_folder = "/sdcard/opendatakit/default/config/assets/formgen/" + table + "/"
+            src = "/sdcard/opendatakit/" + utils.appname + "/config/tables/" + table + "/forms/" + table + "/" + fn
+            dest_folder = "/sdcard/opendatakit/" + utils.appname + "/config/assets/formgen/" + table + "/"
             dest = dest_folder + fn
             subprocess.check_call(["adb", "shell", "mkdir", "-p", dest_folder])
             #print("Linking " + src + " to " + dest)

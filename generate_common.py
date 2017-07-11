@@ -13,7 +13,6 @@ var global_col_localize_names = """ + json.dumps(global_col_localize_names) + ""
 window.odkCommonDefinitions = {_tokens: {}};
 var possible_wrapped = ["prompt", "title"]; // used in both display and fake_translate
 window.fake_translate = function(thing) {
-    //console.log("Fake translating " + thing);
     if (thing === undefined) return "Error translating " + thing;
     if (typeof(thing) == "string") return thing;
     var possible_wrapped_full = possible_wrapped.concat("default").concat("_");
@@ -116,7 +115,19 @@ window.displayCol = function constructSimpleDisplayName(table_id, name) {
         }
     }
     if (name[0] == "_") return name;
-    name = name.replace(/_/g, " "); // can't just replace("_", " ") or it will only hit the first instance
+    return pretty(name.replace(/\\./g, " "));
 };
+window.pretty = function pretty(name) {
+    name = name.replace(/_/g, " "); // can't just replace("_", " ") or it will only hit the first instance
+    var sections = name.split(" ");
+    var new_name = ""
+    for (var i = 0; i < sections.length; i++) {
+        if (sections[i].length > 0) {
+            if (new_name.length > 0) new_name += " "
+            new_name += sections[i][0].toUpperCase() + sections[i].substr(1);
+        }
+    }
+    return new_name;
+}
 """
 open("formgen_common.js", "w").write(basejs)

@@ -94,9 +94,9 @@ def make(filename, customHtml, customCss, customJsOl, customJsSearch, customJsGe
         """ + customCss + """
         </style>
         <meta http-equiv="content-type" content="text/html; charset=UTF-8">
-        <script type="text/javascript" src="/default/system/js/odkCommon.js"></script>
-        <script type="text/javascript" src="/default/system/js/odkData.js"></script>
-        <script type="text/javascript" src="/default/system/tables/js/odkTables.js"></script>
+        <script type="text/javascript" src="/""" + utils.appname + """/system/js/odkCommon.js"></script>
+        <script type="text/javascript" src="/""" + utils.appname + """/system/js/odkData.js"></script>
+        <script type="text/javascript" src="/""" + utils.appname + """/system/tables/js/odkTables.js"></script>
         <script type="text/javascript" src="formgen_common.js"></script>
         <script>
 var add = function() {
@@ -123,6 +123,7 @@ var try_more_cols = false;
 var global_where_clause = null;
 var global_where_arg = null;
 var global_group_by = null;
+var global_which_cols_to_select = "*"
 
 var ol = function ol() {
     var sections = document.location.hash.substr(1).split("/");
@@ -131,11 +132,13 @@ var ol = function ol() {
         global_group_by = sections[1];
     } else {
         global_where_clause = sections[1]
+        if (global_where_clause && !(global_where_clause.indexOf(".") >= 0)) global_where_clause = table_id + "." + global_where_clause
         global_where_arg = sections[2]
     }
     display_subcol = [];
     display_col = null;
     """ + customJsOl + """
+    if (allowed_group_bys != null && allowed_group_bys.length == 0) document.getElementById("group-by").style.display = "none"
     if (display_col == null) {
         display_col = display_cols[table_id];
     }
@@ -161,7 +164,7 @@ var ol = function ol() {
     }
     if (table_id.length == 0) {
         list.innerText = "No table specified!";
-        document.location.href = "/default/config/assets/tables.html"
+        document.location.href = "/""" + utils.appname + """/config/assets/tables.html"
         return;
     }
     document.getElementById("table_id").innerText = display(localized_tables[table_id]);
@@ -241,18 +244,40 @@ var make_query = function make_query(search, limit, offset) {
         }
         if (where == null) where = "";
         where += global_where_clause;
-        query_args = query_args.concat(global_where_arg);
+        if (!(global_where_clause.indexOf("IS NULL") > 0)) {
+            query_args = query_args.concat(global_where_arg);
+        }
     }
     var group_by = null;
     if (global_group_by != undefined && global_group_by != null) {
-        group_by = global_group_by
+        group_by = table_id + "." + global_group_by
     }
     join = ""
     if (global_join != null && global_join != undefined && global_join.trim().length > 0) {
         join = global_join;
     }
     //[whereClause, sqlBindParams, groupBy, having, orderByElementKey, orderByDirection, limit, offset, includeKVS, (NOT IN odkData.query!!!) join]
-    return [where, query_args, group_by, null, null, null, limit, offset, false, join];
+    return [where, query_args, group_by, null, null, null, limit, offset, false, join, global_which_cols_to_select];
+}
+var getCols = function getCols() {
+    if (cols.length == 0) {
+        // Don't use global_which_cols_to_select or we will get extra columns in there that we can't actually group by
+        odkData.arbitraryQuery(table_id, "SELECT * FROM " + table_id + " WHERE 0", [], 0, 0, function success(d) {
+            for (var i = 0; i < d.getColumns().length; i++) {
+                var col = d.getColumns()[i];
+                if (col[0] != "_") {
+                    cols = cols.concat(col);
+                }
+            }
+            document.getElementById("group-by").disabled = false;
+            if ((global_group_by != null && global_group_by != undefined && global_group_by.trim().length > 0) || (global_where_clause != null && global_where_clause != undefined && global_where_clause.trim().length > 0)) {
+                //global_group_by = global_group_by.trim();
+                groupBy();
+            }
+        }, function failure(e) {
+            alert("Could not get columns: " + e);
+        }, 0, 0);
+    }
 }
 var doSearch = function doSearch() {
     offset = Math.max(offset, 0);
@@ -265,20 +290,10 @@ var doSearch = function doSearch() {
     odkCommon.setSessionVariable(table_id + ":offset", offset);
     var the_query = make_query(search, limit, offset);
     //odkData.query(table_id, the_query[0], the_query[1], the_query[2], the_query[3], the_query[4], the_query[5], the_query[6], the_query[7], the_query[8], function success(d) { // doesn't handle the_query[9] (join)
-    odkData.arbitraryQuery(table_id, "SELECT * FROM " + table_id + (the_query[0] ? " WHERE " + the_query[0] : "") + (the_query[2] ? " GROUP BY " + the_query[2] : "") + (the_query[9].length > 0 ? " JOIN " + the_query[9] : ""), the_query[1], the_query[6], the_query[7], function success(d) {
-        if (cols.length == 0) {
-            for (var i = 0; i < d.getColumns().length; i++) {
-                var col = d.getColumns()[i];
-                if (col[0] != "_") {
-                    cols = cols.concat(col);
-                }
-            }
-            document.getElementById("group-by").disabled = false;
-            if ((global_group_by != null && global_group_by != undefined && global_group_by.trim().length > 0) || (global_where_clause != null && global_where_clause != undefined && global_where_clause.trim().length > 0)) {
-                //global_group_by = global_group_by.trim();
-                groupBy();
-            }
-        }
+    getCols()
+    var raw = "SELECT " + the_query[10] + " FROM " + table_id + (the_query[9].length > 0 ? " JOIN " + the_query[9] : "") + (the_query[0] ? " WHERE " + the_query[0] : "") + (the_query[2] ? " GROUP BY " + the_query[2] : "")
+    console.log(raw);
+    odkData.arbitraryQuery(table_id, raw , the_query[1], the_query[6], the_query[7], function success(d) {
         if (d.getCount() == 0) {
             if (!try_more_cols) {
                 try_more_cols = true;
@@ -292,8 +307,12 @@ var doSearch = function doSearch() {
             try_more_cols = false;
         }
         var display_total = Number(total_rows);
-        //if (global_group_by != null && global_group_by != undefined && global_group_by.trim().length > 0) display_total -= 1
-        document.getElementById("navigation-text").innerText = "Showing rows " + (offset + (total_rows == 0 ? 0 : 1)) + "-" + (offset + d.getCount()) + " of " + display_total;
+        var rows = ""
+        if (global_group_by == null && global_where_clause == null) rows = "rows "
+        var newtext = "Showing " + rows + (offset + (total_rows == 0 ? 0 : 1)) + "-" + (offset + d.getCount()) + " of " + display_total;
+        if (global_group_by != null && global_group_by != undefined && global_group_by.trim().length > 0) newtext += " distinct values of " + get_from_allowed_group_bys(global_group_by, false);
+        if (global_where_clause != null && global_where_clause != undefined && global_where_clause.trim().length > 0) newtext += " rows where " + get_from_allowed_group_bys(global_where_clause.split(" ")[0], false) + " is " + global_where_arg
+        document.getElementById("navigation-text").innerText = newtext;
         for (var i = 0; i < d.getCount(); i++) {
             var li = document.createElement("div");
             var displays = document.createElement("span");
@@ -314,6 +333,8 @@ var doSearch = function doSearch() {
                     if (display_subcol[j][1] != null) {
                         subDisplay.appendChild(document.createTextNode(d.getData(i, display_subcol[j][1])))
                     }
+                } else if (display_subcol[j][0] == "Group by value: ") {
+                    subDisplay.appendChild(document.createTextNode(display_subcol[j][0] + pretty(d.getData(i, display_subcol[j][1]))))
                 } else {
                     subDisplay.appendChild(document.createTextNode(display_subcol[j][0](subDisplay, d.getData(i, display_subcol[j][1]), d, j)))
                 }
@@ -348,9 +369,9 @@ var doSearch = function doSearch() {
                 displays.addEventListener("click", function() {
                     if (global_group_by == null || global_group_by == undefined || global_group_by.trim().length == 0) {
                         //page_go("config/assets/detail.html#"+table_id+"/"+d.getData(i, "_id"));
-                        odkTables.openDetailView(null, table_id, d.getData(i, "_id"));
+                        odkTables.openDetailView({}, table_id, d.getData(i, "_id"));
                     } else {
-                        odkTables.launchHTML({}, clean_href() + "#" + table_id + "/" + global_group_by + " = ?/" + d.getData(i, global_group_by));
+                        odkTables.launchHTML({}, clean_href() + "#" + table_id + "/" + global_group_by + (d.getData(i, global_group_by) == null ? " IS NULL " : " = ?" ) + "/" + d.getData(i, global_group_by));
                     }
                 });
                 _delete.addEventListener("click", function() {
@@ -365,7 +386,6 @@ var doSearch = function doSearch() {
                     });
                 });
             })(edit, _delete, i, d);
-            """ + customJsSearch + """
             buttons.appendChild(edit);
             buttons.appendChild(_delete);
             li.appendChild(buttons)
@@ -378,9 +398,31 @@ var doSearch = function doSearch() {
             list.appendChild(hr);
 
         }
+        """ + customJsSearch + """
     }, function(d) {
         alert("Failure! " + d);
     });
+}
+var get_from_allowed_group_bys = function get_from_allowed_group_bys(colname, optional_pair) {
+    if (!allowed_group_bys) {
+        optional_pair = [colname, true];
+    }
+    if (!optional_pair) {
+        for (var i = 0; i < allowed_group_bys.length; i++) {
+            if (allowed_group_bys[i][0] == colname) {
+                optional_pair = allowed_group_bys[i];
+                break;
+            }
+        }
+    }
+    if (!optional_pair) return "ERROR";
+    if (optional_pair[1] === true) {
+        return displayCol(table_id, optional_pair[0]);
+    } else if (optional_pair[1] === false) {
+        return optional_pair[0];
+    } else {
+        return optional_pair[1];
+    }
 }
 var groupBy = function groupBy() {
     var list = document.getElementById("group-by-list");
@@ -398,20 +440,20 @@ var groupBy = function groupBy() {
         for (var i = 0; i < allowed_group_bys.length; i++) {
             var child = document.createElement("option");
             child.value = allowed_group_bys[i][0];
-            child.innerText = allowed_group_bys[i][1];
+            child.innerText = get_from_allowed_group_bys(allowed_group_bys[i][1], allowed_group_bys[i])
             list.appendChild(child);
             if (global_group_by == cols[i]) {
                 list.selectedOptions = [child];
             }
         }
     }
-    if (list.children.length == 1) {
-        list.selectedOptions = [list.children[0]];
-        groupByGo();
-    }
     if (global_where_clause != null && global_where_clause != undefined && global_where_clause.trim().length > 0) {
         document.getElementById("group-by").style.display = "none";
         return;
+    }
+    if (list.children.length == 1) {
+        list.selectedOptions = [list.children[0]];
+        groupByGo();
     }
     if (global_group_by != null && global_group_by != undefined && global_group_by.trim().length > 0) {
         document.getElementById("group-by").style.display = "none";
@@ -420,6 +462,9 @@ var groupBy = function groupBy() {
         list.style.display = "inline-block";
         document.getElementById("group-by").style.display = "none";
         document.getElementById("group-by-list").addEventListener("change", function() {
+            groupByGo();
+        });
+        document.getElementById("group-by-list").addEventListener("blur", function() {
             groupByGo();
         });
         //document.getElementById("group-by-go").style.display = "inline-block";
@@ -465,7 +510,7 @@ var groupByGo = function groupByGo() {
 }
 var clean_href = function clean_href() {
     var href = window.location.href.split("#")[0]
-    href = href.split("default", 2)[1]
+    href = href.split('""" + utils.appname + """', 2)[1]
     return href;
 }
 """ + customJsGeneric + """
