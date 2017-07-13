@@ -1,12 +1,11 @@
 import json, sys, os, glob
-sys.path.append(".")
-import utils
-tables = [os.path.basename(x) for x in glob.glob("/home/niles/Documents/odk/app-designer/app/config/tables/*")]
-cols = {}
-tables = utils.get_tables();
-for table in tables:
-    cols[table] = utils.yank_instance_col(table, table)
-basehtml = """
+def make(utils, filename):
+    tables = [os.path.basename(x) for x in glob.glob("/home/niles/Documents/odk/app-designer/app/config/tables/*")]
+    cols = {}
+    tables = utils.get_tables();
+    for table in tables:
+        cols[table] = utils.yank_instance_col(table, table)
+    basehtml = """
 <!doctype html>
 """ + utils.warning + """
 <html>
@@ -44,4 +43,4 @@ var ol = function ol() {
     </body>
 </html>
 """
-open("tables.html", "w").write(basehtml)
+    open(filename, "w").write(basehtml)

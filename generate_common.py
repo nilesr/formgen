@@ -1,22 +1,9 @@
 import json, sys
-sys.path.append(".")
-import utils
-# Try to pull column localizations from the database. The default app which is supposed to test everything doesn't even use this, so I'd be surprised if global_col_localize_names is ever not empty
-conn = utils.opendb()
-c = conn.cursor()
-global_col_localize_names = {}
-# interestingly enough, the aspect is set to the form name and the key is always "display_name", seems like it should be the other way around. You'd have to ask mitch for a reason for that
-for row in c.execute("SELECT _table_id, _aspect, _value FROM _key_value_store_active WHERE _partition = ? AND _key = ?;", ["Column", "display_name"]):
-    if not row[0] in global_col_localize_names:
-        global_col_localize_names[row[0]] = {}
-    if type(row[2]) == type("string"):
-        row[2] = json.loads(row[2])
-    global_col_localize_names[row[1]] = row[2]
-basejs = """
+def make(utils, filename):
+    basejs = """
 /*
 """ + utils.warning + """
 */
-var global_col_localize_names = """ + json.dumps(global_col_localize_names) + """;
 window.odkCommonDefinitions = {_tokens: {}};
 // used in both display and fake_translate, just stuff that the translatable object might be wrapped in
 var possible_wrapped = ["prompt", "title"];
@@ -158,7 +145,7 @@ window.jsonParse = function jsonParse(text) {
             new_text = new_text.replace(/\'/g, '"');
             // This is a last-ditch effort to save the situation, and it might still fail. The basic idea is
             // {'text': 'He said "Ow"'} -> {'text': 'He said \"Ow\"'} -> {"text": "He said \"Ow\""}
-            // ^ that transition will only make sense from viewing the python, if you're looking at the exported copy it's probably useless
+            // ^ that transition will only make sense from viewing the python, if you're looking at the exported js it's probably useless
             // THIS MAY STILL THROW AN EXCEPTION
             return JSON.parse(new_text)
         }
@@ -166,15 +153,20 @@ window.jsonParse = function jsonParse(text) {
 };
 // Tries to translate the given column name, and if there's no translation, at least it will make it look pretty
 // Even in the default app, no columns have translations, so whatever
-window.displayCol = function constructSimpleDisplayName(table_id, name) {
+window.displayCol = function constructSimpleDisplayName(name, metadata) {
     // Otherwise remove anything after the dot, if it's a group by column in a list view it may be in the form of table_id.column_id
     if (name.indexOf(".") > 0) {
         name = name.split(".", 2)[1]
     }
     // first check the translations we pulled from the db's kvs
-    if (table_id in global_col_localize_names) {
-        if (name in global_col_localize_names[table_id]) {
-            return display(global_col_localize_names[table_id][name]);
+    if (metadata) {
+        var kvs = metadata.keyValueStoreList;
+        var kvslen = kvs.length;
+        for (var i = 0; i < kvslen; i++) {
+            var entry = kvs[i];
+            if (entry.partition == "Column" && entry.aspect == name && (entry.key == "displayName" || entry.key == "display_name")) {
+                return display(jsonParse(entry.value));
+            }
         }
     }
     // if it's a special column, like _sync_state or _savepoint_type, just return it unchanged
@@ -196,5 +188,4 @@ window.pretty = function pretty(name) {
     return new_name;
 }
 """
-# the Makefile's clean target expects it in this location
-open("formgen_common.js", "w").write(basejs)
+    open(filename, "w").write(basejs)

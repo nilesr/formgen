@@ -1,11 +1,9 @@
 import json, sys, os, glob
-sys.path.append(".")
-import utils
 cols = {}
-tables = utils.get_tables();
-for table in tables:
-    cols[table] = utils.yank_instance_col(table, table)
-def make(filename, customHtml, customCss, customJsOl, customJsSearch, customJsGeneric):
+def make(utils, filename, customHtml, customCss, customJsOl, customJsSearch, customJsGeneric):
+    tables = utils.get_tables();
+    for table in tables:
+        cols[table] = utils.yank_instance_col(table, table)
     basehtml = """
 <!doctype html>
 """ + utils.warning + """
@@ -124,6 +122,7 @@ var global_where_clause = null;
 var global_where_arg = null;
 var global_group_by = null;
 var global_which_cols_to_select = "*"
+var metadata = null;
 
 var ol = function ol() {
     var sections = document.location.hash.substr(1).split("/");
@@ -263,6 +262,7 @@ var getCols = function getCols() {
     if (cols.length == 0) {
         // Don't use global_which_cols_to_select or we will get extra columns in there that we can't actually group by
         odkData.arbitraryQuery(table_id, "SELECT * FROM " + table_id + " WHERE 0", [], 0, 0, function success(d) {
+            metadata = d.getMetadata();
             for (var i = 0; i < d.getColumns().length; i++) {
                 var col = d.getColumns()[i];
                 if (col[0] != "_") {
@@ -294,6 +294,7 @@ var doSearch = function doSearch() {
     var raw = "SELECT " + the_query[10] + " FROM " + table_id + (the_query[9].length > 0 ? " JOIN " + the_query[9] : "") + (the_query[0] ? " WHERE " + the_query[0] : "") + (the_query[2] ? " GROUP BY " + the_query[2] : "")
     console.log(raw);
     odkData.arbitraryQuery(table_id, raw , the_query[1], the_query[6], the_query[7], function success(d) {
+        metadata = d.getMetadata();
         if (d.getCount() == 0) {
             if (!try_more_cols) {
                 try_more_cols = true;
@@ -417,7 +418,7 @@ var get_from_allowed_group_bys = function get_from_allowed_group_bys(colname, op
     }
     if (!optional_pair) return "ERROR";
     if (optional_pair[1] === true) {
-        return displayCol(table_id, optional_pair[0]);
+        return displayCol(optional_pair[0], metadata);
     } else if (optional_pair[1] === false) {
         return optional_pair[0];
     } else {
@@ -430,7 +431,7 @@ var groupBy = function groupBy() {
         for (var i = 0; i < cols.length; i++) {
             var child = document.createElement("option");
             child.value = cols[i];
-            child.innerText = displayCol(table_id, cols[i]);
+            child.innerText = displayCol(cols[i], metadata);
             list.appendChild(child);
             if (global_group_by == cols[i]) {
                 list.selectedOptions = [child];
@@ -546,5 +547,3 @@ var clean_href = function clean_href() {
     </body>
 </html>"""
     open(filename, "w").write(basehtml)
-if __name__ == "__main__":
-    make("table.html", "", "", "", "", "");

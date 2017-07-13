@@ -1,11 +1,9 @@
 import json, sys, os, glob
-sys.path.append(".")
-import utils
-cols = {}
-tables = utils.get_tables();
-for table in tables:
-    cols[table] = utils.yank_instance_col(table, table)
-def make(filename, customHtml, customCss, customJsOl, customJsGeneric):
+def make(utils, filename, customHtml, customCss, customJsOl, customJsGeneric):
+    cols = {}
+    tables = utils.get_tables();
+    for table in tables:
+        cols[table] = utils.yank_instance_col(table, table)
     basehtml = """
 <html>
 """ + utils.warning + """
@@ -34,12 +32,20 @@ def make(filename, customHtml, customCss, customJsOl, customJsGeneric):
         input, button {font-size: 16px;}
         </style>
         <script>
+// A map of table ids to their instance columns (or _id if we couldn't pull it)
 var display_cols = """ + json.dumps(cols) + """
 var table_id = null;
 var row_id = null;
+// a map you can override in customJsOnload that dictates which columns get printed and how they get printed
+// e.g. pretty printed or not, or you can give a callback for a column that returns what should get printed
+// If you leave it as this, it will just print every column as not pretty printed no matter what
+// If you set it, only the things you put in it will get set. For what to put in it, see README.md
 var colmap = [];
+// The main column. We'll try and get this from display_cols unless you override it in customJsOl
 var main_col = "";
+// Used so we only have to query the database once, just save the result object
 var cached_d = null;
+// List of tables to edit with formgen. If a table isn't found in this list, we edit it with survey instead
 var allowed_tables = """ + json.dumps(utils.get_allowed_tables()) + """;
 var global_join = "";
 var global_which_cols_to_select = "*"
@@ -82,6 +88,7 @@ var _delete = function _delete() {
 }
 var update_callback = function update_callback(d) {
     cached_d = d;
+    var metadata = d.getMetadata();
 
     document.getElementById("edit").disabled = false;
     document.getElementById("delete").disabled = false;
@@ -96,67 +103,69 @@ var update_callback = function update_callback(d) {
         var col = d.getColumns()[i];
         var val = d.getData(0, col);
         var found = false;
+        var xlscol = col;
+        var checkMedia = false;
+        var split = xlscol.split("_", 2)
+        if (["contentType", "uriFragment"].indexOf(split[1]) >= 0) {
+            xlscol = split[0]
+            pending_media[split[1]] = val;
+            checkMedia = true;
+        }
         for (var j = 0; j < colmap.length; j++) {
-            if (colmap[j][0] == col) {
+            if (colmap[j][0] == xlscol) {
                 found = colmap[j];
                 break;
             }
         }
-        var li = document.createElement("li");
+        var li = null;
         if (col == main_col) {
             li = document.getElementById("main-col")
+        } else {
+            li = document.createElement("li");
         }
+        var is_html = "text";
+        if (checkMedia && "contentType" in pending_media && "uriFragment" in pending_media) {
+            is_html = "element";
+            var type = pending_media["contentType"].split("/")[0];
+            var src = odkCommon.getRowFileAsUrl(table_id, row_id, pending_media["uriFragment"]);
+            if (type == "audio" || type == "video") {
+                var elem = document.createElement(type);
+                var source = document.createElement("source");
+                source.src = src;
+                elem.appendChild(source)
+                val = elem;
+            } else if (type == "image") {
+                var elem = document.createElement("img");
+                elem.src = src;
+                val = elem;
+            } else {
+                alert("unknown content type for column " + xlscol);
+            }
+            pending_media = {}
+        } 
         if (found) {
             if (typeof(found[1]) == "string") {
-                li.appendChild(make_li(col, found[1], val));
+                li.appendChild(make_li(xlscol, found[1], val, "text"));
             } else if (found[1] === true) {
-                li.appendChild(make_li(col, displayCol(table_id, col), pretty(val)));
+                li.appendChild(make_li(xlscol, displayCol(col, metadata), pretty(val), "text"));
             } else {
-                li.appendChild(make_li(col, "", found[1](li, val, d)));
+                li.appendChild(make_li(xlscol, "", found[1](li, val, d), "html"));
             }
         } else {
-            var checkMedia = false;
-            if (col.split("_", 2)[1] == "contentType") {
-                pending_media["contentType"] == val;
-                checkMedia = true;
-            } else if (col.split("_", 2)[1] == "uriFragment") { 
-                pending_media["uriFragment"] == val;
-                checkMedia = true;
-            } 
-            if (checkMedia && "contentType" in pending_media && "uriFragment" in pending_media) {
-                var type = pending_media["contentType"].split("/")[0];
-                var src = odkCommon.getRowFileAsUrl(table_id, row_id, pending_media["uriFragment"]);
-                if (type == "audio" || type == "video") {
-                    var elem = document.createElement(type);
-                    var source = document.createElement("source");
-                    source.src = src;
-                    elem.appendChild(source)
-                    li.appendChild(elem)
-                } else if (type == "image") {
-                    var elem = document.createElement("img");
-                    elem.src = src;
-                    li.appendChild(elem)
-                } else {
-                    checkMedia = false;
-                }
-                pending_media = {}
-            } 
             if (col[0] == "_" || colmap.length > 0) {
                 // TODO check if its _sync_state or _savepoint_type and change body appropriately
                 // Wasn't in the colmap and we have a colmap? Don't display it
                 // If we don't have a colmap, default to displaying everything (except underscore prefixed/special columns)
                 continue;
             }
-            if (!checkMedia) {
-                li.appendChild(make_li(col, displayCol(table_id, col), val));
-            }
+            li.appendChild(make_li(xlscol, displayCol(col, metadata), val, is_html));
         }
         if (col != main_col) {
             ul.appendChild(li);
         }
     }
 }
-var make_li = function make_li(column_id, column_text, value_text) {
+var make_li = function make_li(column_id, column_text, value_text, is_html) {
     var wrapper = document.createElement("span");
     wrapper.setAttribute("data-column", column_id);
     wrapper.classList.add("li-inner")
@@ -164,12 +173,14 @@ var make_li = function make_li(column_id, column_text, value_text) {
     colelem.innerText = column_text
     colelem.style.fontWeight = "bold";
     wrapper.appendChild(colelem);
-    if (column_text == "") {
+    if (is_html == "html") {
         var inner = document.createElement("span")
         inner.innerHTML = value_text;
         wrapper.appendChild(inner);
-    } else {
+    } else if (is_html == "text") {
         wrapper.appendChild(document.createTextNode(": " + value_text));
+    } else if (is_html == "element") {
+        wrapper.appendChild(value_text);
     }
     return wrapper;
 }
@@ -210,6 +221,3 @@ var edit = function() {
     </body>
 </html>"""
     open(filename, "w").write(basehtml)
-if __name__ == "__main__":
-    make("detail.html", "", "", "", "");
-
