@@ -16,48 +16,218 @@ def _make(utils, filenames):
     return filenames
 
 # Cold chain demo
-make_table("refrigerator_types_list.html", "", "", """
+make_table("aa_refrigerator_types_list.html", "", "", """
     display_subcol = [["Manufacturer: ", "manufacturer", true]];
     allowed_group_bys = [["manufacturer", "Manufacturer"]]
     display_col = "catalog_id"
     table_id = "refrigerator_types";
 """, "", "")
 
-make_table("refrigerators_list.html", "", "", """
+make_table("aa_refrigerators_list.html", "", "", """
     global_join = "refrigerator_types ON refrigerators.model_row_id = refrigerator_types._id JOIN health_facility ON refrigerators.facility_row_id = health_facility._id"
     display_subcol = [["", "model_id", true], ["Healthcare Facility: ", "facility_name", true]];
     display_col = "refrigerator_id"
     table_id = "refrigerators";
     allowed_group_bys = [["facility_row_id", "Facility"], ["model_row_id", "Model"], ["reason_not_working", true], ["utilization", "Use"], ["working_status", true], ["year", true]]
 """, "", "")
-make_detail("refrigerators_detail.html", "<div id='h4-wrapper'><h4>Basic Refrigerator Information<h4></div>", open("refrigerator_detail.css").read(),
-"""
-    document.getElementById("main-col").classList.add("main-col-wrapper")
-    document.getElementById("main-col").style.display = "block";
-    var new_elem = document.createElement("div");
-    document.getElementById("main-col").appendChild(new_elem)
-    document.getElementById("main-col").id = ""
-    new_elem.id = "main-col"
-    var h4 = document.getElementById("h4-wrapper")
-    document.body.insertBefore(h4, document.getElementById("rest"));
-    document.body.insertBefore(document.getElementsByClassName("main-col-wrapper")[0], h4);
-    main_col = "refrigerator_id";
+
+make_table("aa_health_facility_list.html", "", "", """
+    display_col = "facility_name"
+    display_subcol = [["Facility ID: ", "facility_id", true]];
+    table_id = "health_facility";
+    //allowed_group_bys = [["facility_row_id", "Facility"], ["model_row_id", "Model"], ["reason_not_working", true], ["utilization", "Use"], ["working_status", true], ["year", true]]
+""", "", "")
+
+make_detail("aa_refrigerators_detail.html", """
+    <div class="main-col-wrapper">
+        <div id="inject-refrigerator_id">Loading...</div>
+    </div>
+    <div class='h4-wrapper'><h4>Basic Refrigerator Information<h4></div>
+    <ul>
+        <li id='inject-power_type'></li>
+        <li id='inject-working_status'></li>
+        <li id='inject-voltage_regulator'></li>
+        <li id='inject-power_source'></li>
+        <li id='inject-reason_not_working'></li>
+        <li id='inject-utilization'></li>
+        <li id='inject-working_status'></li>
+
+        <li id='inject-facility'></li>
+    </ul>
+    <button disabled id='open_model'>Model Information</button>
+    <br />
+    <button disabled id='open_hf'>Health Facility Information</button>
+        """, open("refrigerator_detail.css").read(), open("refrigerator_detail.js", "r").read() + """
+
+    var model_callback = function model_callback(e, c, d) {
+        var btn = document.getElementById("open_model");
+        var model = d.getData(0, "catalog_id"); // from join, not actually the model id
+        var model_row_id = d.getData(0, "model_row_id");
+        btn.disabled = false;
+        btn.addEventListener("click", function() {
+            odkTables.openDetailView(null, "refrigerator_types", model_row_id);
+        });
+        return "<b>Model: </b>" + model;
+    }
+    var hf_callback = function hf_callback(e, c, d) {
+        var btn = document.getElementById("open_hf");
+        var hf = d.getData(0, "facility_name"); // from join, not actually the hf id
+        var hf_row_id = d.getData(0, "facility_row_id");
+        btn.disabled = false;
+        btn.addEventListener("click", function() {
+            alert(hf_row_id);
+            odkTables.openDetailView(null, "health_facility", hf_row_id, "config/assets/aa_health_facility_detail.html#health_facility/" + hf_row_id);
+        });
+        build_generic_callback("facility_id", true, "Facility")
+        return "";
+    }
+
+    main_col = "";
     global_join = "refrigerator_types ON refrigerators.model_row_id = refrigerator_types._id JOIN health_facility ON refrigerators.facility_row_id = health_facility._id"
     colmap = [
-        ["power_type", function(e, c, d) {return "<b>Power:</b> " + pretty(c);}],
-        ["facility_row_id", function(e, c, d) {return "<b>Facility:</b> " + d.getData(0, "facility_name");}], // from join, not actually the facility id
-        ["model_row_id", function(e, c, d) {return "<b>Model:</b> " + d.getData(0, "catalog_id");}], // from join, not actually the model id
+        //["power_type", function(e, c, d) {return "<b>Power:</b> " + pretty(c);}],
+        ["facility_row_id", hf_callback], // from join, not actually the facility id
+        ["model_row_id", model_callback],
         ["working_status", function(e, c, d) {return "<b>Status:</b> " + pretty(c);}],
-        ["utilization", true],
-        ["voltage_regulator", true],
-        ["power_source", true],
-        ["reason_not_working", true],
-        ["utilization", "In use?"],
-        ["working_status", "Working?"],
-        ["refrigerator_id", function(e, c, d) {return "Refrigerator " + c}]
+        ["voltage_regulator", build_generic_callback("voltage_regulator", true)],
+        ["power_source", build_generic_callback("power_source", true)],
+        ["reason_not_working", build_generic_callback("reason_not_working", true)],
+        ["utilization", build_generic_callback("utilization", true, "Use?")],
+        ["refrigerator_id", build_generic_callback("refrigerator_id", true)]
     ]
 """, "")
-# TODO ADD View Model Information, View Facility Information buttons
+
+make_detail("aa_refrigerator_types_detail.html", """
+    <div class="main-col-wrapper">
+        <div id="inject-model_id" style='line-height: 3em;'>Loading...</div>
+        <div id="inject-catalog_id" style='line-height: 3em;'>Loading...</div>
+    </div>
+    <div class="h4-wrapper"><h4>Model Information</h4></div>
+    <ul>
+        <li id='inject-manufacturer'></li>
+        <li id='inject-power_source'></li>
+        <li id='inject-refrigerator_gross_volume'></li>
+        <li id='inject-freezer_gross_volume'></li>
+        <li id='inject-equipment_type'></li>
+        <li id='inject-climate_zone'></li>
+        <li id='inject-refrigerator_net_volume'></li>
+        <li id='inject-freezer_net_volume'></li>
+    </ul>
+    <div id="inject-refrigerator_picture" style="text-align: center;"></div>
+    <div style="text-align: center;">
+        <button disabled id='open_model'>Loading...</button>
+    </div>
+        """, open("refrigerator_detail.css").read(), open("refrigerator_detail.js", "r").read() + """
+
+    main_col = "";
+    //global_join = "refrigerator_types ON refrigerators.model_row_id = refrigerator_types._id JOIN health_facility ON refrigerators.facility_row_id = health_facility._id"
+    var mid_callback = function mid_callback(e, c, d) {
+        generic_callback(e, c, d, "model_id", true);
+        document.getElementById("open_model").innerHTML = "View All " + c + " Refrigerators (<span id='refrig_with_this_model_count'>Loading...</span>)"
+        document.getElementById("open_model").disabled = false;
+        document.getElementById("open_model").addEventListener("click", function click() {
+            odkTables.launchHTML(null, "config/assets/aa_refrigerators_list.html#refrigerators/model_row_id = ?/" + row_id);
+        });
+        odkData.arbitraryQuery("refrigerators", "SELECT COUNT(*) FROM refrigerators WHERE model_row_id = ?;--", [row_id], 1, 0, function success(d) {
+            document.getElementById("refrig_with_this_model_count").innerText = d.getData(0, "COUNT(*)");
+        });
+    }
+    colmap = [
+        ["manufacturer", build_generic_callback("manufacturer", true)],
+        ["power_source", build_generic_callback("power_source", function(i) { return pretty(jsonParse(i).join(", ")); })],
+        ["refrigerator_gross_volume", build_generic_callback("refrigerator_gross_volume", " m<sup>3</sup>")],
+        ["freezer_gross_volume", build_generic_callback("freezer_gross_volume", " m<sup>3</sup>")],
+        ["equipment_type", build_generic_callback("equipment_type", true)],
+        ["climate_zone", build_generic_callback("climate_zone", true)],
+        ["refrigerator_net_volume", build_generic_callback("refrigerator_net_volume", " m<sup>3</sup>")],
+        ["freezer_net_volume", build_generic_callback("freezer_net_volume", " m<sup>3</sup>")],
+        ["model_id", mid_callback],
+        ["catalog_id", build_generic_callback("catalog_id", true)],
+        ["refrigerator_picture", function(e,c,d){document.getElementById("inject-refrigerator_picture").appendChild(c)}]
+    ]
+""", "")
+
+
+
+
+make_detail("aa_health_facility_detail.html", """
+    <div class="main-col-wrapper">
+        <div id="inject-facility_name">Loading...</div>
+    </div>
+    <div class="h4-wrapper"><h4>Basic Facility Information</h4></div>
+    <ul>
+        <li id='inject-facility_id'></li>
+        <li id='inject-facility_type'></li>
+        <li id='inject-facility_ownership'></li>
+        <li id='inject-facility_population'></li>
+        <li id='inject-facility_coverage'></li>
+        <li id='inject-admin_region'></li>
+    </ul>
+    <div class="h4-wrapper"><h4>Power Information</h4></div>
+    <ul>
+        <li id='inject-electricity_source'></li>
+        <li id='inject-grid_power_availability'></li>
+        <li id='inject-gas_availability'></li>
+        <li id='inject-kerosene_availability'></li>
+        <li id='inject-solar_suitable_climate'></li>
+        <li id='inject-solar_suitable_site'></li>
+    </ul>
+    <div class="h4-wrapper"><h4>Location Information</h4></div>
+    <ul>
+        <li id='inject-Location_latitude'></li>
+        <li id='inject-Location_longitude'></li>
+        <li id='inject-climate_zone'></li>
+    </ul>
+    <div class="h4-wrapper"><h4>Stock Information</h4></div>
+    <ul>
+        <li id='inject-distance_to_supply'></li>
+        <li id='inject-vaccine_supply_interval'></li>
+        <li id='inject-vaccine_reserve_stock_requirement'></li>
+        <li id='inject-vaccine_supply_mode'></li>
+    </ul>
+    <div style="text-align: center;">
+        <button disabled id='refrigerator_inventory'>Loading...</button>
+        <br />
+        <button onClick="odkTables.launchHTML(null, "/config/assets/formgen/refrigerators#" + newGuid())">Add refrigerator</button>
+    </div>
+        """, open("refrigerator_detail.css").read(), open("refrigerator_detail.js", "r").read() + """
+
+    main_col = "";
+    //global_join = "refrigerator_types ON refrigerators.model_row_id = refrigerator_types._id JOIN health_facility ON refrigerators.facility_row_id = health_facility._id"
+    var fname_callback = function fname_callback(e, c, d) {
+        generic_callback(e, c, d, "facility_name", true, "Health Facility ID");
+        document.getElementById("refrigerator_inventory").innerHTML = "Refrigerator Inventory (<span id='refrig_with_this_hfid_count'>Loading...</span>)"
+        document.getElementById("refrigerator_inventory").disabled = false;
+        document.getElementById("refrigerator_inventory").addEventListener("click", function click() {
+            odkTables.launchHTML(null, "config/assets/aa_refrigerators_list.html#refrigerators/facility_row_id = ?/" + row_id);
+        });
+        odkData.arbitraryQuery("refrigerators", "SELECT COUNT(*) FROM refrigerators WHERE facility_row_id = ?;--", [row_id], 1, 0, function success(d) {
+            document.getElementById("refrig_with_this_hfid_count").innerText = d.getData(0, "COUNT(*)");
+        });
+    }
+    colmap = [
+        ['facility_name', fname_callback],
+        ['facility_id', build_generic_callback("facility_id", true, "Health Facility ID")],
+        ['facility_type', build_generic_callback("facility_type", true)],
+        ['facility_ownership', build_generic_callback("facility_ownership", true, "Ownership")],
+        ['facility_population', build_generic_callback("facility_population", true, "Population")],
+        ['facility_coverage', build_generic_callback("facility_coverage", true, "Coverage")],
+        ['admin_region', build_generic_callback("admin_region", true, "Admin Region")],
+        ['electricity_source', build_generic_callback("electricity_source", true)],
+        ['grid_power_availability', build_generic_callback("grid_power_availability", true, "Grid Availability")],
+        ['gas_availability', build_generic_callback("gas_availability", true)],
+        ['kerosene_availability', build_generic_callback("kerosene_availability", true)],
+        ['solar_suitable_climate', build_generic_callback("solar_suitable_climate", true, "Solar Suitable Climate?")],
+        ['solar_suitable_site', build_generic_callback("solar_suitable_site", true, "Solar Suitable Site?")],
+        ['Location_latitude', build_generic_callback("Location_latitude", true, "Latitude (GPS)")],
+        ['Location_longitude', build_generic_callback("Location_longitude", true, "Longitude (GPS)")],
+        ['climate_zone', build_generic_callback("climate_zone", true, "Climate")],
+        ['distance_to_supply', build_generic_callback("distance_to_supply", true, "Distance to Supply Point")],
+        ['vaccine_supply_interval', build_generic_callback("vaccine_supply_interval", true)],
+        ['vaccine_reserve_stock_requirement', build_generic_callback("vaccine_reserve_stock_requirement", true, "Vaccine Reserve Stock Req")],
+        ['vaccine_supply_mode', build_generic_callback("vaccine_supply_mode", true)],
+    ]
+""", "")
 
 
 make_table("plot.html", "", "", """
@@ -66,7 +236,7 @@ make_table("plot.html", "", "", """
 """, "", "")
 
 
-make_table("Tea_houses.html", "", "", """
+make_table("Tea_houses_list.html", "", "", """
     global_join = "Tea_types ON Tea_types._id = Tea_houses.Specialty_Type_id"
     global_which_cols_to_select = "*, Tea_types.Name as ttName"
     display_subcol = [["Specialty: ", "ttName", true], ["", "District", false], [", ", "Neighborhood", true]];

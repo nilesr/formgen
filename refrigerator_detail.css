@@ -1,7 +1,10 @@
+#rest {
+   display: none;
+}
 body {
 	font-family: arial;
 }
-#h4-wrapper {
+.h4-wrapper {
 	margin-top: 1.5em;
 	text-align: center;
 	display: block;
@@ -14,7 +17,7 @@ h4 {
 	display: inline-block;
 	height: 25px;
 	margin: 0px 0px;
-	color: white; /* TODO VERIFY */
+	color: #eeeeee;
 }
 .main-col-wrapper {
 	background: repeating-radial-gradient(mediumaquamarine, lightseagreen, teal);
@@ -25,9 +28,8 @@ h4 {
 	margin-top: 3.5em;
 	text-align: center;
 	font-size: 150%;
-
 }
-#back, #edit, #delete {
+button {
 	/*margin-top: -4em;*/
 	padding: 1em 10%;
 	border: 2px solid teal;
@@ -42,10 +44,12 @@ li {
 }
 ul {
 	columns: 2;
+	-webkit-columns: 2;
 	list-style-type: none;
+	padding-left: 20px;
 }
-span[data-column='refrigerator_id'] {
-	border-bottom-style: none;
+.main-col-wrapper > div {
+   border-bottom-style: none;
 }
 #edit {
 	margin-left: 8px;

@@ -7,8 +7,9 @@ appdesigner = "/home/niles/Documents/odk/app-designer"
 def do_command(push, command):
     if type(command) != type([]):
         raise Exception("Unsafe subprocess command")
-    print(" ".join(command))
-    if push: subprocess.check_call(command)
+    if push:
+        print(" ".join(command))
+        subprocess.check_call(command)
 
 class utils():
     # Added to the top of every html file, a simple warning followed by 100 blank lines so the reader notices it
@@ -47,14 +48,37 @@ class utils():
     # Returns a list of all the tables that formgen was able to successfully generate html files for
     # Pulls it from the device due to how the Makefile is set up, the local directories will have already been removed
     def get_allowed_tables(self):
-        return [x.split("/")[1] for x in self.filenames if len(x.split("/")) > 2 and x.split("/")[2] == "/index.html" and x.split("/")[0] == "formgen"]
+        return [x.split("/")[1] for x in self.filenames if len(x.split("/")) > 2 and x.split("/")[2] == "index.html" and x.split("/")[0] == "formgen"]
     # Returns a list of every table in app designer
     def get_tables(self):
         return [os.path.basename(x) for x in glob.glob(appdesigner + "/app/config/tables/*")]
+    def adrun(self, command, null):
+        olddir = os.getcwd();
+        os.chdir(self.appdesigner);
+        if type(command) != type([]): raise Exception("Unsafe command type")
+        args = [command]
+        kwargs = {}
+        if null:
+            kwargs["stdout"] = open(os.devnull, "w")
+        result = subprocess.check_output(*args, **kwargs).decode("utf-8")
+        os.chdir(olddir);
+        return result
     # Checks out the adbranch branch in app designer
     def checkout(self, adbranch):
-        null = open(os.devnull, "w")
-        subprocess.check_call(["bash", "-c", "cd " + appdesigner + "; git checkout " + adbranch], stdout=null)
+        try:
+            self.oldbranch = self.adrun(["git", "symbolic-ref", "--quiet", "HEAD"], False).strip().split("/")[-1]
+        except:
+            self.oldbranch = self.adrun(["git", "rev-parse", "HEAD"], False).strip()
+        result = self.adrun(["git", "diff", "--name-status"], False)
+        self.stashed = False
+        if len(result.strip()) > 0:
+            self.stashed = True
+            self.adrun(["git", "stash"], False)
+        self.adrun(["git", "checkout", adbranch], False)
+    def restore_ad(self):
+        self.adrun(["git", "checkout", self.oldbranch], False)
+        if self.stashed:
+            self.adrun(["git", "stash", "pop"], False)
     def make(self, appname, adbranch, push):
         if appname == "fail" or adbranch == "fail":
             raise Exception("No branch or appname given")
@@ -94,5 +118,6 @@ class utils():
             do_command(push, ["rm", f])
         for f in dirs:
             do_command(push, ["rm", "-rf", f])
+        self.restore_ad();
 
 def make(appname, adbranch, push): utils().make(appname, adbranch, push)

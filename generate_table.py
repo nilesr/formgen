@@ -162,10 +162,18 @@ var ol = function ol() {
         document.getElementById("search-box").value = search;
     }
     if (table_id.length == 0) {
-        list.innerText = "No table specified!";
-        document.location.href = "/""" + utils.appname + """/config/assets/tables.html"
-        return;
+        alert("No table id! Please set it in customJsOl or pass it in the url hash");
+        odkData.getViewData(function success(d) {
+            table_id = d.getTableId();
+            olHasTableId();
+        }, function failure(e) {
+            alert(e);
+        }, 0, 0);
+    } else {
+        olHasTableId();
     }
+}
+var olHasTableId = function olHasTableId() {
     document.getElementById("table_id").innerText = display(localized_tables[table_id]);
     odkCommon.registerListener(function doaction_listener() {
         var a = odkCommon.viewFirstQueuedAction();
@@ -202,9 +210,9 @@ var update_total_rows = function update_total_rows(force) {
         alert("Unexpected error " + e);
     };
     if (global_group_by != null && global_group_by != undefined && global_group_by.trim().length > 0) {
-        odkData.arbitraryQuery(table_id, "SELECT COUNT(*) FROM (SELECT * FROM " + table_id + " GROUP BY " + the_query[2] + ")", the_query[1], the_query[6], the_query[7], success, failure);
+        odkData.arbitraryQuery(table_id, "SELECT COUNT(*) FROM (SELECT * FROM " + table_id + (the_query[9].length > 0 ? " JOIN " + the_query[9] : "") + " GROUP BY " + the_query[2] + ")", the_query[1], the_query[6], the_query[7], success, failure);
     } else {
-        odkData.arbitraryQuery(table_id, "SELECT COUNT(*) FROM " + table_id + (the_query[0] ? " WHERE " + the_query[0] : "") + (the_query[2] ? " GROUP BY " + the_query[2] : ""), the_query[1], the_query[6], the_query[7], success, failure);
+        odkData.arbitraryQuery(table_id, "SELECT COUNT(*) FROM " + table_id + (the_query[9].length > 0 ? " JOIN " + the_query[9] : "") + (the_query[0] ? " WHERE " + the_query[0] : "") + (the_query[2] ? " GROUP BY " + the_query[2] : ""), the_query[1], the_query[6], the_query[7], success, failure);
     }
 }
 var next = function next() {
@@ -232,7 +240,7 @@ var make_query = function make_query(search, limit, offset) {
             if (i != 0) {
                 where += " OR "
             }
-            where += cols[i] + " LIKE ? "
+            where += cols[i] + " LIKE ?"
             query_args = query_args.concat("%" + search + "%");
         }
         where += ")"
@@ -279,6 +287,8 @@ var getCols = function getCols() {
         }, 0, 0);
     }
 }
+var global_line_height = null;
+var global_displays_width = null;
 var doSearch = function doSearch() {
     offset = Math.max(offset, 0);
     document.getElementById("prev").disabled = offset <= 0
@@ -297,8 +307,10 @@ var doSearch = function doSearch() {
         metadata = d.getMetadata();
         if (d.getCount() == 0) {
             if (!try_more_cols) {
+                list.innerText = "Still searching...";
                 try_more_cols = true;
                 update_total_rows(true)
+                return;
             } else {
                 list.innerText = "No results";
                 document.getElementById("navigation-text").innerText = ""
@@ -324,6 +336,7 @@ var doSearch = function doSearch() {
             mainDisplay.innerText = d.getData(i, display_col);
             displays.appendChild(mainDisplay)
             var subDisplay = null;
+            var addedSubDisplays = 0
             for (var j = 0; j < display_subcol.length; j++) {
                 if (subDisplay == null) {
                     subDisplay = document.createElement("div")
@@ -342,11 +355,13 @@ var doSearch = function doSearch() {
                 //subDisplay.innerText = d.getData(i, display_subcol[j][1]);
                 if (display_subcol[j][2]) {
                     displays.appendChild(subDisplay)
+                    addedSubDisplays++;
                     subDisplay = null;
                 }
             }
             if (subDisplay != null) {
                 displays.appendChild(subDisplay)
+                addedSubDisplays++;
             }
             li.appendChild(displays);
             li.classList.add("li");
@@ -368,8 +383,8 @@ var doSearch = function doSearch() {
                     }
                 });
                 displays.addEventListener("click", function() {
+                    console.log(global_group_by);
                     if (global_group_by == null || global_group_by == undefined || global_group_by.trim().length == 0) {
-                        //page_go("config/assets/detail.html#"+table_id+"/"+d.getData(i, "_id"));
                         odkTables.openDetailView({}, table_id, d.getData(i, "_id"));
                     } else {
                         odkTables.launchHTML({}, clean_href() + "#" + table_id + "/" + global_group_by + (d.getData(i, global_group_by) == null ? " IS NULL " : " = ?" ) + "/" + d.getData(i, global_group_by));
@@ -394,10 +409,20 @@ var doSearch = function doSearch() {
             hr.classList.add("status");
             hr.setAttribute("data-status", d.getData(i, "_savepoint_type"))
             list.appendChild(li);
-            li.style.lineHeight = li.clientHeight.toString() + "px";
-            displays.style.width = (li.clientWidth - buttons.clientWidth - 10).toString() + "px";
+            // We cache these two values because they're going to be the same for each item in the list, and clientWidth and clientHeight are very expensive
+            // I used to call clientHeight and clientWidth for each iteration of this loop and the callback took ~250ms, now it takes ~40 for 20 rows
+            // For 1000 rows, ~850ms with the caching, almost 60 seconds without
+            // This vertically centers the buttons
+            if (global_line_height == null) {
+                global_line_height = li.clientHeight.toString() + "px";
+            }
+            li.style.lineHeight = global_line_height;
+            // This makes it so if you click anywhere on the row other than the buttons, it opens a detail view
+            if (global_displays_width == null) {
+                global_displays_width = (li.clientWidth - buttons.clientWidth - 10).toString() + "px";
+            }
+            displays.style.width = global_displays_width;
             list.appendChild(hr);
-
         }
         """ + customJsSearch + """
     }, function(d) {
@@ -416,7 +441,7 @@ var get_from_allowed_group_bys = function get_from_allowed_group_bys(colname, op
             }
         }
     }
-    if (!optional_pair) return "ERROR";
+    if (!optional_pair) return displayCol(colname, metadata);
     if (optional_pair[1] === true) {
         return displayCol(optional_pair[0], metadata);
     } else if (optional_pair[1] === false) {

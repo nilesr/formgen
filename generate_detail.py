@@ -105,10 +105,11 @@ var update_callback = function update_callback(d) {
         var found = false;
         var xlscol = col;
         var checkMedia = false;
-        var split = xlscol.split("_", 2)
-        if (["contentType", "uriFragment"].indexOf(split[1]) >= 0) {
-            xlscol = split[0]
-            pending_media[split[1]] = val;
+        var split = xlscol.split("_")
+        if (["contentType", "uriFragment"].indexOf(split[split.length - 1]) >= 0) {
+            var tail_fragment = split[split.length - 1];
+            xlscol = split.reverse().slice(1).reverse().join("_")
+            pending_media[tail_fragment] = val;
             checkMedia = true;
         }
         for (var j = 0; j < colmap.length; j++) {
@@ -124,24 +125,28 @@ var update_callback = function update_callback(d) {
             li = document.createElement("li");
         }
         var is_html = "text";
-        if (checkMedia && "contentType" in pending_media && "uriFragment" in pending_media) {
-            is_html = "element";
-            var type = pending_media["contentType"].split("/")[0];
-            var src = odkCommon.getRowFileAsUrl(table_id, row_id, pending_media["uriFragment"]);
-            if (type == "audio" || type == "video") {
-                var elem = document.createElement(type);
-                var source = document.createElement("source");
-                source.src = src;
-                elem.appendChild(source)
-                val = elem;
-            } else if (type == "image") {
-                var elem = document.createElement("img");
-                elem.src = src;
-                val = elem;
+        if (checkMedia) {
+            if ("contentType" in pending_media && "uriFragment" in pending_media) {
+                is_html = "element";
+                var type = pending_media["contentType"].split("/")[0];
+                var src = odkCommon.getRowFileAsUrl(table_id, row_id, pending_media["uriFragment"]);
+                if (type == "audio" || type == "video") {
+                    var elem = document.createElement(type);
+                    var source = document.createElement("source");
+                    source.src = src;
+                    elem.appendChild(source)
+                    val = elem;
+                } else if (type == "image") {
+                    var elem = document.createElement("img");
+                    elem.src = src;
+                    val = elem;
+                } else {
+                    alert("unknown content type for column " + xlscol);
+                }
+                pending_media = {}
             } else {
-                alert("unknown content type for column " + xlscol);
+                continue;
             }
-            pending_media = {}
         } 
         if (found) {
             if (typeof(found[1]) == "string") {
