@@ -18,7 +18,7 @@ def _make(utils, filenames):
 # Cold chain demo
 make_table("aa_refrigerator_types_list.html", "", "", """
     display_subcol = [["Manufacturer: ", "manufacturer", true]];
-    allowed_group_bys = [["manufacturer", "Manufacturer"]]
+    allowed_group_bys = ["manufacturer", "climate_zone", "equipment_type"]
     display_col = "catalog_id"
     table_id = "refrigerator_types";
 """, "", "")
@@ -35,7 +35,11 @@ make_table("aa_health_facility_list.html", "", "", """
     display_col = "facility_name"
     display_subcol = [["Facility ID: ", "facility_id", true]];
     table_id = "health_facility";
-    //allowed_group_bys = [["facility_row_id", "Facility"], ["model_row_id", "Model"], ["reason_not_working", true], ["utilization", "Use"], ["working_status", true], ["year", true]]
+    // TODO
+    allowed_group_bys = ["admin_region", "climate_zone", "delivery_type", "electricity_source", ["facility_ownership", "Ownership"], "facility_type", ["regionLevel1", "Region level 1"], ["regionLevel2", "Region level 2"], "storage_type", "solar_suitable_climate", "solar_suitable_type", "vaccine_supply_mode", "vaccine_reserve_stock_requirement"];
+
+    global_which_cols_to_select = "*, (SELECT COUNT(*) FROM refrigerators WHERE facility_row_id = health_facility._id) AS refrigerator_count"
+    display_subcol = [["Facility ID: ", "facility_id", true], ["Refrigerators: ", "refrigerator_count", true]]
 """, "", "")
 
 make_detail("aa_refrigerators_detail.html", """
@@ -44,13 +48,13 @@ make_detail("aa_refrigerators_detail.html", """
     </div>
     <div class='h4-wrapper'><h4>Basic Refrigerator Information<h4></div>
     <ul>
-        <li id='inject-power_type'></li>
+        <li id='inject-facility_name'></li>
+        <li id='inject-year'></li>
         <li id='inject-working_status'></li>
-        <li id='inject-voltage_regulator'></li>
-        <li id='inject-power_source'></li>
         <li id='inject-reason_not_working'></li>
-        <li id='inject-utilization'></li>
-        <li id='inject-working_status'></li>
+        <li id='inject-catalog_id'></li>
+        <li id='inject-tracking_id'></li>
+        <li id='inject-voltage_regulator'></li>
 
         <li id='inject-facility'></li>
     </ul>
@@ -67,7 +71,8 @@ make_detail("aa_refrigerators_detail.html", """
         btn.addEventListener("click", function() {
             odkTables.openDetailView(null, "refrigerator_types", model_row_id);
         });
-        return "<b>Model: </b>" + model;
+        build_generic_callback("catalog_id", true, "catalog_id")
+        return "";
     }
     var hf_callback = function hf_callback(e, c, d) {
         var btn = document.getElementById("open_hf");
@@ -75,26 +80,26 @@ make_detail("aa_refrigerators_detail.html", """
         var hf_row_id = d.getData(0, "facility_row_id");
         btn.disabled = false;
         btn.addEventListener("click", function() {
-            alert(hf_row_id);
             odkTables.openDetailView(null, "health_facility", hf_row_id, "config/assets/aa_health_facility_detail.html#health_facility/" + hf_row_id);
         });
-        build_generic_callback("facility_id", true, "Facility")
+        build_generic_callback("facility_name", true, "Facility")
         return "";
     }
 
     main_col = "";
     global_join = "refrigerator_types ON refrigerators.model_row_id = refrigerator_types._id JOIN health_facility ON refrigerators.facility_row_id = health_facility._id"
     colmap = [
-        //["power_type", function(e, c, d) {return "<b>Power:</b> " + pretty(c);}],
-        ["facility_row_id", hf_callback], // from join, not actually the facility id
-        ["model_row_id", model_callback],
+        ["facility_row_id", hf_callback],
+        ["year", build_generic_callback("year", true, "Year Installed: ")],
         ["working_status", function(e, c, d) {return "<b>Status:</b> " + pretty(c);}],
-        ["voltage_regulator", build_generic_callback("voltage_regulator", true)],
-        ["power_source", build_generic_callback("power_source", true)],
         ["reason_not_working", build_generic_callback("reason_not_working", true)],
-        ["utilization", build_generic_callback("utilization", true, "Use?")],
+        ["model_row_id", model_callback],
+        ["tracking_number", build_generic_callback("tracking_number", true)]
+        ["voltage_regulator", build_generic_callback("voltage_regulator", true)],
+        //["power_source", build_generic_callback("power_source", true)],
+        //["utilization", build_generic_callback("utilization", true, "Use?")],
         ["refrigerator_id", build_generic_callback("refrigerator_id", true)]
-    ]
+    ];
 """, "")
 
 make_detail("aa_refrigerator_types_detail.html", """
@@ -120,7 +125,7 @@ make_detail("aa_refrigerator_types_detail.html", """
         """, open("refrigerator_detail.css").read(), open("refrigerator_detail.js", "r").read() + """
 
     main_col = "";
-    //global_join = "refrigerator_types ON refrigerators.model_row_id = refrigerator_types._id JOIN health_facility ON refrigerators.facility_row_id = health_facility._id"
+    global_which_cols_to_select = "*, (SELECT COUNT(*) FROM refrigerators WHERE model_row_id = refrigerator_types._id) as refrig_with_this_model_count"
     var mid_callback = function mid_callback(e, c, d) {
         generic_callback(e, c, d, "model_id", true);
         document.getElementById("open_model").innerHTML = "View All " + c + " Refrigerators (<span id='refrig_with_this_model_count'>Loading...</span>)"
@@ -128,9 +133,7 @@ make_detail("aa_refrigerator_types_detail.html", """
         document.getElementById("open_model").addEventListener("click", function click() {
             odkTables.launchHTML(null, "config/assets/aa_refrigerators_list.html#refrigerators/model_row_id = ?/" + row_id);
         });
-        odkData.arbitraryQuery("refrigerators", "SELECT COUNT(*) FROM refrigerators WHERE model_row_id = ?;--", [row_id], 1, 0, function success(d) {
-            document.getElementById("refrig_with_this_model_count").innerText = d.getData(0, "COUNT(*)");
-        });
+        document.getElementById("refrig_with_this_model_count").innerText = d.getData(0, "refrig_with_this_model_count");
     }
     colmap = [
         ["manufacturer", build_generic_callback("manufacturer", true)],
@@ -193,7 +196,7 @@ make_detail("aa_health_facility_detail.html", """
         """, open("refrigerator_detail.css").read(), open("refrigerator_detail.js", "r").read() + """
 
     main_col = "";
-    //global_join = "refrigerator_types ON refrigerators.model_row_id = refrigerator_types._id JOIN health_facility ON refrigerators.facility_row_id = health_facility._id"
+    global_which_cols_to_select = "*, (SELECT COUNT(*) FROM refrigerators WHERE facility_row_id = health_facility._id) as refrig_with_this_hfid_count"
     var fname_callback = function fname_callback(e, c, d) {
         generic_callback(e, c, d, "facility_name", true, "Health Facility ID");
         document.getElementById("refrigerator_inventory").innerHTML = "Refrigerator Inventory (<span id='refrig_with_this_hfid_count'>Loading...</span>)"
@@ -201,9 +204,7 @@ make_detail("aa_health_facility_detail.html", """
         document.getElementById("refrigerator_inventory").addEventListener("click", function click() {
             odkTables.launchHTML(null, "config/assets/aa_refrigerators_list.html#refrigerators/facility_row_id = ?/" + row_id);
         });
-        odkData.arbitraryQuery("refrigerators", "SELECT COUNT(*) FROM refrigerators WHERE facility_row_id = ?;--", [row_id], 1, 0, function success(d) {
-            document.getElementById("refrig_with_this_hfid_count").innerText = d.getData(0, "COUNT(*)");
-        });
+        document.getElementById("refrig_with_this_hfid_count").innerText = d.getData(0, "refrig_with_this_hfid_count");
     }
     colmap = [
         ['facility_name', fname_callback],
@@ -211,7 +212,7 @@ make_detail("aa_health_facility_detail.html", """
         ['facility_type', build_generic_callback("facility_type", true)],
         ['facility_ownership', build_generic_callback("facility_ownership", true, "Ownership")],
         ['facility_population', build_generic_callback("facility_population", true, "Population")],
-        ['facility_coverage', build_generic_callback("facility_coverage", true, "Coverage")],
+        ['facility_coverage', build_generic_callback("facility_coverage", "%", "Coverage")],
         ['admin_region', build_generic_callback("admin_region", true, "Admin Region")],
         ['electricity_source', build_generic_callback("electricity_source", true)],
         ['grid_power_availability', build_generic_callback("grid_power_availability", true, "Grid Availability")],

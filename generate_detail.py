@@ -78,8 +78,7 @@ var get_row_id = function get_row_id(callback) {
 }
 var _delete = function _delete() {
     if (confirm("Please confirm deletion of row " + row_id)) {
-        // Escape the LIMIT 1
-        odkData.arbitraryQuery(table_id, "DELETE FROM " + table_id + " WHERE _id = ?;--", [row_id], 1000, 0, function(d) {
+        odkData.deleteRow(table_id, null, row_id, function(d) {
             odkCommon.closeWindow();
         }, function(e) {
             alert("Failed to _delete row - " + JSON.stringify(e));

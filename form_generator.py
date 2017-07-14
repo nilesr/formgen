@@ -1,16 +1,10 @@
 import json, sys, os, glob, traceback, subprocess, random
 # TODO items
 # Must have before release!
-#   - test EVERYTHING I'm now putting in tokens
 #   - query filters
-#   - More filtering options in generate_table
-#   - Check css on smaller devices (emulator?), I think the buttons are way too big
+#   - More filtering options in generate_table (or new pages)
 #   - Display sync state in table, sync state and savepoint type in detail
-#   - Can finalize a totally empty form, row never gets inserted
-#   - Check permissions?
-#   - make an easy way to parameterize things for cold chain demo, maybe hardcode empty html for different h4 sections, column ids, etc then getElementById.innerText set it in colmap
-#       - Will need to make it so if the colmap callback function returns null it doesn't add the node
-#   - Better documentation!
+#   - Better documentation for generate_table, generate_detail
 # Other things not implemented
 #   - take picture is broken - SURVEY BUG
 #   - Figure out when to calculate assigns (and implement calculates object)
@@ -181,7 +175,7 @@ def generate_all(utils, filenames):
                         choice_filter = " data-choice-filter=\""+token+"\""
 
                     # All the attributes that any element append to the screen should have
-                    attrs = " " + " ".join([dbcol, required, calculation, hint, constraint, constraint_message]) + " "
+                    attrs = " " + " ".join([dbcol, required, calculation, hint, constraint, constraint_message, choice_filter]) + " "
                     # All prompts must have the class prompt. It can either just put "<div " + _class + ">their stuff</div>", or if it needs
                     # its own classes, it can use wrapped_class like "<div class='some-prompt-type " + wrapped_class + "'>stuff</div>"
                     wrapped_class = "prompt"
@@ -316,7 +310,7 @@ def generate_all(utils, filenames):
         min-height: 40px;
     }
     #odk-container {
-        padding: 8px 5% 8px 5%;
+        padding: 8px 5% 100px 5%;
     }
     #back, #cancel {
         float: left;
@@ -361,6 +355,11 @@ def generate_all(utils, filenames):
         border-radius: 10px;
         min-width: 50%;
         background-color: lightgrey;
+    }
+    @media screen and (max-width: 480px) {
+        .select-one, .select-multiple, .select-one-with-other {
+            min-width: 100%;
+        }
     }
     input[type="checkbox"], input[type="radio"] {
         position: absolute;
@@ -618,7 +617,7 @@ var do_csv_xhr = function do_csv_xhr(choice_id, filename, callback) {
 // It returns a list, first thing in the returned list is a boolean, true if the results are all there, false if they will be added to choices later
 // Everything after that is a pair of [real_value, translated_display_name], and all of those pairs are added to the on-screen prompt's options
 // in update()
-var get_choices = function get_choices(which, not_first_time) {
+var get_choices = function get_choices(which, not_first_time, filter) {
     // TODO HANDLE CHOICE_FILTER !!
     // Default result - we didn't find anything so check again later
     var result = [false];
@@ -626,17 +625,26 @@ var get_choices = function get_choices(which, not_first_time) {
     for (var j = 0; j < choices.length; j++) {
         // If the choice's "choice_list_name" is the name of the choice list we're called upon to return, add it to the result
         if (choices[j].choice_list_name == which) {
-            // concat on a list will merge them
-            result = result.concat(0);
-            var displayed = choices[j].display;
-            // If there's no "notranslate" key, translate it using display, otherwise fake translate it
-            if (choices[j].notranslate == undefined) {
-                displayed = display(choices[j].display)
-            } else {
-                displayed = fake_translate(choices[j].display);
+            // If there's no filter, add it. If there is a filter, add it only if the filter matches
+            var filter_result = true;
+            if (filter != null) {
+                choice_item = choices[j] // used in the eval
+                var data = screen_data // This is a disgusting hack
+                filter_result = eval(tokens[filter])
             }
-            result[result.length - 1] = [choices[j].data_value, displayed];
-            result[0] = true; // we found at least one thing
+            if (filter_result) {
+                // concat on a list will merge them
+                result = result.concat(0);
+                var displayed = choices[j].display;
+                // If there's no "notranslate" key, translate it using display, otherwise fake translate it
+                if (choices[j].notranslate == undefined) {
+                    displayed = display(choices[j].display)
+                } else {
+                    displayed = fake_translate(choices[j].display);
+                }
+                result[result.length - 1] = [choices[j].data_value, displayed];
+                result[0] = true; // we found at least one thing
+            }
         }
     }
     // If we found choices, return them
@@ -714,16 +722,22 @@ var populate_choices = function populate_choices(selects, callback) {
     for (var i = 0; i < selects.length; i++) {
         var select = selects[i];
         // if it's already populated, skip it
-        if (select.getAttribute("data-populated") == "done") {
+        if (select.getAttribute("data-populated") == "done" && !select.hasAttribute("data-choice-filter")) {
             continue;
         }
         var stuffs = null;
         // pulls the choice_list_name from the prompt
         var which = select.getAttribute("data-values-list");
+        var filter = null;
+        var saved = screen_data(select.getAttribute("data-dbcol"))
+        if (select.hasAttribute("data-choice-filter")) {
+            filter = select.getAttribute("data-choice-filter")
+            select.innerHTML = ""; // Remove all children
+        }
         if (select.getAttribute("data-populated") == "loading") {
-            stuffs = get_choices(which, true);
+            stuffs = get_choices(which, true, filter);
         } else {
-            stuffs = get_choices(which, false);
+            stuffs = get_choices(which, false, filter);
         }
         // If we got results, set "done", otherwise it must have started a csv xhr or cross table query, so set "loading"
         if (stuffs[0]) {
@@ -735,6 +749,9 @@ var populate_choices = function populate_choices(selects, callback) {
         stuffs = stuffs.slice(1);
         // give the list of choices to set and the element to put them on to the callback
         callback(stuffs, select);
+        if (filter != null &&  saved != null && saved != undefined) {
+            changeElement(select, saved);
+        }
     }
 }
 // This takes a prompt and tries to set the data on that prompt to to `newdata`
@@ -1348,13 +1365,12 @@ var cancel = function cancel() {
     if (!opened_for_edit) {
         if (row_exists) {
             if (confirm("Are you sure? All entered data will be deleted.")) {
-                // Escape the LIMIT 1
-                odkData.arbitraryQuery(table_id, "DELETE FROM " + table_id + " WHERE _id = ?;--", [row_id], 100, 0, function() {
+                odkData.deleteRow(table_id, null, row_id, function() {
                     page_back();
                 }, function(err) {
-                    alert("Unexpected error deleting row " + JSON.stringify(err));
+                    alert("Unexpected error deleting row: " + JSON.stringify(err));
                     page_back();
-                });
+                })
             }
         } else {
             page_back();
