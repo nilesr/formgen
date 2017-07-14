@@ -135,11 +135,10 @@ window.jsonParse = function jsonParse(text) {
         } catch (e) {
             // this is six backslashes in python, becomes three in the javascript,
             // becomes a string literal of a backslash followed by a single quote
-            new_text = text.replace(/\"/g, "\\\\\\"")
+            new_text = text.replace(/\"/g, "\\\"")
             new_text = new_text.replace(/\'/g, '"');
             // This is a last-ditch effort to save the situation, and it might still fail. The basic idea is
             // {'text': 'He said "Ow"'} -> {'text': 'He said \"Ow\"'} -> {"text": "He said \"Ow\""}
-            // ^ that transition will only make sense from viewing the python, if you're looking at the exported js it's probably useless
             // THIS MAY STILL THROW AN EXCEPTION
             return JSON.parse(new_text)
         }
@@ -210,4 +209,12 @@ window.get_from_allowed_group_bys = function get_from_allowed_group_bys(allowed_
     } else {
         return optional_pair[1];
     }
+}
+// helper function to get the relative path to where we are now. So if window.location.href
+// is /coldchain/config/assets/refrigerators.html#refrigerator_type then it will
+// return config/assets/refrigerators.html , which we can then add a hash to and pass to odkTables.launchHTML
+var clean_href = function clean_href() {
+    var href = window.location.href.split("#")[0]
+    href = href.split('_formgen_replace_appname', 2)[1]
+    return href;
 }

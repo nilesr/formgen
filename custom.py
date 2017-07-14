@@ -3,14 +3,14 @@ import generate_table
 import generate_detail
 import demo
 queue = []
+_shells = []
 def make_table(filename, customHtml, customCss, customJsOl, customJsSearch, customJsGeneric):
     queue.append(["table", filename, customHtml, customCss, customJsOl, customJsSearch, customJsGeneric])
 def make_detail(filename, customHtml, customCss, customJsOl, customJsGeneric):
     queue.append(["detail", filename, customHtml, customCss, customJsOl, customJsGeneric])
 def make_demo(filename, config):
     queue.append(["demo", filename, config])
-def make_index(filename, config):
-    queue.append(["index", filename, config])
+def shell(command): _shells.append(command);
 def _make(utils, filenames):
     for q in queue:
         if q[0] == "detail":
@@ -18,9 +18,10 @@ def _make(utils, filenames):
         elif q[0] == "table":
             generate_table.make(utils, *(q[1:]))
         elif q[0] == "demo":
-            demo.from_list(utils, *(q[1:]))
+            demo.make_demo(utils, *(q[1:]))
         else:
-            demo.make_index(utils, *(q[1:]))
+            print("Bad type in queue " + q[0]);
+            sys.exit(0);
         filenames.append(q[1])
     return filenames
 
@@ -241,35 +242,51 @@ make_detail("aa_health_facility_detail.html", """
     ]
 """, "")
 
-make_demo("refrigerators_demo.html", """ 
-    var title = "View Refrigerators";
-    var table_id = "refrigerators";
-    var list_view_filename = "config/assets/aa_refrigerators_list.html"
-    var allowed_group_bys = [["facility_row_id", "Facility"], ["model_row_id", "Model"], ["reason_not_working", true], ["utilization", "Use"], ["working_status", true], ["year", true]]
+make_demo("index.html.coldchaindemo2", """
+var metadata = {};
+var list_views = {
+    "health_facility": "config/assets/aa_health_facility_list.html",
+    "refrigerators": "config/assets/aa_refrigerators_list.html",
+    "refrigerator_types": "config/assets/aa_refrigerator_types.html",
+}
+var menu = [
+        "PATH Cold Chain Demo", null, [
+        ["View Health Facilities", "health_facility", [
+            ["View All", "health_facility", ""],
+            [true, "health_facility", "admin_region"],
+            [true, "health_facility", "facility_type"],
+            [true, "health_facility", "ownership"],
+            ["More", "health_facility", [
+                [true, "health_facility", "delivery_type"],
+                [true, "health_facility", "electricity_source"],
+                [true, "health_facility", "storage_type"],
+                [true, "health_facility", "solar_suitable_climate"],
+                [true, "health_facility", "solar_suitable_site"],
+                [true, "health_facility", "vaccine_supply_mode"],
+                ["By Reserve Stock Requirement", "health_facility", "vaccine_reserve_stock_requirement"]
+            ]]
+        ]], ["View Refrigerators", "refrigerators", [
+            ["View All", "refrigerators", ""],
+            ["By Facility", "refrigerators", "facility_name"],
+            ["By Model", "refrigerators", "catalog_id"],
+            ["By Year", "refrigerators", "year"],
+            ["More", "refrigerators", [
+                ["By Use", "refrigerators", "utilization"],
+                ["By Working Status", "refrigerators", "working_status"],
+                ["By Reason Not Working", "refrigerators", "reason_not_working"]
+            ]]
+        ]], ["View Refrigerator Models", "refrigerator_types", [
+            ["View All", "refrigerator_types", ""],
+            ["By Manufacturer", "refrigerator_types", "manufacturer"],
+            ["By Equipment Type", "refrigerator_types", "equipment_type"],
+            ["More", "refrigerator_types", [
+                ["By Climate Zone", "refrigerator_types", "climate_zone"]
+            ]]
+        ]]
+    ]];
         """)
-make_demo("health_facility_demo.html", """ 
-    var title = "View Health Facilities";
-    var table_id = "health_facility";
-    var list_view_filename = "config/assets/aa_health_facility_list.html"
-    var allowed_group_bys = ["admin_region", "climate_zone", "delivery_type", "electricity_source", ["facility_ownership", "Ownership"], "facility_type", "storage_type", "solar_suitable_climate", "solar_suitable_site", "vaccine_supply_mode", "vaccine_reserve_stock_requirement"];
-        """)
-make_demo("refrigerator_types_demo.html", """ 
-    var title = "View Refrigerator Models";
-    var table_id = "refrigerator_types";
-    var list_view_filename = "config/assets/aa_refrigerator_types_list.html"
-    var allowed_group_bys = ["manufacturer", "climate_zone", "equipment_type"]
-        """)
-make_index("demo.html", """
-    var title = "PATH Cold Chain Demo"
-    var menu = [
-        ["config/assets/health_facility_demo.html", "View Health Facilities"],
-        ["config/assets/refrigerators_demo.html", "View Refrigerators"],
-        ["config/assets/refrigerator_types_demo.html", "View Refrigerator Models"]
-    ]
-""")
-
-
-
+# convention is to just squash it
+shell(["cp", "/sdcard/opendatakit/coldchain/config/assets/index.html.coldchaindemo2", "/sdcard/opendatakit/coldchain/config/assets/index.html"]);
 
 
 

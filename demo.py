@@ -16,30 +16,27 @@ body {
     display: block;
     width: 80%;
     margin-left: 10%;
-    background-color: lightblue;
-    padding-top: 10px;
-    padding-bottom: 10px;
     border: none;
     color: white;
     background-color: #33b5e5;
-    /*font-size: 16pt;*/
     font-size: 21px;
     font-weight: 400;
     -webkit-box-shadow: inset 0 -1px 0 rgba(0, 0, 0, .2), inset 0 1px 0 rgba(255, 255, 255, .2), 0 1px 1px rgba(0, 0, 0, .25);
     box-shadow: inset 0 -1px 0 rgba(0, 0, 0, .2), inset 0 1px 0 rgba(255, 255, 255, .2), 0 1px 1px rgba(0, 0, 0, .25);
     border-radius: 2px;
-    padding-top: 15px;
-    padding-bottom: 15px;
-    margin-bottom: 10px;
+    padding-top: 30px;
+    padding-bottom: 30px;
+    margin-bottom: 20px;
 }
 #title {
     display: block;
     font-family: serif;
-    background-color: #cc2e2d;
+    background-color: #aac;
+    color: black;
 }
         </style>
 """
-def from_list(utils, filename, config):
+def make_demo(utils, filename, config):
     basehtml = """
 <!doctype html>
 <html>
@@ -52,75 +49,75 @@ def from_list(utils, filename, config):
         <script>
 """ + config + """
 var ol = function ol() {
-    document.getElementById("title").innerText = title;
-    odkData.arbitraryQuery(table_id, "SELECT _id FROM " + table_id + ";", [], 0, 0, callback, function error(e) {
-        alert("Error: " + e);
-    });
-}
-var callback = function callback(d) {
-    var button = document.createElement("button");
-    allowed_group_bys.reverse();
-    allowed_group_bys = allowed_group_bys.concat(0)
-    allowed_group_bys[allowed_group_bys.length - 1] = ["", false];
-    allowed_group_bys.reverse();
-    for (var i = 0; i < allowed_group_bys.length; i++) {
-        var button = document.createElement("button");
-        var pair = allowed_group_bys[i]
-        if (typeof(pair) == "string") pair = [pair, true];
-        if (pair[1]) {
-            button.innerText = "By " + get_from_allowed_group_bys(allowed_group_bys, pair[1], pair, d.getMetadata());
-        } else {
-            button.innerText = "View All";
+    if (window.location.hash.slice(1).length > 0) {
+        new_menu_path = window.location.hash.slice(1).split("/");
+        for (var i = 0; i < new_menu_path.length; i++) {
+            if (!isNaN(Number(new_menu_path[i]))) {
+                menu_path = menu_path.concat(Number(new_menu_path[i]));
+            }
         }
-        button.classList.add("button");
-        document.getElementById("list").appendChild(button);
-        (function(button, this_pair) {
-            button.addEventListener("click", function() {
-                odkTables.launchHTML(null, list_view_filename + "#" + table_id + "/" + this_pair[0]);
-            });
-        })(button, pair);
-        console.log(button)
-        document.getElementById("list").appendChild(button);
+    }
+    doMenu();
+}
+var getMetadataAndThen = function getMetadata(table, callback) {
+    if (metadata[table] == undefined && table != null) {
+        odkData.arbitraryQuery(table, "SELECT _id FROM " + table, [], 0, 0, function success(d) {
+            metadata[table] = d.getMetadata();
+            callback(metadata[table]);
+        }, function error(e) {
+            alert("Error: " + e);
+        });
+    } else {
+        callback(metadata[table]);
     }
 }
-        </script>
-    </head>
-    <body onLoad='ol();'>
-        <div id="title" class="button"></div>
-        <div id="list"></div>
-    </body>
-</html>
-    """
-    open(filename, "w").write(basehtml)
-
-def make_index(utils, filename, config):
-    basehtml = """
-<!doctype html>
-<html>
-    <head>
-    """ + global_css(utils) + """
-        <script type="text/javascript" src="/""" + utils.appname + """/system/js/odkCommon.js"></script>
-        <script type="text/javascript" src="/""" + utils.appname + """/system/js/odkData.js"></script>
-        <script type="text/javascript" src="/""" + utils.appname + """/system/tables/js/odkTables.js"></script>
-        <script type="text/javascript" src="formgen_common.js"></script>
-        <script>
-""" + config + """
-var ol = function ol(d) {
-    document.getElementById("title").innerText = title;
-    for (var i = 0; i < menu.length; i++) {
-        var button = document.createElement("button");
-        var pair = menu[i]
-        button.innerText = pair[1]
-        button.classList.add("button");
-        document.getElementById("list").appendChild(button);
-        (function(button, this_pair) {
-            button.addEventListener("click", function() {
-                odkTables.launchHTML(null, this_pair[0]);
-            });
-        })(button, pair);
-        console.log(button)
-        document.getElementById("list").appendChild(button);
+var menu_path = [];
+var make_submenu = function make_submenu() {
+    var submenu = menu;
+    for (var i = 0; i < menu_path.length; i++) {
+        submenu = submenu[2][menu_path[i]];
     }
+    return submenu;
+}
+var buttonClick = function doButtonClick(path) {
+    menu_path = menu_path.concat(Number(path));
+    //doMenu();
+    var submenu = make_submenu();
+    if (typeof(submenu[2]) == "string") {
+        odkTables.launchHTML(null, list_views[submenu[1]] + "#" + submenu[1] + "/" + submenu[2]);
+    } else {
+        var new_hash = "#";
+        for (var i = 0; i < menu_path.length; i++) {
+            new_hash += menu_path[i] + "/";
+        }
+        odkTables.launchHTML(null, clean_href() + new_hash);
+    }
+}
+var doMenu = function doMenu() {
+    document.getElementById("list").innerHTML = "";
+    var submenu = make_submenu();
+    document.getElementById("title").innerText = submenu[0];
+    getMetadataAndThen(submenu[1], function(this_table_metadata) {
+
+        for (var i = 0; i < submenu[2].length; i++) {
+            var triplet = submenu[2][i];
+            var button = document.createElement("button");
+            if (triplet[0] === true) {
+                button.innerText = "By " + displayCol(triplet[2], this_table_metadata);
+            } else {
+                button.innerText = triplet[0];
+            }
+            button.classList.add("button");
+            document.getElementById("list").appendChild(button);
+            (function(button, i) {
+                button.addEventListener("click", function() {
+                    buttonClick(i);
+                });
+            })(button, i);
+            console.log(button)
+            document.getElementById("list").appendChild(button);
+        }
+    });
 }
         </script>
     </head>

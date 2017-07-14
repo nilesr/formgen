@@ -27,14 +27,6 @@ var display_cols = """ + json.dumps(cols) + """
 var allowed_tables = """ + json.dumps(utils.get_allowed_tables()) + """
 // A map of table ids to tokens that can be used to localize their display name
 var localized_tables = """ + json.dumps(utils.get_localized_tables()) + """;
-// helper function to get the relative path to where we are now. So if window.location.href
-// is /coldchain/config/assets/refrigerators.html#refrigerator_type then it will
-// return config/assets/refrigerators.html , which we can then add a hash to and pass to odkTables.launchHTML
-var clean_href = function clean_href() {
-    var href = window.location.href.split("#")[0]
-    href = href.split('""" + utils.appname + """', 2)[1]
-    return href;
-}
 """ + open("generate_table.js", "r").read().replace("_formgen_replace_cusotomJsOl", customJsOl).replace("_formgen_replace_customJsSearch", customJsSearch) + """
 """ + customJsGeneric + """
         </script>

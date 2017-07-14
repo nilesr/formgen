@@ -4,5 +4,5 @@ def make(utils, filename):
 /*
 """ + utils.warning + """
 */
-""" + open("generate_common.js", "r").read() # This is here so we can do replacement on things like app name later
+""" + open("generate_common.js", "r").read().replace("_formgen_replace_appname", utils.appname)
     open(filename, "w").write(basejs)
