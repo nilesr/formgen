@@ -26,6 +26,7 @@ def _make(utils, filenames):
 
 # Cold chain demo
 make_table("aa_refrigerator_types_list.html", "", "", """
+    allowed_tables = [];
     display_subcol = [["Manufacturer: ", "manufacturer", true]];
     allowed_group_bys = ["manufacturer", "climate_zone", "equipment_type"]
     display_col = "catalog_id"
@@ -33,6 +34,7 @@ make_table("aa_refrigerator_types_list.html", "", "", """
 """, "", "")
 
 make_table("aa_refrigerators_list.html", "", "", """
+    allowed_tables = [];
     global_join = "refrigerator_types ON refrigerators.model_row_id = refrigerator_types._id JOIN health_facility ON refrigerators.facility_row_id = health_facility._id"
     display_subcol = [["", "model_id", true], ["Healthcare Facility: ", "facility_name", true]];
     display_col = "refrigerator_id"
@@ -41,6 +43,7 @@ make_table("aa_refrigerators_list.html", "", "", """
 """, "", "")
 
 make_table("aa_health_facility_list.html", "", "", """
+    allowed_tables = [];
     display_col = "facility_name"
     display_subcol = [["Facility ID: ", "facility_id", true]];
     table_id = "health_facility";
@@ -93,6 +96,7 @@ make_detail("aa_refrigerators_detail.html", """
         return "";
     }
 
+    allowed_tables = [];
     main_col = "";
     global_join = "refrigerator_types ON refrigerators.model_row_id = refrigerator_types._id JOIN health_facility ON refrigerators.facility_row_id = health_facility._id"
     colmap = [
@@ -129,6 +133,7 @@ make_detail("aa_refrigerator_types_detail.html", """
     </div>
         """, open("refrigerator_detail.css").read(), open("refrigerator_detail.js", "r").read() + """
 
+    allowed_tables = [];
     main_col = "";
     global_which_cols_to_select = "*, (SELECT COUNT(*) FROM refrigerators WHERE model_row_id = refrigerator_types._id) as refrig_with_this_model_count"
     var mid_callback = function mid_callback(e, c, d) {
@@ -200,6 +205,7 @@ make_detail("aa_health_facility_detail.html", """
     </div>
         """, open("refrigerator_detail.css").read(), open("refrigerator_detail.js", "r").read() + """
 
+    allowed_tables = [];
     main_col = "";
     global_which_cols_to_select = "*, (SELECT COUNT(*) FROM refrigerators WHERE facility_row_id = health_facility._id) as refrig_with_this_hfid_count"
     var fname_callback = function fname_callback(e, c, d) {
