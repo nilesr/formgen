@@ -255,7 +255,7 @@ var menu = [
             ["View All", "health_facility", ""],
             [true, "health_facility", "admin_region"],
             [true, "health_facility", "facility_type"],
-            [true, "health_facility", "ownership"],
+            ["Ownership", "health_facility", "facility_ownership"],
             ["More", "health_facility", [
                 [true, "health_facility", "delivery_type"],
                 [true, "health_facility", "electricity_source"],
