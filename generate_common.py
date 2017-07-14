@@ -187,5 +187,36 @@ window.pretty = function pretty(name) {
     }
     return new_name;
 }
+// Retrieves what should be displayed on screen for the given column name. First tries to pull it from
+// optional_pair, which is supposedly an entry in allowed_group_bys, but if that's not set it tries to
+// pull it from allowed_group_bys, and if that doesn't contain it it just returns the translated column name
+window.get_from_allowed_group_bys = function get_from_allowed_group_bys(allowed_group_bys, colname, optional_pair, metadata) {
+    // If we have no allowed_group_bys, always just translate the column name and leave it at that
+    if (!allowed_group_bys) {
+        optional_pair = [colname, true];
+    }
+    // If we weren't given an entry in allowed_group_bys, try and find the right entry
+    if (!optional_pair) {
+        for (var i = 0; i < allowed_group_bys.length; i++) {
+            if (allowed_group_bys[i][0] == colname) {
+                optional_pair = allowed_group_bys[i];
+                break;
+            }
+        }
+    }
+    // If we couldn't find it in allowed_group_bys, just translate it normally
+    if (!optional_pair) optional_pair = [colname, true]
+    // For a full spec see README.md
+    // if the user specified true, translate the column, if they specified false, return the exact column id
+    // otherwise show the string the user specified
+    if (optional_pair[1] === true) {
+        return displayCol(optional_pair[0], metadata);
+    } else if (optional_pair[1] === false) {
+        return optional_pair[0];
+    } else {
+        return optional_pair[1];
+    }
+}
+
 """
     open(filename, "w").write(basejs)

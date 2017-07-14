@@ -622,6 +622,7 @@ var get_choices = function get_choices(which, not_first_time, filter) {
     // Default result - we didn't find anything so check again later
     var result = [false];
     // For each choice
+    var debug = 0;
     for (var j = 0; j < choices.length; j++) {
         // If the choice's "choice_list_name" is the name of the choice list we're called upon to return, add it to the result
         if (choices[j].choice_list_name == which) {
@@ -629,10 +630,23 @@ var get_choices = function get_choices(which, not_first_time, filter) {
             var filter_result = true;
             if (filter != null) {
                 choice_item = choices[j] // used in the eval
-                var data = screen_data // This is a disgusting hack
-                filter_result = eval(tokens[filter])
+                var data = function _data_wrapper(i) {
+                    var sdat = screen_data(i);
+                    if (sdat == null || sdat == undefined || sdat.length == 0) return row_data[i];
+                    return sdat;
+                }
+                // DEBUG !!
+                if (which == "health_facility_list") {
+                    console.log(choice_item.regionLevel2);
+                    console.log(data('regionLevel2'))
+                    console.log(tokens[filter]);
+                    //console.log(eval(tokens[filter]));
+                }
+				filter_result = eval(tokens[filter])
+                if (filter_result) debug++;
             }
-            if (filter_result) {
+            console.log("result: " + filter_result + " " + typeof(filter_result));
+            if (filter_result === true) {
                 // concat on a list will merge them
                 result = result.concat(0);
                 var displayed = choices[j].display;
@@ -647,6 +661,7 @@ var get_choices = function get_choices(which, not_first_time, filter) {
             }
         }
     }
+    //if (debug > 0) alert(debug);
     // If we found choices, return them
     if (result.length > 1) return result;
     // If the csv xhr or cross table query is still in progress, return false and we'll be asked again later
@@ -706,6 +721,13 @@ var do_cross_table_query = function do_cross_table_query(which, query) {
             // notranslate: true so that we don't try and localize it, which would be slow and I doubt the column in the other
             // row has multiple translations anyways
             choices[choices.length - 1] = {"choice_list_name": which, "data_value": val, "display": text, notranslate: true};
+            // Copy in all the columns of the row
+            var all_cols = d.getColumns()
+            for (var j = 0; j < d.getColumns().length; j++) {
+                var this_col = all_cols[j];
+                var this_val = d.getData(i, this_col);
+                choices[choices.length - 1][this_col] = this_val;
+            }
         }
         // make update() call get_choices again now that we've added things to the global `choices` list
         update(0);

@@ -438,11 +438,11 @@ var doSearch = function doSearch() {
         var newtext = "Showing " + rows + (offset + (total_rows == 0 ? 0 : 1)) + "-" + (offset + d.getCount()) + " of " + display_total;
         // if we have a group by, mention that we're in a group by view
         if (global_group_by != null && global_group_by != undefined && global_group_by.trim().length > 0) {
-            newtext += " distinct values of " + get_from_allowed_group_bys(global_group_by, false); 
+            newtext += " distinct values of " + get_from_allowed_group_bys(allowed_group_bys, global_group_by, false, metadata); 
         }
         // if we're in a collection, mention that
         if (global_where_clause != null && global_where_clause != undefined && global_where_clause.trim().length > 0) {
-            newtext += " rows where " + get_from_allowed_group_bys(global_where_clause.split(" ")[0], false) + " is " + global_where_arg;
+            newtext += " rows where " + get_from_allowed_group_bys(allowed_group_bys, global_where_clause.split(" ")[0], false, metadata) + " is " + global_where_arg;
         }
         document.getElementById("navigation-text").innerText = newtext;
         // for each row in the result set, make an element and add it to `list`
@@ -569,36 +569,6 @@ var doSearch = function doSearch() {
         alert("Failure! " + d);
     });
 }
-// Retrieves what should be displayed on screen for the given column name. First tries to pull it from
-// optional_pair, which is supposedly an entry in allowed_group_bys, but if that's not set it tries to
-// pull it from allowed_group_bys, and if that doesn't contain it it just returns the translated column name
-var get_from_allowed_group_bys = function get_from_allowed_group_bys(colname, optional_pair) {
-    // If we have no allowed_group_bys, always just translate the column name and leave it at that
-    if (!allowed_group_bys) {
-        optional_pair = [colname, true];
-    }
-    // If we weren't given an entry in allowed_group_bys, try and find the right entry
-    if (!optional_pair) {
-        for (var i = 0; i < allowed_group_bys.length; i++) {
-            if (allowed_group_bys[i][0] == colname) {
-                optional_pair = allowed_group_bys[i];
-                break;
-            }
-        }
-    }
-    // If we couldn't find it in allowed_group_bys, just translate it normally
-    if (!optional_pair) optional_pair = [colname, true]
-    // For a full spec see README.md
-    // if the user specified true, translate the column, if they specified false, return the exact column id
-    // otherwise show the string the user specified
-    if (optional_pair[1] === true) {
-        return displayCol(optional_pair[0], metadata);
-    } else if (optional_pair[1] === false) {
-        return optional_pair[0];
-    } else {
-        return optional_pair[1];
-    }
-}
 // Called when the user clicks the group by button, or on load if we're in a group by view or a collection view
 var groupBy = function groupBy() {
     var list = document.getElementById("group-by-list");
@@ -616,7 +586,7 @@ var groupBy = function groupBy() {
         for (var i = 0; i < allowed_group_bys.length; i++) {
             var child = document.createElement("option");
             child.value = allowed_group_bys[i][0];
-            child.innerText = get_from_allowed_group_bys(allowed_group_bys[i][1], allowed_group_bys[i])
+            child.innerText = get_from_allowed_group_bys(allowed_group_bys, allowed_group_bys[i][1], allowed_group_bys[i], metadata)
             list.appendChild(child);
             if (global_group_by == cols[i]) {
                 list.selectedOptions = [child];
@@ -659,7 +629,7 @@ var groupByGo = function groupByGo() {
     }
     // TODO test that this works
     display_subcol = [];
-    main_col = global_group_by;
+    display_col = global_group_by;
     /*
     var _in = false;
     if (display_col == global_group_by) {

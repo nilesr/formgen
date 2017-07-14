@@ -1,17 +1,26 @@
 import sys, os, subprocess
 import generate_table
 import generate_detail
+import demo
 queue = []
 def make_table(filename, customHtml, customCss, customJsOl, customJsSearch, customJsGeneric):
     queue.append(["table", filename, customHtml, customCss, customJsOl, customJsSearch, customJsGeneric])
 def make_detail(filename, customHtml, customCss, customJsOl, customJsGeneric):
     queue.append(["detail", filename, customHtml, customCss, customJsOl, customJsGeneric])
+def make_demo(filename, config):
+    queue.append(["demo", filename, config])
+def make_index(filename, config):
+    queue.append(["index", filename, config])
 def _make(utils, filenames):
     for q in queue:
         if q[0] == "detail":
             generate_detail.make(utils, *(q[1:]))
-        else:
+        elif q[0] == "table":
             generate_table.make(utils, *(q[1:]))
+        elif q[0] == "demo":
+            demo.from_list(utils, *(q[1:]))
+        else:
+            demo.make_index(utils, *(q[1:]))
         filenames.append(q[1])
     return filenames
 
@@ -35,8 +44,7 @@ make_table("aa_health_facility_list.html", "", "", """
     display_col = "facility_name"
     display_subcol = [["Facility ID: ", "facility_id", true]];
     table_id = "health_facility";
-    // TODO
-    allowed_group_bys = ["admin_region", "climate_zone", "delivery_type", "electricity_source", ["facility_ownership", "Ownership"], "facility_type", ["regionLevel1", "Region level 1"], ["regionLevel2", "Region level 2"], "storage_type", "solar_suitable_climate", "solar_suitable_type", "vaccine_supply_mode", "vaccine_reserve_stock_requirement"];
+    allowed_group_bys = ["admin_region", "climate_zone", "delivery_type", "electricity_source", ["facility_ownership", "Ownership"], "facility_type", "storage_type", "solar_suitable_climate", "solar_suitable_site", "vaccine_supply_mode", "vaccine_reserve_stock_requirement"];
 
     global_which_cols_to_select = "*, (SELECT COUNT(*) FROM refrigerators WHERE facility_row_id = health_facility._id) AS refrigerator_count"
     display_subcol = [["Facility ID: ", "facility_id", true], ["Refrigerators: ", "refrigerator_count", true]]
@@ -52,11 +60,9 @@ make_detail("aa_refrigerators_detail.html", """
         <li id='inject-year'></li>
         <li id='inject-working_status'></li>
         <li id='inject-reason_not_working'></li>
-        <li id='inject-catalog_id'></li>
+        <li id='inject-model_id'></li>
         <li id='inject-tracking_id'></li>
         <li id='inject-voltage_regulator'></li>
-
-        <li id='inject-facility'></li>
     </ul>
     <button disabled id='open_model'>Model Information</button>
     <br />
@@ -71,10 +77,11 @@ make_detail("aa_refrigerators_detail.html", """
         btn.addEventListener("click", function() {
             odkTables.openDetailView(null, "refrigerator_types", model_row_id);
         });
-        build_generic_callback("catalog_id", true, "catalog_id")
+        build_generic_callback("model_id", true)(e, c, d)
         return "";
     }
     var hf_callback = function hf_callback(e, c, d) {
+        console.log(d.getData(0, "facility_name"));
         var btn = document.getElementById("open_hf");
         var hf = d.getData(0, "facility_name"); // from join, not actually the hf id
         var hf_row_id = d.getData(0, "facility_row_id");
@@ -82,22 +89,20 @@ make_detail("aa_refrigerators_detail.html", """
         btn.addEventListener("click", function() {
             odkTables.openDetailView(null, "health_facility", hf_row_id, "config/assets/aa_health_facility_detail.html#health_facility/" + hf_row_id);
         });
-        build_generic_callback("facility_name", true, "Facility")
+        build_generic_callback("facility_name", true, "Facility")(e, c, d)
         return "";
     }
 
     main_col = "";
     global_join = "refrigerator_types ON refrigerators.model_row_id = refrigerator_types._id JOIN health_facility ON refrigerators.facility_row_id = health_facility._id"
     colmap = [
-        ["facility_row_id", hf_callback],
-        ["year", build_generic_callback("year", true, "Year Installed: ")],
-        ["working_status", function(e, c, d) {return "<b>Status:</b> " + pretty(c);}],
+        ["facility_name", hf_callback],
+        ["year", build_generic_callback("year", true, "Year Installed")],
+        ["working_status", build_generic_callback("working_status", true, "Status")],
         ["reason_not_working", build_generic_callback("reason_not_working", true)],
         ["model_row_id", model_callback],
-        ["tracking_number", build_generic_callback("tracking_number", true)]
+        ["tracking_id", build_generic_callback("tracking_id", false, "Tracking Number")],
         ["voltage_regulator", build_generic_callback("voltage_regulator", true)],
-        //["power_source", build_generic_callback("power_source", true)],
-        //["utilization", build_generic_callback("utilization", true, "Use?")],
         ["refrigerator_id", build_generic_callback("refrigerator_id", true)]
     ];
 """, "")
@@ -229,6 +234,37 @@ make_detail("aa_health_facility_detail.html", """
         ['vaccine_supply_mode', build_generic_callback("vaccine_supply_mode", true)],
     ]
 """, "")
+
+make_demo("refrigerators_demo.html", """ 
+    var title = "View Refrigerators";
+    var table_id = "refrigerators";
+    var list_view_filename = "config/assets/aa_refrigerators_list.html"
+    var allowed_group_bys = [["facility_row_id", "Facility"], ["model_row_id", "Model"], ["reason_not_working", true], ["utilization", "Use"], ["working_status", true], ["year", true]]
+        """)
+make_demo("health_facility_demo.html", """ 
+    var title = "View Health Facilities";
+    var table_id = "health_facility";
+    var list_view_filename = "config/assets/aa_health_facility_list.html"
+    var allowed_group_bys = ["admin_region", "climate_zone", "delivery_type", "electricity_source", ["facility_ownership", "Ownership"], "facility_type", "storage_type", "solar_suitable_climate", "solar_suitable_site", "vaccine_supply_mode", "vaccine_reserve_stock_requirement"];
+        """)
+make_demo("refrigerator_types_demo.html", """ 
+    var title = "View Refrigerator Models";
+    var table_id = "refrigerator_types";
+    var list_view_filename = "config/assets/aa_refrigerator_types_list.html"
+    var allowed_group_bys = ["manufacturer", "climate_zone", "equipment_type"]
+        """)
+make_index("demo.html", """
+    var title = "PATH Cold Chain Demo"
+    var menu = [
+        ["config/assets/health_facility_demo.html", "View Health Facilities"],
+        ["config/assets/refrigerators_demo.html", "View Refrigerators"],
+        ["config/assets/refrigerator_types_demo.html", "View Refrigerator Models"]
+    ]
+""")
+
+
+
+
 
 
 make_table("plot.html", "", "", """
