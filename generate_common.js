@@ -65,10 +65,8 @@ window.display_update_result = function display_update_result(result, this_resul
 
 // This is an unfortunately named function, it should really be called translate, not display
 window.display = function display(thing) {
-    if (typeof(thing) == "string") return thing;
+  if (typeof(thing) == "string") return thing;
 	if (typeof(thing) == "undefined") return "Can't translate undefined!";
-    // REMOVE THIS LINE BEFORE SHIPPING TO ANOTHER COUNTRY
-    //return fake_translate(thing);
     for (var i = 0; i < possible_wrapped.length; i++) {
         if (thing[possible_wrapped[i]] !== undefined) {
             return display(thing[possible_wrapped[i]]);
@@ -217,4 +215,11 @@ var clean_href = function clean_href() {
     var href = window.location.href.split("#")[0]
     href = href.split("_formgen_replace_appname", 2)[1]
     return href;
+}
+
+window._t = function(s) {
+
+}
+window._tu = function(s) {
+
 }

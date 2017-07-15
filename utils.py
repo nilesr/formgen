@@ -101,8 +101,7 @@ class utils():
         self.filenames.append("formgen_common.js")
         generate_common.make(self, "formgen_common.js")
 
-        self.filenames = custom._make(self, self.filenames)
-        shells = custom._shells;
+        self.filenames = custom._make(appname, self, self.filenames)
         for q in self.queue:
             command = q
             do_command(push, command)
@@ -111,8 +110,6 @@ class utils():
             do_command(push, command)
             command = ["adb", "push", f, "/sdcard/opendatakit/" + appname + "/config/assets/" + f]
             do_command(push, command)
-        for s in shells:
-            do_command(push, ["adb", "shell"] + s);
         dirs = set()
         for f in self.filenames:
             if f[0] == "/" or f[:2] == "..": continue # RELATIVE PATHS ONLY, DON'T WANT TO END UP REMOVING /home OR /Users OR SOMETHING BAD
