@@ -127,7 +127,7 @@ make_detail("aa_refrigerators_detail.html", """
         // UNTESTED
         document.getElementById("view_m_log").disabled = false;
         document.getElementById("view_m_log").addEventListener("click", function add_m_log() {
-            odkTables.launchHTML(null, clean_href() + "config/assets/aa_m_logs_list.html#m_log/refrigerator_id = ?/" + d.getData(0, "refrigerator_id"));
+            odkTables.launchHTML(null, "config/assets/aa_m_logs_list.html#m_log/refrigerator_id = ?/" + d.getData(0, "refrigerator_id"));
         });
 
         return "";
