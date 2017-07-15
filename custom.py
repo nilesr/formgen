@@ -290,6 +290,32 @@ make_detail("aa_m_logs_detail.html", "", "", """
     ]
 """, "")
 
+import sqlite3, csv
+db = sqlite3.connect(":memory:")
+c = db.cursor()
+c.execute("CREATE TABLE t1 (regionLevel1, regionLevel2);")
+c.execute("CREATE TABLE t2 (regionLevel2, regionLevel3);")
+rows = [[x["regionLevel1"], x["regionLevel2"]] for x in csv.DictReader(open("regions1-2.csv", "r"))]
+c.executemany("INSERT INTO t1 (regionLevel1, regionLevel2) VALUES (?, ?);", rows);
+rows = [[x["regionLevel2"], x["regionLevel3"]] for x in csv.DictReader(open("regions2-3.csv", "r"))]
+c.executemany("INSERT INTO t2 (regionLevel2, regionLevel3) VALUES (?, ?);", rows);
+
+import collections
+hierarchy = collections.defaultdict(lambda: set())
+for i in range(2):
+    for row in c.execute("SELECT regionLevel1, t1.regionLevel2, regionLevel3 FROM t1 JOIN t2 ON t1.regionLevel2 = t2.regionLevel2;"):
+        hierarchy["_start"].add(row[0])
+        if row[i] != row[i + 1]:
+            hierarchy[row[i]].add(row[i+1])
+def make_map(val):
+    if len(hierarchy[val]) == 0: return [val, "health_facility", "admin_region = ?/" + val];
+    return [val, None, [make_map(x) for x in hierarchy[val]]]
+#print(hierarchy)
+as_list = make_map("_start")
+#as_list = as_list[2] # Remove the _start
+import json
+#print(json.dumps(as_list, indent = 4))
+
 make_demo("index.html", """
 var metadata = {};
 var list_views = {
@@ -297,38 +323,40 @@ var list_views = {
     "refrigerators": "config/assets/aa_refrigerators_list.html",
     "refrigerator_types": "config/assets/aa_refrigerator_types_list.html",
 }
-var menu = [
-        "PATH Cold Chain Demo", null, [
-        ["View Health Facilities", "health_facility", [
-            ["View All", "health_facility", ""],
-            [true, "health_facility", "admin_region"],
-            [true, "health_facility", "facility_type"],
-            ["Ownership", "health_facility", "facility_ownership"],
-            ["More", "health_facility", [
-                [true, "health_facility", "delivery_type"],
-                [true, "health_facility", "electricity_source"],
-                [true, "health_facility", "storage_type"],
-                [true, "health_facility", "solar_suitable_climate"],
-                [true, "health_facility", "solar_suitable_site"],
-                [true, "health_facility", "vaccine_supply_mode"],
-                ["By Reserve Stock Requirement", "health_facility", "vaccine_reserve_stock_requirement"]
-            ]]
-        ]], ["View Refrigerators", "refrigerators", [
-            ["View All", "refrigerators", ""],
-            ["By Facility", "refrigerators", "facility_name"],
-            ["By Model", "refrigerators", "catalog_id"],
-            ["By Year", "refrigerators", "year"],
-            ["More", "refrigerators", [
-                ["By Use", "refrigerators", "utilization"],
-                ["By Working Status", "refrigerators", "working_status"],
-                ["By Reason Not Working", "refrigerators", "reason_not_working"]
-            ]]
-        ]], ["View Refrigerator Models", "refrigerator_types", [
-            ["View All", "refrigerator_types", ""],
-            ["By Manufacturer", "refrigerator_types", "manufacturer"],
-            ["By Equipment Type", "refrigerator_types", "equipment_type"],
-            ["More", "refrigerator_types", [
-                ["By Climate Zone", "refrigerator_types", "climate_zone"]
+var menu = ["PATH Cold Chain Demo", null, [
+        """ + json.dumps(as_list, indent = 4) + """,
+        ["View Data", null, [
+            ["View Health Facilities", "health_facility", [
+                ["View All", "health_facility", ""],
+                [true, "health_facility", "admin_region"],
+                [true, "health_facility", "facility_type"],
+                ["Ownership", "health_facility", "facility_ownership"],
+                ["More", "health_facility", [
+                    [true, "health_facility", "delivery_type"],
+                    [true, "health_facility", "electricity_source"],
+                    [true, "health_facility", "storage_type"],
+                    [true, "health_facility", "solar_suitable_climate"],
+                    [true, "health_facility", "solar_suitable_site"],
+                    [true, "health_facility", "vaccine_supply_mode"],
+                    ["By Reserve Stock Requirement", "health_facility", "vaccine_reserve_stock_requirement"]
+                ]]
+            ]], ["View Refrigerators", "refrigerators", [
+                ["View All", "refrigerators", ""],
+                ["By Facility", "refrigerators", "facility_name"],
+                ["By Model", "refrigerators", "catalog_id"],
+                ["By Year", "refrigerators", "year"],
+                ["More", "refrigerators", [
+                    ["By Use", "refrigerators", "utilization"],
+                    ["By Working Status", "refrigerators", "working_status"],
+                    ["By Reason Not Working", "refrigerators", "reason_not_working"]
+                ]]
+            ]], ["View Refrigerator Models", "refrigerator_types", [
+                ["View All", "refrigerator_types", ""],
+                ["By Manufacturer", "refrigerator_types", "manufacturer"],
+                ["By Equipment Type", "refrigerator_types", "equipment_type"],
+                ["More", "refrigerator_types", [
+                    ["By Climate Zone", "refrigerator_types", "climate_zone"]
+                ]]
             ]]
         ]]
     ]];

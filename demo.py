@@ -81,16 +81,20 @@ var make_submenu = function make_submenu() {
 }
 var buttonClick = function doButtonClick(path) {
     menu_path = menu_path.concat(Number(path));
-    //doMenu();
     var submenu = make_submenu();
-    if (typeof(submenu[2]) == "string") {
-        odkTables.launchHTML(null, list_views[submenu[1]] + "#" + submenu[1] + "/" + submenu[2]);
+    if (submenu[1] == "_html") {
+        odkTables.launchHTML(null, submenu[2]);
     } else {
-        var new_hash = "#";
-        for (var i = 0; i < menu_path.length; i++) {
-            new_hash += menu_path[i] + "/";
+        // Must be a group by
+        if (typeof(submenu[2]) == "string") {
+            odkTables.launchHTML(null, list_views[submenu[1]] + "#" + submenu[1] + "/" + submenu[2]);
+        } else {
+            var new_hash = "#";
+            for (var i = 0; i < menu_path.length; i++) {
+                new_hash += menu_path[i] + "/";
+            }
+            odkTables.launchHTML(null, clean_href() + new_hash);
         }
-        odkTables.launchHTML(null, clean_href() + new_hash);
     }
 }
 var doMenu = function doMenu() {
