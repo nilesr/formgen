@@ -295,6 +295,9 @@ def make_admin_region(val):
     ]];
 def make_map(val):
     if len(hierarchy[val]) == 0: return make_admin_region(val)
+    # These two lines aren't needed, but they make it so the order in the list doesn't change every time you regenerate
+    hierarchy[val] = list(hierarchy[val])
+    hierarchy[val].sort()
     return [val, None, [make_map(x) for x in hierarchy[val]]]
 #print(hierarchy)
 as_list = make_map("_start")
