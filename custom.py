@@ -302,7 +302,8 @@ c.executemany("INSERT INTO t2 (regionLevel2, regionLevel3) VALUES (?, ?);", rows
 
 import collections
 hierarchy = collections.defaultdict(lambda: set())
-for i in range(2):
+levels = ["Region level 1", "Region level 2", "Admin Region"]
+for i in range(len(levels) - 1):
     for row in c.execute("SELECT regionLevel1, t1.regionLevel2, regionLevel3 FROM t1 JOIN t2 ON t1.regionLevel2 = t2.regionLevel2;"):
         hierarchy["_start"].add(row[0])
         if row[i] != row[i + 1]:
@@ -312,7 +313,11 @@ def make_map(val):
     return [val, None, [make_map(x) for x in hierarchy[val]]]
 #print(hierarchy)
 as_list = make_map("_start")
-#as_list = as_list[2] # Remove the _start
+# as_list now like ["_start", null, [...]]
+as_list = as_list[2]
+# as_list now like [...]
+as_list = json.dumps(as_list)[1:-1]
+# as_list now like ...
 import json
 #print(json.dumps(as_list, indent = 4))
 
@@ -324,7 +329,7 @@ var list_views = {
     "refrigerator_types": "config/assets/aa_refrigerator_types_list.html",
 }
 var menu = ["PATH Cold Chain Demo", null, [
-        """ + json.dumps(as_list, indent = 4) + """,
+        """ + as_list + """,
         ["View Data", null, [
             ["View Health Facilities", "health_facility", [
                 ["View All", "health_facility", ""],
