@@ -84,6 +84,8 @@ make_detail("aa_refrigerators_detail.html", """
     <br />
     <button disabled id='add_m_log'>Add Maintenance Record</button>
     <br />
+    <button disabled id='view_m_log'>View all maintenance logs</button>
+    <br />
         """, open("refrigerator_detail.css").read(), open("refrigerator_detail.js", "r").read() + """
 
     var model_callback = function model_callback(e, c, d) {
@@ -122,6 +124,12 @@ make_detail("aa_refrigerators_detail.html", """
                 odkTables.addRowWithSurvey({}, "m_logs", "m_logs", null, defaults);
             }
         });
+        // UNTESTED
+        document.getElementById("view_m_log").disabled = false;
+        document.getElementById("view_m_log").addEventListener("click", function add_m_log() {
+            odkTables.launchHTML(null, clean_href() + "config/assets/aa_m_log_list.html#m_log/refrigerator_id = ?/" + d.getData(0, "refrigerator_id"));
+        });
+
         return "";
     }
 
