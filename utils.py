@@ -115,7 +115,7 @@ class utils():
             do_command(push, ["adb", "shell"] + s);
         dirs = set()
         for f in self.filenames:
-            if f[0] == "/": continue # RELATIVE PATHS ONLY, DON'T WANT TO END UP REMOVING /home OR /Users OR SOMETHING BAD
+            if f[0] == "/" or f[:2] == "..": continue # RELATIVE PATHS ONLY, DON'T WANT TO END UP REMOVING /home OR /Users OR SOMETHING BAD
             if len(f.split("/")) > 1:
                 dirs.add(f.split("/")[0])
             do_command(push, ["rm", f])
