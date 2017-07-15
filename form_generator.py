@@ -117,7 +117,7 @@ def generate_all(utils, filenames):
                     if len(rules) > 0:
                         continue_out = False
                         for rule in rules:
-                            if falsey(rule):
+                            if falsey(tokens[rule]):
                                 continue_out = True
                                 break
                             screen.append("<span style='display: none;' class='validate' data-validate-rule=\"" + str(rule) + "\">")

@@ -149,7 +149,7 @@ var do_csv_xhr = function do_csv_xhr(choice_id, filename, callback) {
             // Appends each row to this list
             var all = []
             // split by lines
-            var s = this.responseText.split("\\n")
+            var s = this.responseText.split("\n")
             // split the first line by a comma to extract a list of the headers in the csv
             var cols = s[0].split(",");
             // remove the headers line from the data
@@ -175,8 +175,8 @@ var do_csv_xhr = function do_csv_xhr(choice_id, filename, callback) {
                     }
                     */
                     // Trim out the column name and the cell
-                    cols[j] = cols[j].trim().replace("\\r", "");
-                    var this_col = cs[j].trim().replace("\\r", "");
+                    cols[j] = cols[j].trim().replace("\r", "");
+                    var this_col = cs[j].trim().replace("\r", "");
                     // If there's no trailing comma or something weird, put it in choice
                     if (cols[j].length > 0 && this_col.length > 0) {
                         choice[cols[j]] = this_col
@@ -350,7 +350,11 @@ var populate_choices = function populate_choices(selects, callback) {
         // pulls the choice_list_name from the prompt
         var which = select.getAttribute("data-values-list");
         var filter = null;
-        var saved = screen_data(select.getAttribute("data-dbcol"))
+        // Dates are selects but they don't have a dbcol
+        var saved = null;
+        if (select.hasAttribute("data-dbcol")) {
+            saved = screen_data(select.getAttribute("data-dbcol"))
+        }
         if (select.hasAttribute("data-choice-filter")) {
             filter = select.getAttribute("data-choice-filter")
             select.innerHTML = ""; // Remove all children
@@ -739,7 +743,7 @@ var update = function update(delta) {
     populate_choices(document.getElementsByClassName("select-one-with-other"), function(stuffs, select) {
         pop_choices_for_select_one(stuffs, select, "radio");
         var dbcol = select.getAttribute("data-dbcol")
-        pop_choices_for_select_one(["_other", "<input type='text' name='"+dbcol+"' id='"+dbcol+"__other_tag' onblur='document.getElementById(\\""+dbcol+"__other\\").checked = true; update(0);' />"], select);
+        pop_choices_for_select_one(["_other", "<input type='text' name='"+dbcol+"' id='"+dbcol+"__other_tag' onblur='document.getElementById(\""+dbcol+"__other\").checked = true; update(0);' />"], select);
         /*
         //var elem = document.createElement("div")
         ////elem.classList.add("option")

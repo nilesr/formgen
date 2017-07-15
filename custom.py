@@ -54,6 +54,15 @@ make_table("aa_health_facility_list.html", "", "", """
     display_subcol = [["Facility ID: ", "facility_id", true], ["Refrigerators: ", "refrigerator_count", true]]
 """, "", "")
 
+make_table("aa_m_logs_list.html", "", "", """
+    allowed_tables = [];
+    display_subcol = [["", "refrigerator_id", false]];
+    allowed_group_bys = ["manufacturer", "climate_zone", "equipment_type"]
+    display_col = "date_serviced"
+    table_id = "m_logs";
+""", "", "")
+
+
 make_detail("aa_refrigerators_detail.html", """
     <div class="main-col-wrapper">
         <div id="inject-refrigerator_id">Loading...</div>
@@ -67,10 +76,14 @@ make_detail("aa_refrigerators_detail.html", """
         <li id='inject-model_id'></li>
         <li id='inject-tracking_id'></li>
         <li id='inject-voltage_regulator'></li>
+        <li id='inject-date_serviced'></li>
     </ul>
     <button disabled id='open_model'>Model Information</button>
     <br />
     <button disabled id='open_hf'>Health Facility Information</button>
+    <br />
+    <button disabled id='add_m_log'>Add Maintenance Record</button>
+    <br />
         """, open("refrigerator_detail.css").read(), open("refrigerator_detail.js", "r").read() + """
 
     var model_callback = function model_callback(e, c, d) {
@@ -94,12 +107,30 @@ make_detail("aa_refrigerators_detail.html", """
             odkTables.openDetailView(null, "health_facility", hf_row_id, "config/assets/aa_health_facility_detail.html#health_facility/" + hf_row_id);
         });
         build_generic_callback("facility_name", true, "Facility")(e, c, d)
+        document.getElementById("add_m_log").disabled = false;
+        var defaults = {"refrigerator_id": d.getData(0, "refrigerator_id"), "date_serviced": odkCommon.toOdkTimeStampFromDate(new Date())};
+        document.getElementById("add_m_log").addEventListener("click", function add_m_log() {
+            if (allowed_tables.indexOf("m_logs") >= 0) {
+                var id = newGuid();
+                odkData.addRow("m_logs", defaults, id, function() {
+                    // Escape the LIMIT 1
+                    odkData.arbitraryQuery("m_logs", "UPDATE m_logs SET _savepoint_type = ? WHERE _id = ?;--", ["INCOMPLETE", id], 100, 0, function success(d) {
+                        odkTables.launchHTML({}, "config/assets/formgen/m_logs#" + id);
+                    }, null);
+                });
+            } else {
+                odkTables.addRowWithSurvey({}, "m_logs", "m_logs", null, defaults);
+            }
+        });
         return "";
     }
 
-    allowed_tables = [];
+    allowed_tables = ["m_logs"];
     main_col = "";
     global_join = "refrigerator_types ON refrigerators.model_row_id = refrigerator_types._id JOIN health_facility ON refrigerators.facility_row_id = health_facility._id"
+    global_which_cols_to_select = "*"
+    var subquery = "(SELECT date_serviced FROM m_logs WHERE m_logs.refrigerator_id = refrigerators.refrigerator_id AND m_logs._savepoint_type != 'INCOMPLETE' ORDER BY date_serviced DESC LIMIT 1)"
+    global_which_cols_to_select = global_which_cols_to_select.concat(", (CASE WHEN "+subquery+" IS NOT NULL THEN "+subquery+" ELSE 'No Records' END) as date_serviced")
     colmap = [
         ["facility_name", hf_callback],
         ["year", build_generic_callback("year", true, "Year Installed")],
@@ -108,7 +139,8 @@ make_detail("aa_refrigerators_detail.html", """
         ["model_row_id", model_callback],
         ["tracking_id", build_generic_callback("tracking_id", false, "Tracking Number")],
         ["voltage_regulator", build_generic_callback("voltage_regulator", true)],
-        ["refrigerator_id", build_generic_callback("refrigerator_id", true)]
+        ["refrigerator_id", build_generic_callback("refrigerator_id", true)],
+        ["date_serviced", build_generic_callback("date_serviced", function(i) { return i.split("T")[0]; })]
     ];
 """, "")
 
@@ -241,13 +273,21 @@ make_detail("aa_health_facility_detail.html", """
         ['vaccine_supply_mode', build_generic_callback("vaccine_supply_mode", true)],
     ]
 """, "")
+make_detail("aa_m_logs_detail.html", "", "", """
+    main_col = "refrigerator_id";
+    colmap = [
+        ['refrigerator_id', false],
+        ['date_serviced', function(e, c, d) { return "<b>Date Serviced:</b> " + c.split("T")[0]; }],
+        ['notes', false]
+    ]
+""", "")
 
-make_demo("index.html.coldchaindemo2", """
+make_demo("index.html", """
 var metadata = {};
 var list_views = {
     "health_facility": "config/assets/aa_health_facility_list.html",
     "refrigerators": "config/assets/aa_refrigerators_list.html",
-    "refrigerator_types": "config/assets/aa_refrigerator_types.html",
+    "refrigerator_types": "config/assets/aa_refrigerator_types_list.html",
 }
 var menu = [
         "PATH Cold Chain Demo", null, [
@@ -285,8 +325,6 @@ var menu = [
         ]]
     ]];
         """)
-# convention is to just squash it
-shell(["cp", "/sdcard/opendatakit/coldchain/config/assets/index.html.coldchaindemo2", "/sdcard/opendatakit/coldchain/config/assets/index.html"]);
 
 
 

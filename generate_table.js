@@ -180,9 +180,15 @@ var update_total_rows = function update_total_rows(force) {
     // clause will cause it to return the wrong number of results in a group by view
     var the_query = make_query(search, 10000, 0);
     if (global_group_by != null && global_group_by != undefined && global_group_by.trim().length > 0) {
-        odkData.arbitraryQuery(table_id, "SELECT COUNT(*) FROM (SELECT * FROM " + table_id + (the_query[9].length > 0 ? " JOIN " + the_query[9] : "") + " GROUP BY " + the_query[2] + ")", the_query[1], the_query[6], the_query[7], success, failure);
+        var raw = "SELECT COUNT(*) FROM (SELECT * FROM " + table_id + (the_query[9].length > 0 ? " JOIN " + the_query[9] : "") + " GROUP BY " + the_query[2] + ")";
+        console.log(raw);
+        //odkData.arbitraryQuery(table_id, raw, the_query[1], the_query[6], the_query[7], success, failure);
+        // TEST
+        odkData.arbitraryQuery(table_id, raw, [], the_query[6], the_query[7], success, failure);
     } else {
-        odkData.arbitraryQuery(table_id, "SELECT COUNT(*) FROM " + table_id + (the_query[9].length > 0 ? " JOIN " + the_query[9] : "") + (the_query[0] ? " WHERE " + the_query[0] : "") + (the_query[2] ? " GROUP BY " + the_query[2] : ""), the_query[1], the_query[6], the_query[7], success, failure);
+        var raw = "SELECT COUNT(*) FROM " + table_id + (the_query[9].length > 0 ? " JOIN " + the_query[9] : "") + (the_query[0] ? " WHERE " + the_query[0] : "") + (the_query[2] ? " GROUP BY " + the_query[2] : "");
+        console.log(raw);
+        odkData.arbitraryQuery(table_id, raw, the_query[1], the_query[6], the_query[7], success, failure);
     }
 }
 // Called when the user clicks the next button. This can't make offset too big because doSearch will
@@ -236,7 +242,11 @@ var make_query = function make_query(search, limit, offset) {
             where += " AND ";
         }
         if (where == null) where = "";
-        where += global_where_clause;
+        // TESTING
+        var global_where_clause_temp = global_where_clause
+        if (global_where_clause_temp.indexOf(".") > 0) global_where_clause_temp = global_where_clause_temp.split(".", 2)[1]
+
+        where += global_where_clause_temp;
         // this is a bit of a hack, if we were passed 'refrigerator_type IS NULL' then don't put anything in the bindargs because
         // there's no question mark in the clause
         if (!(global_where_clause.indexOf("IS NULL") > 0)) {
@@ -246,7 +256,8 @@ var make_query = function make_query(search, limit, offset) {
     // If we're in a group by view, apply that. We have to add the table id because people like to group by things from join tables
     var group_by = null;
     if (global_group_by != undefined && global_group_by != null) {
-        group_by = table_id + "." + global_group_by
+        //group_by = table_id + "." + global_group_by
+        group_by = global_group_by;
     }
     join = ""
     // If we have a global join from the customJsOl configuration, apply that.
@@ -302,7 +313,7 @@ var doSearch = function doSearch() {
     // Make a query for the results to put on the page and run it
     var the_query = make_query(search, limit, offset);
     var raw = "SELECT " + the_query[10] + " FROM " + table_id + (the_query[9].length > 0 ? " JOIN " + the_query[9] : "") + (the_query[0] ? " WHERE " + the_query[0] : "") + (the_query[2] ? " GROUP BY " + the_query[2] : "")
-    console.log(raw);
+    //console.log(raw);
     odkData.arbitraryQuery(table_id, raw , the_query[1], the_query[6], the_query[7], function success(d) {
         // Cache metadata for use in translating the column names later
         metadata = d.getMetadata();
@@ -425,7 +436,10 @@ var doSearch = function doSearch() {
                     if (global_group_by == null || global_group_by == undefined || global_group_by.trim().length == 0) {
                         odkTables.openDetailView({}, table_id, d.getData(i, "_id"));
                     } else {
-                        odkTables.launchHTML({}, clean_href() + "#" + table_id + "/" + global_group_by + (d.getData(i, global_group_by) == null ? " IS NULL " : " = ?" ) + "/" + d.getData(i, global_group_by));
+                        //odkTables.launchHTML({}, clean_href() + "#" + table_id + "/" + global_group_by + (d.getData(i, global_group_by) == null ? " IS NULL " : " = ?" ) + "/" + d.getData(i, global_group_by));
+                        var global_group_by_temp = global_group_by
+                        if (global_group_by_temp.indexOf(".") > 0) global_group_by_temp = global_group_by_temp.split(".", 2)[1]
+                        odkTables.launchHTML({}, clean_href() + "#" + table_id + "/" + global_group_by_temp + (d.getData(i, global_group_by) == null ? " IS NULL " : " = ?" ) + "/" + d.getData(i, global_group_by));
                     }
                 });
                 _delete.addEventListener("click", function() {
@@ -441,7 +455,9 @@ var doSearch = function doSearch() {
             })(edit, _delete, i, d);
             buttons.appendChild(edit);
             buttons.appendChild(_delete);
-            li.appendChild(buttons)
+            if (!global_group_by) {
+                li.appendChild(buttons)
+            }
             var hr = document.createElement("hr")
             hr.classList.add("status");
             hr.setAttribute("data-status", d.getData(i, "_savepoint_type"))

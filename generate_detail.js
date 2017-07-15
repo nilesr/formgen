@@ -114,6 +114,8 @@ var update_callback = function update_callback(d) {
                 li.appendChild(make_li(xlscol, found[1], val, "text"));
             } else if (found[1] === true) {
                 li.appendChild(make_li(xlscol, displayCol(col, metadata), pretty(val), "text"));
+            } else if (found[1] === false) {
+                li.appendChild(make_li(xlscol, displayCol(col, metadata), val, "text"));
             } else {
                 li.appendChild(make_li(xlscol, "", found[1](li, val, d), "html"));
             }
