@@ -220,7 +220,7 @@ window.get_from_allowed_group_bys = function get_from_allowed_group_bys(allowed_
 // return config/assets/refrigerators.html , which we can then add a hash to and pass to odkTables.launchHTML
 var clean_href = function clean_href() {
     var href = window.location.href.split("#")[0]
-    href = href.split("_formgen_replace_appname", 2)[1]
+    href = href.split(appname, 2)[1]
     return href;
 }
 
@@ -277,7 +277,6 @@ window._tc = function(table, column, text) {
     return text;
 }
 
-var user_translations = _formgen_replace_user_translations
 
 var formgen_specific_translations = {
     "Prompt for database column ": {"text": {

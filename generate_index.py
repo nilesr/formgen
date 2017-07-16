@@ -7,16 +7,17 @@ def make_index(utils, filename, customJs, customCss):
         <script type="text/javascript" src="/""" + utils.appname + """/system/js/odkData.js"></script>
         <script type="text/javascript" src="/""" + utils.appname + """/system/tables/js/odkTables.js"></script>
         <script type="text/javascript" src="formgen_common.js"></script>
+        <script type="text/javascript" src="generate_common.js"></script>
+        <link href="generate_index.css" rel="stylesheet" />
         <style>
-        """ + open("generate_index.css", "r").read() + """
         """ + customCss + """
         </style>
         <script>
-""" + open("generate_index.js", "r").read() + """
-// BEGIN CONFIG
-""" + customJs + """
-// END CONFIG
+            // BEGIN CONFIG
+            """ + customJs + """
+            // END CONFIG
         </script>
+        <script src="generate_index.js"></script>
     </head>
     <body onLoad='ol();'>
         <div id="title" class="button"></div>

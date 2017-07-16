@@ -100,9 +100,7 @@ var ol = function ol() {
     display_subcol = [];
     // SET THIS
     display_col = null;
-    // BEGIN CONFIG
-    _formgen_replace_cusotomJsOl
-    // END CONFIG
+    customJsOl();
     // If there are no columns the user is allowed to group by, disable the group by button
     if (allowed_group_bys != null && allowed_group_bys.length == 0) document.getElementById("group-by").style.display = "none"
     // If there are some columns, get them into the standard format, a list of pairs [:column_name, :display_name]
@@ -535,9 +533,7 @@ var doSearch = function doSearch() {
             displays.style.width = global_displays_width;
             list.appendChild(hr);
         }
-        // BEGIN CUSTOM JS SEARCH
-        _formgen_replace_customJsSearch
-        // END CUSTOM JS SEARCH
+        customJsSearch();
     }, function(d) {
         alert(_t("Failure! ") + d);
     });

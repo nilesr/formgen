@@ -13,8 +13,9 @@ def make(utils, filename, customHtml, customCss, customJsOl, customJsGeneric):
         <script type="text/javascript" src="/""" + utils.appname + """/system/js/odkData.js"></script>
         <script type="text/javascript" src="formgen_common.js"></script>
         <script type="text/javascript" src="/""" + utils.appname + """/system/tables/js/odkTables.js"></script>
+        <script type="text/javascript" src="generate_common.js"></script>
+        <link href="generate_detail.css" rel="stylesheet" />
         <style>
-""" + open("generate_detail.css", "r").read() + """
 """ + customCss + """
         </style>
         <script>
@@ -22,9 +23,12 @@ def make(utils, filename, customHtml, customCss, customJsOl, customJsGeneric):
 var display_cols = """ + json.dumps(cols) + """
 // List of tables to edit with formgen. If a table isn't found in this list, we edit it with survey instead
 var allowed_tables = """ + json.dumps(utils.get_allowed_tables()) + """;
-""" + open("generate_detail.js", "r").read().replace("_formgen_replace_customJsOl", customJsOl) + """
+var customJsOl = function customJsOl() {
+    """+customJsOl+"""
+}
 """ + customJsGeneric + """
         </script>
+        <script type="text/javascript" src="generate_detail.js"></script>
     </head>
     <body onLoad='ol();'>
         <div id="header">

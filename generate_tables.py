@@ -15,6 +15,7 @@ def make(utils, filename):
         -->
         <script type="text/javascript" src="/default/system/tables/js/odkTables.js"></script>
         <script type="text/javascript" src="formgen_common.js"></script>
+        <script type="text/javascript" src="generate_common.js"></script>
         <script>
 var table_ids = """ + json.dumps(tables) + """
 var display_cols = """ + json.dumps(cols) + """

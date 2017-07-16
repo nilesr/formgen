@@ -292,10 +292,8 @@ def generate_all(utils, filenames):
 """ + utils.warning + """
 <html>
 <head>
-    <style>
-    """ + open("form_generator.css", "r").read() + """
-    </style>
     <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    <link rel="stylesheet" href="../../form_generator.css" />
     <!--
         <meta content='width=device-width; initial-scale=1.0; maximum-scale=1.0; user-scalable=0;' name='viewport' />
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -303,6 +301,7 @@ def generate_all(utils, filenames):
     <title>OpenDataKit Common Javascript Framework</title>
     <!-- we will typically be at /default/config/assets/formgen/:table_id/index.html, paths are relative to that -->
     <script type="text/javascript" src="../../formgen_common.js"></script>
+    <script type="text/javascript" src="../../generate_common.js"></script>
     <script type="text/javascript" src="../../../../system/js/odkCommon.js"></script>
     <script type="text/javascript" src="../../../../system/js/odkData.js"></script>
     <script type="text/javascript" src="../../../../system/libs/underscore.1.8.3.js"></script>
@@ -314,8 +313,8 @@ var queries = """ + queries + """;
 var table_id = '""" + table + """';
 var tokens = """ + json.dumps(tokens) + """
 var has_dates = """ + ("true" if has_dates else "false") + """
-""" + open("form_generator.js", "r").read() + """
     </script>
+    <script src="../../form_generator.js"></script>
 </head>
 <body onLoad='ol();'>
     <div class="odk-toolbar" id="odk-toolbar">

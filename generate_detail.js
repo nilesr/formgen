@@ -23,9 +23,7 @@ var ol = function ol() {
         table_id = hash.split("/")[0]
         row_id = hash.split("/")[1]
     }
-    // BEGIN CONFIG
-    _formgen_replace_customJsOl
-    // END CONFIG
+    customJsOl();
     if (main_col.length == 0) {
         main_col = display_cols[table_id];
     }

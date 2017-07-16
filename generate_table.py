@@ -9,8 +9,8 @@ def make(utils, filename, customHtml, customCss, customJsOl, customJsSearch, cus
 """ + utils.warning + """
 <html>
     <head>
+        <link href="generate_table.css" rel="stylesheet" />
         <style>
-        """ + open("generate_table.css", "r").read() + """
         """ + customCss + """
         </style>
         <meta http-equiv="content-type" content="text/html; charset=UTF-8">
@@ -18,6 +18,7 @@ def make(utils, filename, customHtml, customCss, customJsOl, customJsSearch, cus
         <script type="text/javascript" src="/""" + utils.appname + """/system/js/odkData.js"></script>
         <script type="text/javascript" src="/""" + utils.appname + """/system/tables/js/odkTables.js"></script>
         <script type="text/javascript" src="formgen_common.js"></script>
+        <script type="text/javascript" src="generate_common.js"></script>
         <script>
 // If you set a display_col, that column will be shown in the large text for each row item.
 // If you don't set one, we'll try and use the table id to pull it from this variable, which stores the
@@ -27,9 +28,15 @@ var display_cols = """ + json.dumps(cols) + """
 var allowed_tables = """ + json.dumps(utils.get_allowed_tables()) + """
 // A map of table ids to tokens that can be used to localize their display name
 var localized_tables = """ + json.dumps(utils.get_localized_tables()) + """;
-""" + open("generate_table.js", "r").read().replace("_formgen_replace_cusotomJsOl", customJsOl).replace("_formgen_replace_customJsSearch", customJsSearch) + """
+var customJsOl = function customJsOl() {
+    """+customJsOl+"""
+}
+var customJsSearch = function customJsSearch() {
+    """+customJsSearch+"""
+}
 """ + customJsGeneric + """
         </script>
+        <script type="text/javascript" src="generate_table.js"></script>
     </head>
     <body onLoad="ol();">
         <div id="header">
