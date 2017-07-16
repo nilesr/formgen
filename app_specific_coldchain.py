@@ -575,5 +575,37 @@ helper.translations = {
         "en_US": True,
         "es_ES": "ID de Facilidad"
     }},
+    "South": {"text": {
+        "en_US": True,
+        "es_ES": "Sur"
+    }},
+    "North": {"text": {
+        "en_US": True,
+        "es_ES": "Norte"
+    }},
+    "Central": {"text": {
+        "en_US": True,
+        "es_ES": True
+    }},
+    "South East": {"text": {
+        "en_US": True,
+        "es_ES": "Sureste"
+    }},
+    "South West": {"text": {
+        "en_US": True,
+        "es_ES": "Suroeste"
+    }},
+    "Central East": {"text": {
+        "en_US": True,
+        "es_ES": "Este"
+    }},
+    "Central West": {"text": {
+        "en_US": True,
+        "es_ES": "Oeste"
+    }},
+    "Refrigerators: ": {"text": {
+        "english": True,
+        "spanish": "Frigoríficos: "
+    }},
 }
 
