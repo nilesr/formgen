@@ -27,7 +27,7 @@ Since it's python, you can use docstrings (triple quotes) to enter multiple line
 
 Tip - if you set `allowed_tables = []` in onload, it will open/edit in survey instead of formgen no matter what.
 
-#### List views
+### List views
 
 customHtml will be appended at the end of the body, customCss in a style tag, customJsGeneric in a script tag, and customJsOnload at the end of the onload function. Most of those can be empty strings **BUT NOT customJsOnload**
 
@@ -111,7 +111,7 @@ If there's only one pair in the list of `allowed_group_bys`, it's launched autom
 
 If you set `allowed_group_bys` to an empty list, the group by button won't be displayed
 
-#### Detail views
+### Detail views
 
 For `make_detail`, you almost certainly need to set `main_col` to something, so for tea houses
 
@@ -145,7 +145,7 @@ And the result might look like this:
 <b>Facility Type</b>: Dispensary<br />
 Located in <b>Atlanta</b>, <b>Georgia</b>
 
-#### Menus
+### Menus
 
 In customJs you need to set `menu`. A `menu` is either a triplet of strings `["Value to display on the screen", "table_id", "something appended to the list view path]`. So for example, to open a list of `health_facilities` where admin_region is Dowa, you would set
 
@@ -179,7 +179,7 @@ You also need to set the `list_views` variable to a dictionary. So for the above
 
 If you didn't create a custom list view file, you can leave it blank and it will default to `config/assets/table.html`, just make sure you specified an instance column in your xlsx.
 
-#### Translations
+### Translations
 
 Most of the above configuration involves setting strings that will be displayed to the user. To have those strings automatically translated to another language, set `helper.translations`. For example
 
