@@ -178,3 +178,35 @@ You also need to set the `list_views` variable to a dictionary. So for the above
 	}
 
 If you didn't create a custom list view file, you can leave it blank and it will default to `config/assets/table.html`, just make sure you specified an instance column in your xlsx.
+
+#### Translations
+
+Most of the above configuration involves setting strings that will be displayed to the user. To have those strings automatically translated to another language, set `helper.translations`. For example
+
+	helper.make_table("aa_health_facility_list.html", "", "", """
+		table_id = "health_facility";
+		display_col = "facility_name"
+		display_subcol = [["Facility ID: ", "facility_id", true], ["Refrigerators: ", "refrigerator_count", true]]
+	""", "", "")
+	
+	helper.translations = {
+		"Facility ID: ": {"text": {
+			"default": True,
+			"spanish": "ID de Facilidad: "
+		}},
+		"Refrigerators: ": {"text": {
+			"default": True,
+			"spanish": "Frigoríficos: "
+		}},
+	}
+		
+would do exactly what you expect. You can pass in the boolean literal true to avoid duplicating the input string if they are the same
+
+Total list of things translated using these translations:
+- The second string in a pair in colmap in a detail view
+- Button text in indexes
+- The first string in a triplet in display_subcol in a list view
+- Strings to be displayed in allowed_group_bys in a list view
+- Human readable "what is being selected" explanations in table views, ?s replaced with bindargs of the query.
+
+You can also call the `_tu` function in your custom javascript to retrieve something from helper.translations in the user's currently selected locale
