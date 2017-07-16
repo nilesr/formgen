@@ -87,7 +87,7 @@ class utils():
         self.adbranch = adbranch
         self.checkout(adbranch)
         #import form_generator, generate_table, generate_tables, generate_detail, generate_common, custom
-        self.filenames = form_generator.generate_all(self, self.filenames)
+        self.filenames, choices, which = form_generator.generate_all(self, self.filenames)
 
         self.filenames.append("table.html")
         generate_table.make(self, "table.html", "", "", "", "", "")
@@ -101,7 +101,7 @@ class utils():
         self.filenames, user_translations = custom._make(appname, self, self.filenames)
 
         self.filenames.append("formgen_common.js")
-        generate_common.make(self, "formgen_common.js", user_translations)
+        generate_common.make(self, "formgen_common.js", user_translations, choices, which)
 
         for q in self.queue:
             command = q

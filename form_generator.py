@@ -1,21 +1,16 @@
-import json, sys, os, glob, traceback, subprocess, random
+import json, sys, os, glob, traceback, subprocess, random, collections
 # TODO items
 # Must have before release!
-#   - query filters
-#   - More filtering options in generate_table (or new pages)
 #   - Display sync state in table, sync state and savepoint type in detail
-#   - Better documentation for generate_table, generate_detail
 # Other things not implemented
 #   - take picture is broken - SURVEY BUG
+# 	- datetime, time - IMPORTANT
 #   - Figure out when to calculate assigns (and implement calculates object)
-#   - Fix odkTables.editRowWithSurveyDefault() - SURVEY BUG
-#   - Handle doAction in generate_table.py to call update_total_rows(true)
 # 	- linegraph, piechart
 # 	- goto (EASY!)
 # 	- sections (could be hard)
 # 	- send_sms
 # 	- read_only_image
-# 	- datetime, time
 # 	- user_branch
 # 	- signature
 # 	- barcode
@@ -51,6 +46,7 @@ import json, sys, os, glob, traceback, subprocess, random
 #   - barcode, image, video, audio
 
 # Throws an exception but sets skipping to true so we don't actually stop, we just skip the table and move on
+skipped = True
 def die():
     global skipped
     skipped = True
@@ -68,6 +64,8 @@ def gensym(): return genpart() + genpart() + "-4" + genpart()[1:] + "-" + genpar
 def generate_all(utils, filenames):
     if not os.path.exists("formgen"): os.mkdir("formgen");
     tables = utils.get_tables()
+    all_choices = collections.defaultdict(lambda: [])
+    columns_that_need_choices = collections.defaultdict(lambda: [])
     for table in tables:
         global skipped
         skipped = False
@@ -76,7 +74,6 @@ def generate_all(utils, filenames):
             screens = []
             rules = []
             screen = []
-            #assigns = []
             # Used for translations, we json dump the translations because they're json objects.
             # In the past they were stringified and put in a span with the class translate, but html tags inside
             # translations were broken because the DOM molests them and I can't accurately retrieve the text I put in.
@@ -241,12 +238,15 @@ def generate_all(utils, filenames):
                     # Div element that will have checkbox elements with labels appended to it in update. Store the choices_list value, 
                     # which might be something already in the choices list, or possibly 
                     elif item["type"] in ["select_multiple", "select_multiple_inline"]:
+                        columns_that_need_choices[table].append(item["name"]);
                         screen.append("<br /><div style='display: inline-block;' data-values-list=\""+item["values_list"]+"\" class=\"select-multiple "+wrapped_class+"\"" + attrs + "></div>")
                     # Same thing but with radio buttons instead of checkboxes
                     elif item["type"] in ["select_one", "select_one_grid"]:
+                        columns_that_need_choices[table].append(item["name"]);
                         screen.append("<br /><div style='display: inline-block;' data-values-list=\""+item["values_list"]+"\" class=\"select-one "+wrapped_class+"\"" + attrs + "></div>")
                     # Same thing but an extra _other choice will be added, with a text box for the label
                     elif item["type"] == "select_one_with_other":
+                        columns_that_need_choices[table].append(item["name"]);
                         screen.append("<br /><div style='display: inline-block;' data-values-list=\""+item["values_list"]+"\" class=\"select-one-with-other "+wrapped_class+"\"" + attrs + "></div>")
                     # an actual select element, will display as a dropdown menu and contents will be populated with option items
                     elif item["type"] == "select_one_dropdown":
@@ -289,6 +289,7 @@ def generate_all(utils, filenames):
                 queries = json.dumps(formDef["xlsx"]["queries"]);
             if "choices" in formDef["xlsx"]:
                 choices = json.dumps(formDef["xlsx"]["choices"]);
+                all_choices[table] += choices;
             basehtml = """
 <!doctype html>
 """ + utils.warning + """
@@ -353,4 +354,4 @@ var has_dates = """ + ("true" if has_dates else "false") + """
                 print("Unexpected exception in " + table)
                 print(traceback.format_exc())
                 sys.exit(1)
-    return filenames
+    return filenames, all_choices, columns_that_need_choices

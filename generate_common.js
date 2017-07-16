@@ -64,16 +64,20 @@ window.display_update_result = function display_update_result(result, this_resul
 };
 
 // This is an unfortunately named function, it should really be called translate, not display
+// It also needs to be optimized. Nothing obvious to do, but it gets called a lot
 window.display = function display(thing) {
   if (typeof(thing) == "string") return thing;
-	if (typeof(thing) == "undefined") return _t("Can't translate undefined!");
+	if (typeof(thing) == "undefined") {
+	    // A recursive call on an error? What could possibly go wrong!
+      return _t("Can't translate undefined!");
+	}
     for (var i = 0; i < possible_wrapped.length; i++) {
         if (thing[possible_wrapped[i]] !== undefined) {
             return display(thing[possible_wrapped[i]]);
         }
     }
     // if we get {text: "something"}, don't bother asking odkCommon to do it, just call fake_translate
-	// however if we get {text: {en_US: "a", hindi: "b"}} we should continue with the real translation instead
+	// however if we get {text: {default: "a", hindi: "b"}} we should continue with the real translation instead
     for (var j = 0; j < odkCommon.i18nFieldNames.length; j++) {
         if (typeof(thing[odkCommon.i18nFieldNames[j]]) == "string") {
             return fake_translate(thing);
@@ -251,231 +255,249 @@ window._tu = function(s) {
     odkData.addRow("m_logs", {"notes": "_tu failed to translate '''" + s + "''' on the page " + window.location.href}, newGuid());
     return s;
 }
+window._tc = function(table, column, text) {
+    if (cols_that_need_choices[table] != undefined && column in cols_that_need_choices[table]) {
+        if (column in all_choices[table]) {
+            var cs = all_choices[table][column];
+            for (var i = 0; i < cs.length; i++) {
+              if (cs[i]["data_value"] == text) {
+                  return display(cs[i]["display"])
+              }
+            }
+            // other in a select one with other row
+        }
+        // not a column with choices
+        return text;
+    }
+    // wtf
+    return text;
+}
+
 var user_translations = _formgen_replace_user_translations
 
 var formgen_specific_translations = {
     "Prompt for database column ": {"text": {
-        "en_US": true,
-        "es_ES": "Prompt por la columna "
+        "default": true,
+        "spanish": "Prompt por la columna "
     }},
     " not found on the screen! Will be stored in the database as null!": {"text": {
-        "en_US": true,
-        "es_ES": " no encontrado en el viento! Estará en el baso de datos como null!"
+        "default": true,
+        "spanish": " no encontrado en el viento! Estará en el baso de datos como null!"
     }},
     "Unknown query type ": {"text": {
-        "en_US": true,
-        "es_ES": "No conozco la forma de popular opciones: "
+        "default": true,
+        "spanish": "No conozco la forma de popular opciones: "
     }},
     "Failed to start cross-table query: ": {"text": {
-        "en_US": true,
-        "es_ES": "No se pudo empezar el poblar de opciones de una tabla: "
+        "default": true,
+        "spanish": "No se pudo empezar el poblar de opciones de una tabla: "
     }},
     "Unexpected failure": {"text": {
-        "en_US": true,
-        "es_ES": ""
+        "default": true,
+        "spanish": ""
     }},
     "This shouldn't be possible, don't know how to update screen column ": {"text": {
-        "en_US": true,
-        "es_ES": "Este no debe ser posible, no hay forma de cambiar el texto en el viento para la celuda "
+        "default": true,
+        "spanish": "Este no debe ser posible, no hay forma de cambiar el texto en el viento para la celuda "
     }},
     "Unexpected failure to save row": {"text": {
-        "en_US": true,
-        "es_ES": "Inesperadamente no se puede salvar la fila"
+        "default": true,
+        "spanish": "Inesperadamente no se puede salvar la fila"
     }},
     "Error saving row: ": {"text": {
-        "en_US": true,
-        "es_ES": "Inesperadamente no se puede salvar la fila"
+        "default": true,
+        "spanish": "Inesperadamente no se puede salvar la fila"
     }},
     "An error occurred while loading the page. ": {"text": {
-        "en_US": true,
-        "es_ES": "Se ha occurido un error mientras cargando este viento. "
+        "default": true,
+        "spanish": "Se ha occurido un error mientras cargando este viento. "
     }},
     "Error, location providers are disabled.": {"text": {
-        "en_US": true,
-        "es_ES": "Error, provisor de ubicacion no está eneblado"
+        "default": true,
+        "spanish": "Error, provisor de ubicacion no está eneblado"
     }},
     "Unknown type in dispatch struct!": {"text": {
-        "en_US": true,
-        "es_ES": "Tipo de pregunta en la estructura de envío no conocido"
+        "default": true,
+        "spanish": "Tipo de pregunta en la estructura de envío no conocido"
     }},
     "Error translating ": {"text": {
-        "en_US": true,
-        "es_ES": "Error al traducir "
+        "default": true,
+        "spanish": "Error al traducir "
     }},
     "Are you sure? All entered data will be deleted.": {"text": {
-        "en_US": true,
-        "es_ES": "¿Está usted seguro? Todos los datos en este fila será perdido."
+        "default": true,
+        "spanish": "¿Está usted seguro? Todos los datos en este fila será perdido."
     }},
     "Unexpected error deleting row: ": {"text": {
-        "en_US": true,
-        "es_ES": "Inesperadamente no se puede eliminar la fila"
+        "default": true,
+        "spanish": "Inesperadamente no se puede eliminar la fila"
     }},
     "Error launching ": {"text": {
-        "en_US": true,
-        "es_ES": "Inesperadamente no se puede lanzar "
+        "default": true,
+        "spanish": "Inesperadamente no se puede lanzar "
     }},
     "yes": {"text": {
-        "en_US": true,
-        "es_ES": "sí"
+        "default": true,
+        "spanish": "sí"
     }},
     "no": {"text": {
-        "en_US": true,
-        "es_ES": "no"
+        "default": true,
+        "spanish": "no"
     }},
     "No row id in uri, beginning new instance with id ": {"text": {
-        "en_US": true,
-        "es_ES": "No se puede hallar el id de la fila en el URL, empezando una fila nueva"
+        "default": true,
+        "spanish": "No se puede hallar el id de la fila en el URL, empezando una fila nueva"
     }},
     "Save incomplete": {"text": {
-        "en_US": true,
-        "es_ES": "Salvar como no completado"
+        "default": true,
+        "spanish": "Salvar como no completado"
     }},
     "Cancel and delete row": {"text": {
-        "en_US": true,
-        "es_ES": "Cancelar e eliminar fila"
+        "default": true,
+        "spanish": "Cancelar e eliminar fila"
     }},
     "Next": {"text": {
-        "en_US": true,
-        "es_ES": "Adelante!"
+        "default": true,
+        "spanish": "Adelante!"
     }},
     "Back": {"text": {
-        "en_US": true,
-        "es_ES": "Retirarse"
+        "default": true,
+        "spanish": "Retirarse"
     }},
     "Finalize": {"text": {
-        "en_US": true,
-        "es_ES": "Finalizar"
+        "default": true,
+        "spanish": "Finalizar"
     }},
     "Can't translate undefined!": {"text": {
-        "en_US": true,
-        "es_ES": "¡No se puede traducir texto lo que no existe!"
+        "default": true,
+        "spanish": "¡No se puede traducir texto lo que no existe!"
     }},
     "Error fake translating ": {"text": {
-        "en_US": true,
-        "es_ES": "Error al pretender a traducir "
+        "default": true,
+        "spanish": "Error al pretender a traducir "
     }},
     "Couldn't translate ": {"text": {
-        "en_US": true,
-        "es_ES": "No se puede traducir "
+        "default": true,
+        "spanish": "No se puede traducir "
     }},
     "Please confirm deletion of row ": {"text": {
-        "en_US": true,
-        "es_ES": "Por favor confirme que quiere usted eliminar la fila "
+        "default": true,
+        "spanish": "Por favor confirme que quiere usted eliminar la fila "
     }},
     "Failed to _delete row - ": {"text": {
-        "en_US": true,
-        "es_ES": "Inesperadamente no se puede _eliminar la fila "
+        "default": true,
+        "spanish": "Inesperadamente no se puede _eliminar la fila "
     }},
     "Row not found!": {"text": {
-        "en_US": true,
-        "es_ES": "¡Fila no encontrada!"
+        "default": true,
+        "spanish": "¡Fila no encontrada!"
     }},
     "Error querying data: ": {"text": {
-        "en_US": true,
-        "es_ES": "Error al pedir data: "
+        "default": true,
+        "spanish": "Error al pedir data: "
     }},
     "Delete Row": {"text": {
-        "en_US": true,
-        "es_ES": "Eliminar fila"
+        "default": true,
+        "spanish": "Eliminar fila"
     }},
     "Edit Row": {"text": {
-        "en_US": true,
-        "es_ES": "Editar fila"
+        "default": true,
+        "spanish": "Editar fila"
     }},
     "Edit": {"text": {
-        "en_US": true,
-        "es_ES": "Editar"
+        "default": true,
+        "spanish": "Editar"
     }},
     "Delete": {"text": {
-        "en_US": true,
-        "es_ES": "Eliminar"
+        "default": true,
+        "spanish": "Eliminar"
     }},
     "By ": {"text": {
-        "en_US": true,
-        "es_ES": "En grupos de "
+        "default": true,
+        "spanish": "En grupos de "
     }},
     "Unknown selector in query hash": {"text": {
-        "en_US": true,
-        "es_ES": "El seleccionador encontrado en el URL es desconocido"
+        "default": true,
+        "spanish": "El seleccionador encontrado en el URL es desconocido"
     }},
     "Couldn't guess instance col. Bailing out, you're on your own.": {"text": {
-        "en_US": true,
-        "es_ES": "No se puede automáticamente detectar cual celda por demostrar, demostrando el id"
+        "default": true,
+        "spanish": "No se puede automáticamente detectar cual celda por demostrar, demostrando el id"
     }},
     "No table id! Please set it in customJsOl or pass it in the url hash": {"text": {
-        "en_US": true,
-        "es_ES": "¡No hay ID de tabla! Por favor ponerlo en customJsOl o darla en el URL"
+        "default": true,
+        "spanish": "¡No hay ID de tabla! Por favor ponerlo en customJsOl o darla en el URL"
     }},
     "Unexpected error ": {"text": {
-        "en_US": true,
-        "es_ES": "Error inesperado"
+        "default": true,
+        "spanish": "Error inesperado"
     }},
     "Could not get columns: ": {"text": {
-        "en_US": true,
-        "es_ES": "No se puede obtener las columnas"
+        "default": true,
+        "spanish": "No se puede obtener las columnas"
     }},
     "Still searching...": {"text": {
-        "en_US": true,
-        "es_ES": "Todavia buscando..."
+        "default": true,
+        "spanish": "Todavia buscando..."
     }},
     "No results": {"text": {
-        "en_US": true,
-        "es_ES": "Sin resultos"
+        "default": true,
+        "spanish": "Sin resultos"
     }},
     "rows ": {"text": {
-        "en_US": true,
-        "es_ES": "filas "
+        "default": true,
+        "spanish": "filas "
     }},
     "Showing ": {"text": {
-        "en_US": true,
-        "es_ES": "Demostrando "
+        "default": true,
+        "spanish": "Demostrando "
     }},
     " of ": {"text": {
-        "en_US": true,
-        "es_ES": " de "
+        "default": true,
+        "spanish": " de "
     }},
     " distinct values of ": {"text": {
-        "en_US": true,
-        "es_ES": " valores unicos de "
+        "default": true,
+        "spanish": " valores unicos de "
     }},
     " rows where ": {"text": {
-        "en_US": true,
-        "es_ES": " filas donde "
+        "default": true,
+        "spanish": " filas donde "
     }},
     " is ": {"text": {
-        "en_US": true,
-        "es_ES": " está "
+        "default": true,
+        "spanish": " está "
     }},
     "Add Row": {"text": {
-        "en_US": true,
-        "es_ES": "Aggregar fila"
+        "default": true,
+        "spanish": "Aggregar fila"
     }},
     "Group by": {"text": {
-        "en_US": true,
-        "es_ES": "Ver in grupos de..."
+        "default": true,
+        "spanish": "Ver in grupos de..."
     }},
     "Go": {"text": {
-        "en_US": true,
-        "es_ES": "¡Ir!"
+        "default": true,
+        "spanish": "¡Ir!"
     }},
     "Previous Page": {"text": {
-        "en_US": true,
-        "es_ES": "Previo"
+        "default": true,
+        "spanish": "Previo"
     }},
     "Next Page": {"text": {
-        "en_US": true,
-        "es_ES": "Siguiente"
+        "default": true,
+        "spanish": "Siguiente"
     }},
     "Search": {"text": {
-        "en_US": true,
-        "es_ES": "Buscar"
+        "default": true,
+        "spanish": "Buscar"
     }},
     "List of tables": {"text": {
-        "en_US": true,
-        "es_ES": "Lista de tablas"
+        "default": true,
+        "spanish": "Lista de tablas"
     }},
     "Failure! ": {"text": {
-        "en_US": true,
-        "es_ES": "¡Error!"
+        "default": true,
+        "spanish": "¡Error!"
     }},
 }

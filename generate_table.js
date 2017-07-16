@@ -420,7 +420,7 @@ var doSearch = function doSearch() {
             displays.classList.add("displays");
             var mainDisplay = document.createElement("div")
             mainDisplay.classList.add("main-display");
-            mainDisplay.innerText = d.getData(i, display_col);
+            mainDisplay.innerText = _tc(table_id, display_col, d.getData(i, display_col));
             if (global_group_by) mainDisplay.innerText = pretty(mainDisplay.innerText);
             displays.appendChild(mainDisplay)
             var subDisplay = null;
@@ -443,7 +443,7 @@ var doSearch = function doSearch() {
                 if (typeof(display_subcol[j][0]) == "string") {
                     subDisplay.appendChild(document.createTextNode(_tu(display_subcol[j][0])))
                     if (display_subcol[j][1] != null) {
-                        subDisplay.appendChild(document.createTextNode(d.getData(i, display_subcol[j][1])))
+                        subDisplay.appendChild(document.createTextNode(_tc(table_id, display_subcol[j][1], d.getData(i, display_subcol[j][1]))))
                     }
                 } else if (display_subcol[j][0] === true) {
                     subDisplay.appendChild(document.createTextNode(pretty(d.getData(i, display_subcol[j][1]))))

@@ -368,243 +368,243 @@ var menu = ["PATH Cold Chain Demo", null, [
 
 helper.translations = {
     "PATH Cold Chain Demo": {"text": {
-        "en_US": True,
-        "es_ES": "Demo del app de vacunaciónes por PATH"
+        "default": True,
+        "spanish": "Demo del app de vacunaciónes por PATH"
     }},
     "View Data": {"text": {
-        "en_US": True,
-        "es_ES": "Ver Data"
+        "default": True,
+        "spanish": "Ver Data"
     }},
     "View Health Facilities": {"text": {
-        "en_US": True,
-        "es_ES": "Ver Facilidades de Salud",
+        "default": True,
+        "spanish": "Ver Facilidades de Salud",
     }},
     "View All": {"text": {
-        "en_US": True,
-        "es_ES": "Ver Todos"
+        "default": True,
+        "spanish": "Ver Todos"
     }},
     "Ownership": {"text": {
-        "en_US": True,
-        "es_ES": "Tipo de Propriedad"
+        "default": True,
+        "spanish": "Tipo de Propriedad"
     }},
     "More": {"text": {
-        "en_US": True,
-        "es_ES": "Más"
+        "default": True,
+        "spanish": "Más"
     }},
     "By Reserve Stock Requirement": {"text": {
-        "en_US": True,
-        "es_ES": "De Requisito de Reserva"
+        "default": True,
+        "spanish": "De Requisito de Reserva"
     }},
     "View Refrigerators": {"text": {
-        "en_US": True,
-        "es_ES": "Ver Frigorífico"
+        "default": True,
+        "spanish": "Ver Frigorífico"
     }},
     "By Facility": {"text": {
-        "en_US": True,
-        "es_ES": "De Facilidad"
+        "default": True,
+        "spanish": "De Facilidad"
     }},
     "By Model": {"text": {
-        "en_US": True,
-        "es_ES": "De Modelo"
+        "default": True,
+        "spanish": "De Modelo"
     }},
     "By Year": {"text": {
-        "en_US": True,
-        "es_ES": "De Año"
+        "default": True,
+        "spanish": "De Año"
     }},
     "By Use": {"text": {
-        "en_US": True,
-        "es_ES": "De Uso"
+        "default": True,
+        "spanish": "De Uso"
     }},
     "By Working Status": {"text": {
-        "en_US": True,
-        "es_ES": "De Trabajando"
+        "default": True,
+        "spanish": "De Trabajando"
     }},
     "By Reason Not Working": {"text": {
-        "en_US": True,
-        "es_ES": "De Razón por no Trabajar"
+        "default": True,
+        "spanish": "De Razón por no Trabajar"
     }},
     "View Refrigerator Models": {"text": {
-        "en_US": True,
-        "es_ES": "Ver Modelos de frigorífico"
+        "default": True,
+        "spanish": "Ver Modelos de frigorífico"
     }},
     "By Manufacturer": {"text": {
-        "en_US": True,
-        "es_ES": "De Fabricante"
+        "default": True,
+        "spanish": "De Fabricante"
     }},
     "By Equipment Type": {"text": {
-        "en_US": True,
-        "es_ES": "De Tipo"
+        "default": True,
+        "spanish": "De Tipo"
     }},
     "By Climate Zone": {"text": {
-        "en_US": True,
-        "es_ES": "De Zona de Clima"
+        "default": True,
+        "spanish": "De Zona de Clima"
     }},
     "Health Facility ID": {"text": {
-        "en_US": True,
-        "es_ES": "ID de Facilidad"
+        "default": True,
+        "spanish": "ID de Facilidad"
     }},
     "Population": {"text": {
-        "en_US": True,
-        "es_ES": "Poblacion"
+        "default": True,
+        "spanish": "Poblacion"
     }},
     "Coverage": {"text": {
-        "en_US": True,
-        "es_ES": "Cobertura"
+        "default": True,
+        "spanish": "Cobertura"
     }},
     "Admin Region": {"text": {
-        "en_US": True,
-        "es_ES": "Region de Administración"
+        "default": True,
+        "spanish": "Region de Administración"
     }},
     "Grid Availability": {"text": {
-        "en_US": True,
-        "es_ES": "Disponibilidad de Electricidad del Red Eléctrica"
+        "default": True,
+        "spanish": "Disponibilidad de Electricidad del Red Eléctrica"
     }},
     "Solar Suitable Climate?": {"text": {
-        "en_US": True,
-        "es_ES": "Clima Adecueto por Energía Solar"
+        "default": True,
+        "spanish": "Clima Adecueto por Energía Solar"
     }},
     "Solar Suitable Site?": {"text": {
-        "en_US": True,
-        "es_ES": "Edificio Equipado por Energía Solar"
+        "default": True,
+        "spanish": "Edificio Equipado por Energía Solar"
     }},
     "Latitude (GPS)": {"text": {
-        "en_US": True,
-        "es_ES": "Latitud (SUG)"
+        "default": True,
+        "spanish": "Latitud (SUG)"
     }},
     "Longitude (GPS)": {"text": {
-        "en_US": True,
-        "es_ES": "Longitud (SUG)"
+        "default": True,
+        "spanish": "Longitud (SUG)"
     }},
     "Climate": {"text": {
-        "en_US": True,
-        "es_ES": "Clima"
+        "default": True,
+        "spanish": "Clima"
     }},
     "Distance to Supply Point": {"text": {
-        "en_US": True,
-        "es_ES": "Distancia al Punto de Suministro"
+        "default": True,
+        "spanish": "Distancia al Punto de Suministro"
     }},
     "Vaccine Reserve Stock Req": {"text": {
-        "en_US": True,
-        "es_ES": "Tamaño Minimo de Reserva"
+        "default": True,
+        "spanish": "Tamaño Minimo de Reserva"
     }},
     "Basic Facility Information": {"text": {
-        "en_US": True,
-        "es_ES": "Información Basica"
+        "default": True,
+        "spanish": "Información Basica"
     }},
     "Refrigerator Inventory (<span id='refrig_with_this_hfid_count'>Loading...</span>)": {"text": {
-        "en_US": True,
-        "es_ES": "Frigorificos Aquí (<span id='refrig_with_this_hfid_count'>Cargando Numero...</span>)"
+        "default": True,
+        "spanish": "Frigorificos Aquí (<span id='refrig_with_this_hfid_count'>Cargando Numero...</span>)"
     }},
     "Power Information": {"text": {
-        "en_US": True,
-        "es_ES": "Información de Energía"
+        "default": True,
+        "spanish": "Información de Energía"
     }},
     "Location Information": {"text": {
-        "en_US": True,
-        "es_ES": "Información de Ubicación"
+        "default": True,
+        "spanish": "Información de Ubicación"
     }},
     "Stock Information": {"text": {
-        "en_US": True,
-        "es_ES": "Información de Reserva"
+        "default": True,
+        "spanish": "Información de Reserva"
     }},
     "Add Refrigerator": {"text": {
-        "en_US": True,
-        "es_ES": "Aggregar Frigorífico"
+        "default": True,
+        "spanish": "Aggregar Frigorífico"
     }},
     "Date Serviced:": {"text": {
-        "en_US": True,
-        "es_ES": "Fecha de Ultimo Revisión (Mantener)"
+        "default": True,
+        "spanish": "Fecha de Ultimo Revisión (Mantener)"
     }},
     "View All ": {"text": {
-        "en_US": True,
-        "es_ES": ""
+        "default": True,
+        "spanish": ""
     }},
     " Refrigerators (<span id='refrig_with_this_model_count'>Loading...</span>)": {"text": {
-        "en_US": True,
-        "es_ES": " Frigoríficos (<span id='refrig_with_this_model_count'>Cargando...</span>)"
+        "default": True,
+        "spanish": " Frigoríficos (<span id='refrig_with_this_model_count'>Cargando...</span>)"
     }},
     "Model Information": {"text": {
-        "en_US": True,
-        "es_ES": "Información de Modelo"
+        "default": True,
+        "spanish": "Información de Modelo"
     }},
     "View all maintenance logs": {"text": {
-        "en_US": True,
-        "es_ES": "Ver todos los registros de mantener"
+        "default": True,
+        "spanish": "Ver todos los registros de mantener"
     }},
     "Add Maintenance Record": {"text": {
-        "en_US": True,
-        "es_ES": "Aggregar registro de mantener/servicio"
+        "default": True,
+        "spanish": "Aggregar registro de mantener/servicio"
     }},
     "Health Facility Information": {"text": {
-        "en_US": True,
-        "es_ES": "Información de la Facilidad de Salud"
+        "default": True,
+        "spanish": "Información de la Facilidad de Salud"
     }},
     "Basic Refrigerator Information": {"text": {
-        "en_US": True,
-        "es_ES": "Información Básica"
+        "default": True,
+        "spanish": "Información Básica"
     }},
     "View All Health Facilities": {"text": {
-        "en_US": True,
-        "es_ES": "Ver Todos los Facilidades de Salud"
+        "default": True,
+        "spanish": "Ver Todos los Facilidades de Salud"
     }},
     "View All Refrigerators Not Serviced In The Last Six Months": {"text": {
-        "en_US": True,
-        "es_ES": "Ver Todos Frigoríficos Cuales no se han Mantenido en los 6 Meses Pasados"
+        "default": True,
+        "spanish": "Ver Todos Frigoríficos Cuales no se han Mantenido en los 6 Meses Pasados"
     }},
     "refrigerators in health facilities in the admin region ? that haven't been serviced in the last 180 days or have no service records": {"text": {
-        "en_US": True,
-        "es_ES": " Frigoríficos Cuales no se han Mantenido en los 6 Meses Pasados y los que Están en una Facilidad de Salud lo que Está en el Región de Administración ?"
+        "default": True,
+        "spanish": " Frigoríficos Cuales no se han Mantenido en los 6 Meses Pasados y los que Están en una Facilidad de Salud lo que Está en el Región de Administración ?"
     }},
     "Facility": {"text": {
-        "en_US": True,
-        "es_ES": "Facilidad"
+        "default": True,
+        "spanish": "Facilidad"
     }},
     "Model": {"text": {
-        "en_US": True,
-        "es_ES": "Modelo"
+        "default": True,
+        "spanish": "Modelo"
     }},
     "Use": {"text": {
-        "en_US": True,
-        "es_ES": "Uso"
+        "default": True,
+        "spanish": "Uso"
     }},
     "Healthcare Facility: ": {"text": {
-        "en_US": True,
-        "es_ES": "Facilidad de Salud"
+        "default": True,
+        "spanish": "Facilidad de Salud"
     }},
     "Facility ID: ": {"text": {
-        "en_US": True,
-        "es_ES": "ID de Facilidad"
+        "default": True,
+        "spanish": "ID de Facilidad"
     }},
     "South": {"text": {
-        "en_US": True,
-        "es_ES": "Sur"
+        "default": True,
+        "spanish": "Sur"
     }},
     "North": {"text": {
-        "en_US": True,
-        "es_ES": "Norte"
+        "default": True,
+        "spanish": "Norte"
     }},
     "Central": {"text": {
-        "en_US": True,
-        "es_ES": True
+        "default": True,
+        "spanish": True
     }},
     "South East": {"text": {
-        "en_US": True,
-        "es_ES": "Sureste"
+        "default": True,
+        "spanish": "Sureste"
     }},
     "South West": {"text": {
-        "en_US": True,
-        "es_ES": "Suroeste"
+        "default": True,
+        "spanish": "Suroeste"
     }},
     "Central East": {"text": {
-        "en_US": True,
-        "es_ES": "Este"
+        "default": True,
+        "spanish": "Este"
     }},
     "Central West": {"text": {
-        "en_US": True,
-        "es_ES": "Oeste"
+        "default": True,
+        "spanish": "Oeste"
     }},
     "Refrigerators: ": {"text": {
-        "english": True,
+        "default": True,
         "spanish": "Frigoríficos: "
     }},
 }
