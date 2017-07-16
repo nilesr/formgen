@@ -260,15 +260,17 @@ window._tu = function(s) {
     return s;
 }
 window._tc = function(table, column, text) {
-    if (cols_that_need_choices[table] != undefined && column in cols_that_need_choices[table]) {
-        if (column in all_choices[table]) {
-            var cs = all_choices[table][column];
+    if (cols_that_need_choices[table] != undefined) {
+        if (column in cols_that_need_choices[table]) {
+            choice_list = cols_that_need_choices[table][column];
+            var cs = all_choices[table];
             for (var i = 0; i < cs.length; i++) {
-              if (cs[i]["data_value"] == text) {
+              if (cs[i]["choice_list_name"] == choice_list && cs[i]["data_value"] == text) {
                   return display(cs[i]["display"])
               }
             }
             // other in a select one with other row
+            return text;
         }
         // not a column with choices
         return text;
