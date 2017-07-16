@@ -140,8 +140,6 @@ window.jsonParse = function jsonParse(text) {
         try {
             return JSON.parse(new_text);
         } catch (e) {
-            // this is six backslashes in python, becomes three in the javascript,
-            // becomes a string literal of a backslash followed by a single quote
             new_text = text.replace(/\"/g, "\\\"")
             new_text = new_text.replace(/\'/g, '"');
             // This is a last-ditch effort to save the situation, and it might still fail. The basic idea is

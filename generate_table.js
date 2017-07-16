@@ -394,7 +394,9 @@ var doSearch = function doSearch() {
         }
         // if we're in a collection, mention that
         if (global_where_clause != null && global_where_clause != undefined && global_where_clause.trim().length > 0) {
-            newtext += _t(" rows where ") + get_from_allowed_group_bys(allowed_group_bys, global_where_clause.split(" ")[0], false, metadata) + _t(" is ") + global_where_arg;
+            var where_col = global_where_clause.split(" ")[0];
+            if (where_col.indexOf(".") >= 0) where_col = where_col.split(".")[1];
+            newtext += _t(" rows where ") + get_from_allowed_group_bys(allowed_group_bys, global_where_clause.split(" ")[0], false, metadata) + _t(" is ") + _tc(table_id, where_col, global_where_arg);
         }
         if (global_human_readable_what) {
             hrw = _tu(global_human_readable_what);
