@@ -569,11 +569,11 @@ helper.translations = {
     }},
     "Healthcare Facility: ": {"text": {
         "default": True,
-        "spanish": "Facilidad de Salud"
+        "spanish": "Facilidad: "
     }},
     "Facility ID: ": {"text": {
         "default": True,
-        "spanish": "ID de Facilidad"
+        "spanish": "ID: "
     }},
     "South": {"text": {
         "default": True,
