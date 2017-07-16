@@ -1,6 +1,7 @@
 window.odkCommonDefinitions = {_tokens: {}};
 // used in both display and fake_translate, just stuff that the translatable object might be wrapped in
 var possible_wrapped = ["prompt", "title"];
+var preferred_locale = null; // for caching
 
 // Mocks translation, much faster than actual translation
 window.fake_translate = function fake_translate(thing) {
@@ -96,7 +97,10 @@ window.display = function display(thing) {
     var result = "";
     for (i = 0; i < odkCommon.i18nFieldNames.length; i++) {
         var field = odkCommon.i18nFieldNames[i];
-        this_result = odkCommon.localizeTokenField(odkCommon.getPreferredLocale(), id, field);
+        if (preferred_locale == null) {
+            preferred_locale = odkCommon.getPreferredLocale();
+        }
+        this_result = odkCommon.localizeTokenField(preferred_locale, id, field);
         if (this_result === true) return true; // used in __tr for passthrough translations
         result = display_update_result(result, this_result, field);
     }
