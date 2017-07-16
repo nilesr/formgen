@@ -607,5 +607,17 @@ helper.translations = {
         "default": True,
         "spanish": "Frigoríficos: "
     }},
+    "Tracking Number": {"text": {
+        "english": True,
+        "spanish": "Código de seguimiento"
+    }},
+    "Status": {"text": {
+        "english": True,
+        "spanish": "Estatus"
+    }},
+    "Year Installed": {"text": {
+        "english": True,
+        "spanish": "Año de instalación"
+    }},
 }
 

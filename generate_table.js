@@ -331,6 +331,8 @@ var getCols = function getCols() {
                 display_col = global_group_by;
             } else if (global_where_clause != null && global_where_clause != undefined && global_where_clause.trim().length > 0) {
                 document.getElementById("group-by").style.display = "none";
+            } else if (global_static) {
+                document.getElementById("group-by").style.display = "none";
             }
         }, function failure(e) {
             alert(_t("Could not get columns: ") + e);
