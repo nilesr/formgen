@@ -33,15 +33,15 @@ var localized_tables = """ + json.dumps(utils.get_localized_tables()) + """;
     </head>
     <body onLoad="ol();">
         <div id="header">
-            <button id='back' onClick='page_back();'>Back</button>
+            <button id='back' onClick='page_back();'></button>
             <span id="table_id"></span>
-            <button id='add' onClick='add();'>Add row</button>
+            <button id='add' onClick='add();'></button>
         </div>
         <div id="navigation">
-            <button id="group-by" onClick='groupBy();' style='font-size: small;' disabled>Group by</button>
+            <button id="group-by" onClick='groupBy();' style='font-size: small;' disabled></button>
             <select id="group-by-list" style='display: none;'></select>
-            <button id="group-by-go" style='display: none;' onClick="groupByGo();">Go</button>
-            <button disabled=true id='prev' onClick='prev();'>Previous page</button>
+            <button id="group-by-go" style='display: none;' onClick="groupByGo();"></button>
+            <button disabled id='prev' onClick='prev();'></button>
             <select id="limit" onChange='newLimit();'>
                 <!--<option value="2">2 (debug)</option>-->
                 <option value="20">20</option>
@@ -50,11 +50,11 @@ var localized_tables = """ + json.dumps(utils.get_localized_tables()) + """;
                 <option value="1000">1000</option>
             </select>
             <span id="navigation-text">Loading...</span>
-            <button disabled=true id='next' onClick='next();'>Next page</button>
+            <button disabled id='next' onClick='next();'></button>
         </div>
         <div id="search">
             <input type='text' id='search-box' onblur='offset=0; update_total_rows(false)' />
-            <button onClick='offset=0; update_total_rows(false);'>Search</button>
+            <button onClick='offset=0; update_total_rows(false);' id='search-button'></button>
         </div>
         <div id="list">Loading...</div>
         """ + customHtml + """

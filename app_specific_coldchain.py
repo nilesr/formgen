@@ -1,3 +1,4 @@
+# coding=utf-8
 import sys
 sys.path.append(".")
 import custom_helper
@@ -25,7 +26,6 @@ helper.make_table("aa_refrigerators_list.html", "", "", """
 helper.make_table("aa_health_facility_list.html", "", "", """
     allowed_tables = [];
     display_col = "facility_name"
-    display_subcol = [["Facility ID: ", "facility_id", true]];
     table_id = "health_facility";
     allowed_group_bys = ["admin_region", "climate_zone", "delivery_type", "electricity_source", ["facility_ownership", "Ownership"], "facility_type", "storage_type", "solar_suitable_climate", "solar_suitable_site", "vaccine_supply_mode", "vaccine_reserve_stock_requirement"];
 
@@ -46,7 +46,7 @@ helper.make_detail("aa_refrigerators_detail.html", """
     <div class="main-col-wrapper">
         <div id="inject-refrigerator_id">Loading...</div>
     </div>
-    <div class='h4-wrapper'><h4>Basic Refrigerator Information<h4></div>
+    <div class='h4-wrapper'><h4 id='bfi'><h4></div>
     <ul>
         <li id='inject-facility_name'></li>
         <li id='inject-year'></li>
@@ -57,18 +57,19 @@ helper.make_detail("aa_refrigerators_detail.html", """
         <li id='inject-voltage_regulator'></li>
         <li id='inject-date_serviced'></li>
     </ul>
-    <button disabled id='open_model'>Model Information</button>
+    <button disabled id='open_model'></button>
     <br />
-    <button disabled id='open_hf'>Health Facility Information</button>
+    <button disabled id='open_hf'></button>
     <br />
-    <button disabled id='add_m_log'>Add Maintenance Record</button>
+    <button disabled id='add_m_log'></button>
     <br />
-    <button disabled id='view_m_log'>View all maintenance logs</button>
+    <button disabled id='view_m_log'></button>
     <br />
         """, open("refrigerator_detail.css").read(), open("refrigerator_detail.js", "r").read() + """
-
+    document.getElementById("bfi").innerText = _tu("Basic Refrigerator Information")
     var model_callback = function model_callback(e, c, d) {
         var btn = document.getElementById("open_model");
+        btn.innerText = _tu("Model Information");
         var model = d.getData(0, "catalog_id"); // from join, not actually the model id
         var model_row_id = d.getData(0, "model_row_id");
         btn.disabled = false;
@@ -81,6 +82,7 @@ helper.make_detail("aa_refrigerators_detail.html", """
     var hf_callback = function hf_callback(e, c, d) {
         console.log(d.getData(0, "facility_name"));
         var btn = document.getElementById("open_hf");
+        btn.innerText = _tu("Health Facility Information");
         var hf = d.getData(0, "facility_name"); // from join, not actually the hf id
         var hf_row_id = d.getData(0, "facility_row_id");
         btn.disabled = false;
@@ -89,6 +91,7 @@ helper.make_detail("aa_refrigerators_detail.html", """
         });
         build_generic_callback("facility_name", true, "Facility")(e, c, d)
         document.getElementById("add_m_log").disabled = false;
+        document.getElementById("add_m_log").innerText = _tu("Add Maintenance Record");
         var defaults = {"refrigerator_id": d.getData(0, "refrigerator_id"), "date_serviced": odkCommon.toOdkTimeStampFromDate(new Date())};
         document.getElementById("add_m_log").addEventListener("click", function add_m_log() {
             if (allowed_tables.indexOf("m_logs") >= 0) {
@@ -103,8 +106,8 @@ helper.make_detail("aa_refrigerators_detail.html", """
                 odkTables.addRowWithSurvey({}, "m_logs", "m_logs", null, defaults);
             }
         });
-        // UNTESTED
         document.getElementById("view_m_log").disabled = false;
+        document.getElementById("view_m_log").innerText = _tu("View all maintenance logs")
         document.getElementById("view_m_log").addEventListener("click", function add_m_log() {
             odkTables.launchHTML(null, "config/assets/aa_m_logs_list.html#m_log/refrigerator_id = ?/" + d.getData(0, "refrigerator_id"));
         });
@@ -136,7 +139,7 @@ helper.make_detail("aa_refrigerator_types_detail.html", """
         <div id="inject-model_id" style='line-height: 3em;'>Loading...</div>
         <div id="inject-catalog_id" style='line-height: 3em;'>Loading...</div>
     </div>
-    <div class="h4-wrapper"><h4>Model Information</h4></div>
+    <div class="h4-wrapper"><h4 id='mi'></h4></div>
     <ul>
         <li id='inject-manufacturer'></li>
         <li id='inject-power_source'></li>
@@ -153,12 +156,14 @@ helper.make_detail("aa_refrigerator_types_detail.html", """
     </div>
         """, open("refrigerator_detail.css").read(), open("refrigerator_detail.js", "r").read() + """
 
+    document.getElementById("mi").innerText = _tu("Model Information")
+
     allowed_tables = [];
     main_col = "";
     global_which_cols_to_select = "*, (SELECT COUNT(*) FROM refrigerators WHERE model_row_id = refrigerator_types._id) as refrig_with_this_model_count"
     var mid_callback = function mid_callback(e, c, d) {
         generic_callback(e, c, d, "model_id", true);
-        document.getElementById("open_model").innerHTML = "View All " + c + " Refrigerators (<span id='refrig_with_this_model_count'>Loading...</span>)"
+        document.getElementById("open_model").innerHTML = _tu("View All ") + c + _tu(" Refrigerators (<span id='refrig_with_this_model_count'>Loading...</span>)")
         document.getElementById("open_model").disabled = false;
         document.getElementById("open_model").addEventListener("click", function click() {
             odkTables.launchHTML(null, "config/assets/aa_refrigerators_list.html#refrigerators/model_row_id = ?/" + row_id);
@@ -187,7 +192,7 @@ helper.make_detail("aa_health_facility_detail.html", """
     <div class="main-col-wrapper">
         <div id="inject-facility_name">Loading...</div>
     </div>
-    <div class="h4-wrapper"><h4>Basic Facility Information</h4></div>
+    <div class="h4-wrapper"><h4 id="bfi"></h4></div>
     <ul>
         <li id='inject-facility_id'></li>
         <li id='inject-facility_type'></li>
@@ -196,7 +201,7 @@ helper.make_detail("aa_health_facility_detail.html", """
         <li id='inject-facility_coverage'></li>
         <li id='inject-admin_region'></li>
     </ul>
-    <div class="h4-wrapper"><h4>Power Information</h4></div>
+    <div class="h4-wrapper"><h4 id="pi"></h4></div>
     <ul>
         <li id='inject-electricity_source'></li>
         <li id='inject-grid_power_availability'></li>
@@ -205,13 +210,13 @@ helper.make_detail("aa_health_facility_detail.html", """
         <li id='inject-solar_suitable_climate'></li>
         <li id='inject-solar_suitable_site'></li>
     </ul>
-    <div class="h4-wrapper"><h4>Location Information</h4></div>
+    <div class="h4-wrapper"><h4 id="locationi"></h4></div>
     <ul>
         <li id='inject-Location_latitude'></li>
         <li id='inject-Location_longitude'></li>
         <li id='inject-climate_zone'></li>
     </ul>
-    <div class="h4-wrapper"><h4>Stock Information</h4></div>
+    <div class="h4-wrapper"><h4 id="stocki"></h4></div>
     <ul>
         <li id='inject-distance_to_supply'></li>
         <li id='inject-vaccine_supply_interval'></li>
@@ -221,7 +226,7 @@ helper.make_detail("aa_health_facility_detail.html", """
     <div style="text-align: center;">
         <button disabled id='refrigerator_inventory'>Loading...</button>
         <br />
-        <button onClick="odkTables.launchHTML(null, "/config/assets/formgen/refrigerators#" + newGuid())">Add refrigerator</button>
+        <button onClick="odkTables.launchHTML(null, "/config/assets/formgen/refrigerators#" + newGuid())" id="addref"></button>
     </div>
         """, open("refrigerator_detail.css").read(), open("refrigerator_detail.js", "r").read() + """
 
@@ -230,7 +235,7 @@ helper.make_detail("aa_health_facility_detail.html", """
     global_which_cols_to_select = "*, (SELECT COUNT(*) FROM refrigerators WHERE facility_row_id = health_facility._id) as refrig_with_this_hfid_count"
     var fname_callback = function fname_callback(e, c, d) {
         generic_callback(e, c, d, "facility_name", true, "Health Facility ID");
-        document.getElementById("refrigerator_inventory").innerHTML = "Refrigerator Inventory (<span id='refrig_with_this_hfid_count'>Loading...</span>)"
+        document.getElementById("refrigerator_inventory").innerHTML = _tu("Refrigerator Inventory (<span id='refrig_with_this_hfid_count'>Loading...</span>)")
         document.getElementById("refrigerator_inventory").disabled = false;
         document.getElementById("refrigerator_inventory").addEventListener("click", function click() {
             odkTables.launchHTML(null, "config/assets/aa_refrigerators_list.html#refrigerators/facility_row_id = ?/" + row_id);
@@ -259,12 +264,17 @@ helper.make_detail("aa_health_facility_detail.html", """
         ['vaccine_reserve_stock_requirement', build_generic_callback("vaccine_reserve_stock_requirement", true, "Vaccine Reserve Stock Req")],
         ['vaccine_supply_mode', build_generic_callback("vaccine_supply_mode", true)],
     ]
+    document.getElementById("bfi").innerText = _tu("Basic Facility Information");
+    document.getElementById("pi").innerText = _tu("Power Information");
+    document.getElementById("locationi").innerText = _tu("Location Information");
+    document.getElementById("stocki").innerText = _tu("Stock Information");
+    document.getElementById("addref").innerText = _tu("Add Refrigerator");
 """, "")
 helper.make_detail("aa_m_logs_detail.html", "", "", """
     main_col = "refrigerator_id";
     colmap = [
         ['refrigerator_id', false],
-        ['date_serviced', function(e, c, d) { return "<b>Date Serviced:</b> " + c.split("T")[0]; }],
+        ['date_serviced', function(e, c, d) { return "<b>" + _tu("Date Serviced:") + "</b> " + c.split("T")[0]; }],
         ['notes', false]
     ]
 """, "")
@@ -291,7 +301,7 @@ def make_admin_region(val):
     subquery = "(SELECT date_serviced FROM m_logs WHERE m_logs.refrigerator_id = refrigerators.refrigerator_id ORDER BY date_serviced DESC LIMIT 1)"
     return [val, "health_facility", [
         ["View All Health Facilities", "health_facility", "admin_region = ?/" + val],
-        ["View All Refrigerators Not Serviced In The Last Six Months", "refrigerators", "STATIC/SELECT * FROM refrigerators JOIN health_facility ON refrigerators.facility_row_id = health_facility._id JOIN refrigerator_types ON refrigerators.model_row_id = refrigerator_types._id WHERE health_facility.admin_region = ? AND ("+subquery+" IS NULL OR (julianday(datetime('now')) - julianday("+subquery+")) > (6 * 30))/[\""+val+"\"]/refrigerators in health facilities in the admin region " + val + " that haven't been serviced in the last 180 days or have no service records"],
+        ["View All Refrigerators Not Serviced In The Last Six Months", "refrigerators", "STATIC/SELECT * FROM refrigerators JOIN health_facility ON refrigerators.facility_row_id = health_facility._id JOIN refrigerator_types ON refrigerators.model_row_id = refrigerator_types._id WHERE health_facility.admin_region = ? AND ("+subquery+" IS NULL OR (julianday(datetime('now')) - julianday("+subquery+")) > (6 * 30))/[\""+val+"\"]/refrigerators in health facilities in the admin region ? that haven't been serviced in the last 180 days or have no service records"],
     ]];
 def make_map(val):
     if len(hierarchy[val]) == 0: return make_admin_region(val)
@@ -354,3 +364,216 @@ var menu = ["PATH Cold Chain Demo", null, [
         ]]
     ]];
         """)
+
+
+helper.translations = {
+    "PATH Cold Chain Demo": {"text": {
+        "en_US": True,
+        "es_ES": "Demo del app de vacunaciónes por PATH"
+    }},
+    "View Data": {"text": {
+        "en_US": True,
+        "es_ES": "Ver Data"
+    }},
+    "View Health Facilities": {"text": {
+        "en_US": True,
+        "es_ES": "Ver Facilidades de Salud",
+    }},
+    "View All": {"text": {
+        "en_US": True,
+        "es_ES": "Ver Todos"
+    }},
+    "Ownership": {"text": {
+        "en_US": True,
+        "es_ES": "Tipo de Propriedad"
+    }},
+    "More": {"text": {
+        "en_US": True,
+        "es_ES": "Más"
+    }},
+    "By Reserve Stock Requirement": {"text": {
+        "en_US": True,
+        "es_ES": "De Requisito de Reserva"
+    }},
+    "View Refrigerators": {"text": {
+        "en_US": True,
+        "es_ES": "Ver Frigorífico"
+    }},
+    "By Facility": {"text": {
+        "en_US": True,
+        "es_ES": "De Facilidad"
+    }},
+    "By Model": {"text": {
+        "en_US": True,
+        "es_ES": "De Modelo"
+    }},
+    "By Year": {"text": {
+        "en_US": True,
+        "es_ES": "De Año"
+    }},
+    "By Use": {"text": {
+        "en_US": True,
+        "es_ES": "De Uso"
+    }},
+    "By Working Status": {"text": {
+        "en_US": True,
+        "es_ES": "De Trabajando"
+    }},
+    "By Reason Not Working": {"text": {
+        "en_US": True,
+        "es_ES": "De Razón por no Trabajar"
+    }},
+    "View Refrigerator Models": {"text": {
+        "en_US": True,
+        "es_ES": "Ver Modelos de frigorífico"
+    }},
+    "By Manufacturer": {"text": {
+        "en_US": True,
+        "es_ES": "De Fabricante"
+    }},
+    "By Equipment Type": {"text": {
+        "en_US": True,
+        "es_ES": "De Tipo"
+    }},
+    "By Climate Zone": {"text": {
+        "en_US": True,
+        "es_ES": "De Zona de Clima"
+    }},
+    "Health Facility ID": {"text": {
+        "en_US": True,
+        "es_ES": "ID de Facilidad"
+    }},
+    "Population": {"text": {
+        "en_US": True,
+        "es_ES": "Poblacion"
+    }},
+    "Coverage": {"text": {
+        "en_US": True,
+        "es_ES": "Cobertura"
+    }},
+    "Admin Region": {"text": {
+        "en_US": True,
+        "es_ES": "Region de Administración"
+    }},
+    "Grid Availability": {"text": {
+        "en_US": True,
+        "es_ES": "Disponibilidad de Electricidad del Red Eléctrica"
+    }},
+    "Solar Suitable Climate?": {"text": {
+        "en_US": True,
+        "es_ES": "Clima Adecueto por Energía Solar"
+    }},
+    "Solar Suitable Site?": {"text": {
+        "en_US": True,
+        "es_ES": "Edificio Equipado por Energía Solar"
+    }},
+    "Latitude (GPS)": {"text": {
+        "en_US": True,
+        "es_ES": "Latitud (SUG)"
+    }},
+    "Longitude (GPS)": {"text": {
+        "en_US": True,
+        "es_ES": "Longitud (SUG)"
+    }},
+    "Climate": {"text": {
+        "en_US": True,
+        "es_ES": "Clima"
+    }},
+    "Distance to Supply Point": {"text": {
+        "en_US": True,
+        "es_ES": "Distancia al Punto de Suministro"
+    }},
+    "Vaccine Reserve Stock Req": {"text": {
+        "en_US": True,
+        "es_ES": "Tamaño Minimo de Reserva"
+    }},
+    "Basic Facility Information": {"text": {
+        "en_US": True,
+        "es_ES": "Información Basica"
+    }},
+    "Refrigerator Inventory (<span id='refrig_with_this_hfid_count'>Loading...</span>)": {"text": {
+        "en_US": True,
+        "es_ES": "Frigorificos Aquí (<span id='refrig_with_this_hfid_count'>Cargando Numero...</span>)"
+    }},
+    "Power Information": {"text": {
+        "en_US": True,
+        "es_ES": "Información de Energía"
+    }},
+    "Location Information": {"text": {
+        "en_US": True,
+        "es_ES": "Información de Ubicación"
+    }},
+    "Stock Information": {"text": {
+        "en_US": True,
+        "es_ES": "Información de Reserva"
+    }},
+    "Add Refrigerator": {"text": {
+        "en_US": True,
+        "es_ES": "Aggregar Frigorífico"
+    }},
+    "Date Serviced:": {"text": {
+        "en_US": True,
+        "es_ES": "Fecha de Ultimo Revisión (Mantener)"
+    }},
+    "View All ": {"text": {
+        "en_US": True,
+        "es_ES": ""
+    }},
+    " Refrigerators (<span id='refrig_with_this_model_count'>Loading...</span>)": {"text": {
+        "en_US": True,
+        "es_ES": " Frigoríficos (<span id='refrig_with_this_model_count'>Cargando...</span>)"
+    }},
+    "Model Information": {"text": {
+        "en_US": True,
+        "es_ES": "Información de Modelo"
+    }},
+    "View all maintenance logs": {"text": {
+        "en_US": True,
+        "es_ES": "Ver todos los registros de mantener"
+    }},
+    "Add Maintenance Record": {"text": {
+        "en_US": True,
+        "es_ES": "Aggregar registro de mantener/servicio"
+    }},
+    "Health Facility Information": {"text": {
+        "en_US": True,
+        "es_ES": "Información de la Facilidad de Salud"
+    }},
+    "Basic Refrigerator Information": {"text": {
+        "en_US": True,
+        "es_ES": "Información Básica"
+    }},
+    "View All Health Facilities": {"text": {
+        "en_US": True,
+        "es_ES": "Ver Todos los Facilidades de Salud"
+    }},
+    "View All Refrigerators Not Serviced In The Last Six Months": {"text": {
+        "en_US": True,
+        "es_ES": "Ver Todos Frigoríficos Cuales no se han Mantenido en los 6 Meses Pasados"
+    }},
+    "refrigerators in health facilities in the admin region ? that haven't been serviced in the last 180 days or have no service records": {"text": {
+        "en_US": True,
+        "es_ES": " Frigoríficos Cuales no se han Mantenido en los 6 Meses Pasados y los que Están en una Facilidad de Salud lo que Está en el Región de Administración ?"
+    }},
+    "Facility": {"text": {
+        "en_US": True,
+        "es_ES": "Facilidad"
+    }},
+    "Model": {"text": {
+        "en_US": True,
+        "es_ES": "Modelo"
+    }},
+    "Use": {"text": {
+        "en_US": True,
+        "es_ES": "Uso"
+    }},
+    "Healthcare Facility: ": {"text": {
+        "en_US": True,
+        "es_ES": "Facilidad de Salud"
+    }},
+    "Facility ID: ": {"text": {
+        "en_US": True,
+        "es_ES": "ID de Facilidad"
+    }},
+}
+

@@ -6,6 +6,7 @@ class helper():
     def __init__(self):
         self.filanames = []
         self.queue = []
+        self.translations = {}
     def make_table(self, filename, customHtml, customCss, customJsOl, customJsSearch, customJsGeneric):
         self.queue.append(["table", filename, customHtml, customCss, customJsOl, customJsSearch, customJsGeneric])
     def make_detail(self, filename, customHtml, customCss, customJsOl, customJsGeneric):
@@ -24,5 +25,5 @@ class helper():
                 print("Bad type in queue " + q[0]);
                 sys.exit(0);
             filenames.append(q[1])
-        return filenames
+        return filenames, self.translations
 

@@ -321,10 +321,10 @@ var has_dates = """ + ("true" if has_dates else "false") + """
 </head>
 <body onLoad='ol();'>
     <div class="odk-toolbar" id="odk-toolbar">
-        <button id='cancel' onClick='cancel()' disabled=true>Loading...</button>
-        <button id='back' onClick='update(-1)'>Back</button>
-        <button id='next' onClick='update(1)'>Next</button>
-        <button id='finalize' style='display: none;' onClick='finalize()'>Finalize</button>
+        <button id='cancel' onClick='cancel()' disabled>Loading...</button>
+        <button id='back' onClick='update(-1)'></button>
+        <button id='next' onClick='update(1)'></button>
+        <button id='finalize' style='display: none;' onClick='finalize()'></button>
     </div>
     <div class="odk-container" id="odk-container">Please wait...</div>
     <!--

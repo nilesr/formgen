@@ -98,10 +98,11 @@ class utils():
         self.filenames.append("detail.html")
         generate_detail.make(self, "detail.html", "", "", "", "")
 
-        self.filenames.append("formgen_common.js")
-        generate_common.make(self, "formgen_common.js")
+        self.filenames, user_translations = custom._make(appname, self, self.filenames)
 
-        self.filenames = custom._make(appname, self, self.filenames)
+        self.filenames.append("formgen_common.js")
+        generate_common.make(self, "formgen_common.js", user_translations)
+
         for q in self.queue:
             command = q
             do_command(push, command)

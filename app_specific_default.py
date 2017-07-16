@@ -17,15 +17,13 @@ helper.make_table("Tea_houses_list.html", "", "", """
     table_id = "Tea_houses";
 """, "", "")
 
-#make_detail("Tea_houses_detail.html", "", "", "", "")
-
 # For testing that sure it opens survey for forms I can't generate yet. This one has sections or something and formgen hates it
-#make_detail("exampleForm_detail.html", "", "", "", "")
-#make_table("exampleForm_list.html", "", "", """
-#        display_subcol = [["", "rating", false], ["/10", null, true]];
-#        display_col = "name"
-#        table_id = "exampleForm";
-#""", "", "")
+helper.make_detail("exampleForm_detail.html", "", "", "", "")
+helper.make_table("exampleForm_list.html", "", "", """
+        display_subcol = [["", "rating", false], ["/10", null, true]];
+        display_col = "name"
+        table_id = "exampleForm";
+""", "", "")
 
 
 #make_detail("selects_detail.html", "", "", "", "")

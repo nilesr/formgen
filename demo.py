@@ -100,16 +100,16 @@ var buttonClick = function doButtonClick(path) {
 var doMenu = function doMenu() {
     document.getElementById("list").innerHTML = "";
     var submenu = make_submenu();
-    document.getElementById("title").innerText = submenu[0];
+    document.getElementById("title").innerText = _tu(submenu[0]);
     getMetadataAndThen(submenu[1], function(this_table_metadata) {
 
         for (var i = 0; i < submenu[2].length; i++) {
             var triplet = submenu[2][i];
             var button = document.createElement("button");
             if (triplet[0] === true) {
-                button.innerText = "By " + displayCol(triplet[2], this_table_metadata);
+                button.innerText = _t("By ") + displayCol(triplet[2], this_table_metadata);
             } else {
-                button.innerText = triplet[0];
+                button.innerText = _tu(triplet[0]);
             }
             button.classList.add("button");
             document.getElementById("list").appendChild(button);

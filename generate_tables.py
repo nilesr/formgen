@@ -1,6 +1,5 @@
 import json, sys, os, glob
 def make(utils, filename):
-    tables = [os.path.basename(x) for x in glob.glob("/home/niles/Documents/odk/app-designer/app/config/tables/*")]
     cols = {}
     tables = utils.get_tables();
     for table in tables:
@@ -21,6 +20,7 @@ var table_ids = """ + json.dumps(tables) + """
 var display_cols = """ + json.dumps(cols) + """
 var localized_tables = """ + json.dumps(utils.get_localized_tables()) + """;
 var ol = function ol() {
+    document.getElementsByTagName("h1")[0].innerText = _t("List of tables");
     for (var i = 0; i < table_ids.length; i++) {
         var table = table_ids[i];
         var h2 = document.createElement("h2");
@@ -39,7 +39,7 @@ var ol = function ol() {
         </script>
     </head>
     <body onLoad='ol();'>
-        <h1>List of tables</h1>
+        <h1></h1>
     </body>
 </html>
 """

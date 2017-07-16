@@ -28,9 +28,9 @@ var allowed_tables = """ + json.dumps(utils.get_allowed_tables()) + """;
     </head>
     <body onLoad='ol();'>
         <div id="header">
-            <button id="back" onClick='odkCommon.closeWindow();'>Back</button>
-            <button id="delete" onClick='_delete();' disabled>Delete Row</button>
-            <button id="edit" onClick='edit();' disabled>Edit Row</button>
+            <button id="back" onClick='odkCommon.closeWindow();'></button>
+            <button id="delete" onClick='_delete();' disabled></button>
+            <button id="edit" onClick='edit();' disabled></button>
             <span id="main-col"></span>
         </div>
         <ul id="rest">Loading...</ul>

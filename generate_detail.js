@@ -15,6 +15,9 @@ var global_which_cols_to_select = "*"
 // Function called on page load, tries to pull table id and row id from url hash, sets up doAction listener so we'll reload
 // when the user comes back from editing the row
 var ol = function ol() {
+    document.getElementById("back").innerText = _t("Back")
+    document.getElementById("delete").innerText = _t("Delete Row")
+    document.getElementById("edit").innerText = _t("Edit Row")
     var hash = document.location.hash.substr(1);
     if (hash.length > 0 && hash.indexOf("/") > 0) {
         table_id = hash.split("/")[0]
@@ -47,11 +50,11 @@ var getWhichColumnAndThen = function getWhichColumnAndThen(callback) {
 }
 // Called when the user clicks the delete row button, asks for a confirmation then calls deleteRow
 var _delete = function _delete() {
-    if (confirm("Please confirm deletion of row " + row_id)) {
+    if (confirm(_t("Please confirm deletion of row ") + row_id)) {
         odkData.deleteRow(table_id, null, row_id, function(d) {
             odkCommon.closeWindow();
         }, function(e) {
-            alert("Failed to _delete row - " + JSON.stringify(e));
+            alert(_t("Failed to _delete row - ") + JSON.stringify(e));
         });
     }
 }
@@ -70,7 +73,7 @@ var update_callback = function update_callback(d) {
     ul.innerHTML = "";
     // Handle no row
     if (d.getCount() == 0) {
-        ul.innerText = "Row not found!";
+        ul.innerText = _t("Row not found!");
     }
     // pending_media aggregates contentType and uriFragment rows until we have enough information to display them
     // Right now it depends on the fact that the rows are usually close together in the database
@@ -139,7 +142,7 @@ var update_callback = function update_callback(d) {
         } 
         if (found) {
             if (typeof(found[1]) == "string") {
-                li.appendChild(make_li(xlscol, found[1], val, "text"));
+                li.appendChild(make_li(xlscol, _tu(found[1]), val, "text"));
             } else if (found[1] === true) {
                 li.appendChild(make_li(xlscol, displayCol(col, metadata), pretty(val), "text"));
             } else if (found[1] === false) {
@@ -181,7 +184,7 @@ var make_li = function make_li(column_id, column_text, value_text, is_html) {
     return wrapper;
 }
 var failure_callback = function failure_callback(e) {
-    alert("Error querying data: " + e);
+    alert(_t("Error querying data: ") + e);
     odkCommon.closeWindow();
 }
 var update = function update() {

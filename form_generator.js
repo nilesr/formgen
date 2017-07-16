@@ -44,7 +44,7 @@ var screen_data = function screen_data(id) {
     // This will throw an error if the requested prompt isn't on the screen
     var gsp_result = get_screen_prompt(id);
     if (!gsp_result[0]) {
-        alert("Prompt for database column " + id + " not found on the screen! Will be stored in the database as null!") 
+        alert(_t("Prompt for database column ") + id + _t(" not found on the screen! Will be stored in the database as null!"))
         return null;
     }
     var elem = get_screen_prompt(id)[1]
@@ -221,7 +221,6 @@ var get_choices = function get_choices(which, not_first_time, filter) {
     // Default result - we didn't find anything so check again later
     var result = [false];
     // For each choice
-    var debug = 0;
     for (var j = 0; j < choices.length; j++) {
         // If the choice's "choice_list_name" is the name of the choice list we're called upon to return, add it to the result
         if (choices[j].choice_list_name == which) {
@@ -234,15 +233,7 @@ var get_choices = function get_choices(which, not_first_time, filter) {
                     if (sdat == null || sdat == undefined || sdat.length == 0) return row_data[i];
                     return sdat;
                 }
-                // DEBUG !!
-                if (which == "health_facility_list") {
-                    console.log(choice_item.regionLevel2);
-                    console.log(data('regionLevel2'))
-                    console.log(tokens[filter]);
-                    //console.log(eval(tokens[filter]));
-                }
-				filter_result = eval(tokens[filter])
-                if (filter_result) debug++;
+				        filter_result = eval(tokens[filter])
             }
             console.log("result: " + filter_result + " " + typeof(filter_result));
             if (filter_result === true) {
@@ -260,7 +251,6 @@ var get_choices = function get_choices(which, not_first_time, filter) {
             }
         }
     }
-    //if (debug > 0) alert(debug);
     // If we found choices, return them
     if (result.length > 1) return result;
     // If the csv xhr or cross table query is still in progress, return false and we'll be asked again later
@@ -281,7 +271,7 @@ var get_choices = function get_choices(which, not_first_time, filter) {
                 return [false]
             }
             // Don't know that kind of query
-            return [true, ["ERROR", "Unknown query type " + queries[j].query_type]]
+            return [true, ["ERROR", _t("Unknown query type ") + queries[j].query_type]]
         }
     }
     // Wasn't in choices or queries, don't know what to do, just leave it as empty
@@ -301,7 +291,7 @@ var do_cross_table_query = function do_cross_table_query(which, query) {
         try {
             selectionArgs = jsonParse(query.selectionArgs);
         } catch (e) {
-            alert("Failed to start cross-table query: " + e);
+            alert(_t("Failed to start cross-table query: ") + e);
             console.log(e);
             return;
         }
@@ -331,7 +321,7 @@ var do_cross_table_query = function do_cross_table_query(which, query) {
         // make update() call get_choices again now that we've added things to the global `choices` list
         update(0);
     }, function failure_callback() {
-        alert("Unexpected failure");
+        alert(_t("Unexpected failure"));
     });
 }
 // Helper function called by update, detects if a prompt in the given list of prompts has had choices added to it yet,
@@ -526,7 +516,7 @@ var updateOrInsert = function updateOrInsert() {
         });
     } else {
         odkData.updateRow(table_id, row_data, row_id, function(){}, function() {
-            alert("Unexpected failure to save row");
+            alert(_t("Unexpected failure to save row"));
             console.log(arguments);
         });
     }
@@ -538,7 +528,7 @@ var updateOrInsert = function updateOrInsert() {
     odkData.arbitraryQuery(table_id, "UPDATE " + table_id + " SET _savepoint_type = ? WHERE _id = ?;--", [setTo, row_id], 1000, 0, function success_callback(d) {
         console.log("Set _savepoint_type to "+setTo+" successfully");
     }, function failure(d) {
-        alert("Error saving row: " + d);
+        alert(_t("Error saving row: ") + d);
     });
 }
 // This is the big function that expects to be called every time there's a change.
@@ -552,7 +542,7 @@ var update = function update(delta) {
     console.log("Update called " + delta);
     // If we failed to load the data from the database in the first place,
     if (noop) {
-        var error = "An error occured while loading the page. ";
+        var error = _t("An error occurred while loading the page. ");
         if (noop !== true) {
             error = error.concat(noop);
         }
@@ -574,7 +564,7 @@ var update = function update(delta) {
                 if (s.type == "geopoint") {
                     // geopoint prompts are actually four seperate prompts, one :dbcol_:suffix for each suffix
                     if (a.jsonValue.status == 0) {
-                        alert("Error, location providers are disabled.") // (or the action was cancelled)
+                        alert(_t("Error, location providers are disabled.")) // (or the action was cancelled)
                     } else {
                         var suffixes = ["latitude", "longitude", "altitude", "accuracy"];
                         // update the screen data for each suffix with the results of the action
@@ -630,7 +620,7 @@ var update = function update(delta) {
                         console.log("No result in result object!");
                     }
                 } else {
-                    alert("Unknown type in dispach struct!")
+                    alert(_t("Unknown type in dispatch struct!"));
                 }
             }
             odkCommon.removeFirstQueuedAction();
@@ -989,11 +979,11 @@ var finalize = function finalize() {
 var cancel = function cancel() {
     if (!opened_for_edit) {
         if (row_exists) {
-            if (confirm("Are you sure? All entered data will be deleted.")) {
+            if (confirm(_t("Are you sure? All entered data will be deleted."))) {
                 odkData.deleteRow(table_id, null, row_id, function() {
                     page_back();
                 }, function(err) {
-                    alert("Unexpected error deleting row: " + JSON.stringify(err));
+                    alert(_t("Unexpected error deleting row: ") + JSON.stringify(err));
                     page_back();
                 })
             }
@@ -1010,11 +1000,14 @@ var doAction = function doAction(dStruct, act, intent) {
     if (result == "OK" || result == "IGNORED") {
         return;
     }
-    alert("Error launching " + act + ": " + result);
+    alert(_t("Error launching ") + act + ": " + result);
 }
 // Function that runs on page load, sets up some initial choices, gets the row id from the uri, determines if the row
 // we're editing exists or not and sets up opened_for_edit and row_exists based on that, 
 var ol = function onLoad() {
+    document.getElementById("next").innerText = _t("Next");
+    document.getElementById("back").innerText = _t("Back");
+    document.getElementById("finalize").innerText = _t("Finalize");
     if (has_dates) {
         // won't be localized, so we can set display to i instead of {text: i}
         for (var i = 1; i <= 31; i++) {
@@ -1027,8 +1020,8 @@ var ol = function onLoad() {
             choices = choices.concat({choice_list_name: "_year", data_value: i.toString(), display: i.toString(), notranslate: true})
         }
     }
-    choices = choices.concat({"choice_list_name": "_yesno", "data_value": "true", "display": {"text": "yes"}});
-    choices = choices.concat({"choice_list_name": "_yesno", "data_value": "false", "display": {"text": "no"}});
+    choices = choices.concat({"choice_list_name": "_yesno", "data_value": "true", "display": {"text": _t("yes")}});
+    choices = choices.concat({"choice_list_name": "_yesno", "data_value": "false", "display": {"text": _t("no")}});
     // Get the row id from the url, or makes a new id if it can't get it
     row_id = window.location.hash.substr(1);
     if (row_id.length == 0) {

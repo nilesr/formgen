@@ -64,6 +64,13 @@ var add = function() {
 
 // Function run on page load
 var ol = function ol() {
+    document.getElementById("back").innerText = _t("Back");
+    document.getElementById("add").innerText = _t("Add Row");
+    document.getElementById("group-by").innerText = _t("Group by");
+    document.getElementById("group-by-go").innerText = _t("Go");
+    document.getElementById("prev").innerText = _t("Previous Page");
+    document.getElementById("next").innerText = _t("Next Page");
+    document.getElementById("search-button").innerText = _t("Search");
     // The sections of the url hash delimited by slashes
     var sections = document.location.hash.substr(1).split("/");
     // The first section is always the table id
@@ -86,7 +93,7 @@ var ol = function ol() {
             global_static_args = jsonParse(sections[3]);
             global_human_readable_what = sections[4];
         } else {
-            alert("Unknown selector in query hash");
+            alert(_t("Unknown selector in query hash") + ": " + selector);
         }
     }
     // SET THIS
@@ -114,7 +121,7 @@ var ol = function ol() {
     }
     // If we fail, harshly warn the user (even though we're not actually bailing out)
     if (display_col == undefined || display_col == null) {
-        alert("Couldn't guess instance col. Bailing out, you're on your own.")
+        alert(_t("Couldn't guess instance col. Bailing out, you're on your own."));
         display_col = "_id"; // BAD IDEA
     }
     // Try and load the contents of the search box, limit dropdown and offset (i.e. what page we're on) from
@@ -141,7 +148,7 @@ var ol = function ol() {
     // Make sure we have a table id before continuing, if we don't, try and get it from getViewData
     // This will slow down page loading by a good second, so just please set it in customJsOl
     if (table_id.length == 0) {
-        alert("No table id! Please set it in customJsOl or pass it in the url hash");
+        alert(_t("No table id! Please set it in customJsOl or pass it in the url hash"));
         odkData.getViewData(function success(d) {
             table_id = d.getTableId();
             olHasTableId();
@@ -193,7 +200,7 @@ var update_total_rows = function update_total_rows(force) {
         doSearch();
     };
     var failure = function failure(e) {
-        alert("Unexpected error " + e);
+        alert(_t("Unexpected error ") + e);
     };
     // I don't really remember why these are different cases, but having them both use the query currently in the else
     // clause will cause it to return the wrong number of results in a group by view
@@ -326,7 +333,7 @@ var getCols = function getCols() {
                 document.getElementById("group-by").style.display = "none";
             }
         }, function failure(e) {
-            alert("Could not get columns: " + e);
+            alert(_t("Could not get columns: ") + e);
         }, 0, 0);
     }
 }
@@ -357,13 +364,13 @@ var doSearch = function doSearch() {
         if (d.getCount() == 0) {
             // try more columns first
             if (!try_more_cols) {
-                list.innerText = "Still searching...";
+                list.innerText = _t("Still searching...");
                 try_more_cols = true;
                 update_total_rows(true)
                 return;
             } else {
                 // if that doesn't work
-                list.innerText = "No results";
+                list.innerText = _t("No results");
                 document.getElementById("navigation-text").innerText = ""
             }
         } else {
@@ -376,21 +383,26 @@ var doSearch = function doSearch() {
         // trying to make a computer speak english is hard
         var rows = ""
         if (global_group_by == null && global_where_clause == null && !global_human_readable_what) {
-            rows = "rows ";
+            rows = _t("rows ");
         }
-        var newtext = "Showing " + rows + (offset + (total_rows == 0 ? 0 : 1)) + "-" + (offset + d.getCount()) + " of " + display_total;
+        var newtext = _t("Showing ") + rows + (offset + (total_rows == 0 ? 0 : 1)) + "-" + (offset + d.getCount()) + _t(" of ") + display_total;
         // if we have a group by, mention that we're in a group by view
         if (global_group_by != null && global_group_by != undefined && global_group_by.trim().length > 0) {
-            newtext += " distinct values of " + get_from_allowed_group_bys(allowed_group_bys, global_group_by, false, metadata); 
+            newtext += _t(" distinct values of ") + get_from_allowed_group_bys(allowed_group_bys, global_group_by, false, metadata);
         }
         // if we're in a collection, mention that
         if (global_where_clause != null && global_where_clause != undefined && global_where_clause.trim().length > 0) {
-            newtext += " rows where " + get_from_allowed_group_bys(allowed_group_bys, global_where_clause.split(" ")[0], false, metadata) + " is " + global_where_arg;
+            newtext += _t(" rows where ") + get_from_allowed_group_bys(allowed_group_bys, global_where_clause.split(" ")[0], false, metadata) + _t(" is ") + global_where_arg;
         }
         if (global_human_readable_what) {
-          newtext += " " + global_human_readable_what
+            hrw = _tu(global_human_readable_what);
+            for (var i = 0; i < global_static_args.length; i++) {
+                hrw = hrw.replace("?", global_static_args[i]);
+            }
+            newtext += " " + hrw
         }
-        document.getElementById("navigation-text").innerText = newtext;
+        // we may have been passed html via global_human_readable_what
+        document.getElementById("navigation-text").innerHTML = newtext;
         // for each row in the result set, make an element and add it to `list`
         // heirarchy looks something like this
         // li
@@ -429,7 +441,7 @@ var doSearch = function doSearch() {
                     subDisplay.classList.add("sub-display");
                 }
                 if (typeof(display_subcol[j][0]) == "string") {
-                    subDisplay.appendChild(document.createTextNode(display_subcol[j][0]))
+                    subDisplay.appendChild(document.createTextNode(_tu(display_subcol[j][0])))
                     if (display_subcol[j][1] != null) {
                         subDisplay.appendChild(document.createTextNode(d.getData(i, display_subcol[j][1])))
                     }
@@ -455,9 +467,9 @@ var doSearch = function doSearch() {
             var buttons = document.createElement("div");
             buttons.classList.add("buttons");
             var edit = document.createElement("button");
-            edit.innerText = "Edit";
+            edit.innerText = _t("Edit");
             var _delete = document.createElement("button");
-            _delete.innerText = "Delete";
+            _delete.innerText = _t("Delete");
             // Add event listeners for the edit and delete buttons, but also one for displays that will
             // launch a detail view if we're not in a group by view, otherwise add the collection view
             (function(edit, _delete, i, d) {
@@ -482,13 +494,13 @@ var doSearch = function doSearch() {
                     }
                 });
                 _delete.addEventListener("click", function() {
-                    if (!confirm("Please confirm deletion of row: " + d.getData(i, "_id"))) {
+                    if (!confirm(_t("Please confirm deletion of row ") + d.getData(i, "_id"))) {
                         return;
                     }
                     odkData.deleteRow(table_id, null, d.getData(i, "_id"), function(d) {
                         update_total_rows(true);
                     }, function(e) {
-                        alert("Failed to _delete row - " + JSON.stringify(e));
+                        alert(_t("Failed to _delete row - ") + JSON.stringify(e));
                     });
                 });
             })(edit, _delete, i, d);
@@ -523,7 +535,7 @@ var doSearch = function doSearch() {
         _formgen_replace_customJsSearch
         // END CUSTOM JS SEARCH
     }, function(d) {
-        alert("Failure! " + d);
+        alert(_t("Failure! ") + d);
     });
 }
 // Called when the user clicks the group by button, or on load if we're in a group by view or a collection view
@@ -547,7 +559,7 @@ var groupBy = function groupBy() {
         for (var i = 0; i < allowed_group_bys.length; i++) {
             var child = document.createElement("option");
             child.value = allowed_group_bys[i][0];
-            child.innerText = get_from_allowed_group_bys(allowed_group_bys, allowed_group_bys[i][1], allowed_group_bys[i], metadata)
+            child.innerText = _tu(get_from_allowed_group_bys(allowed_group_bys, allowed_group_bys[i][1], allowed_group_bys[i], metadata));
             list.appendChild(child);
             // Not sure if this is important or not
             if (global_group_by == cols[i]) {
