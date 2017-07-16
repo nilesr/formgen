@@ -221,6 +221,7 @@ var clean_href = function clean_href() {
 var __tr = function __tr(s) {
     console.log("Was going to translate " + s);
     //return ["ok", "TEMP!!!!"]
+    if (s.length == 0) return ["ok",  ""]
     var found = formgen_specific_translations[s];
     if (found != undefined) {
       result = display(found);
