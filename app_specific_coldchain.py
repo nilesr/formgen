@@ -319,14 +319,14 @@ as_list = json.dumps(as_list)[1:-1]
 # as_list now like ...
 #print(json.dumps(as_list, indent = 4))
 
-helper.make_demo("index.html", """
+helper.make_index("index.html", """
 var metadata = {};
-var list_views = {
+list_views = {
     "health_facility": "config/assets/aa_health_facility_list.html",
     "refrigerators": "config/assets/aa_refrigerators_list.html",
     "refrigerator_types": "config/assets/aa_refrigerator_types_list.html",
 }
-var menu = ["PATH Cold Chain Demo", null, [
+menu = ["PATH Cold Chain Demo", null, [
         """ + as_list + """,
         ["View Data", null, [
             ["View Health Facilities", "health_facility", [
@@ -363,6 +363,10 @@ var menu = ["PATH Cold Chain Demo", null, [
             ]]
         ]]
     ]];
+        """, """
+body {
+    background: url('/coldchain/config/assets/img/hallway.jpg') no-repeat center/cover fixed;
+}
         """)
 
 

@@ -5,7 +5,11 @@ helper = custom_helper.helper();
 
 
 helper.make_table("plot.html", "", "", """
-    display_subcol = [["", "planting", false], [", ","plot_size", false], [" hectares", null, true]];
+    var plating_cb = function(elem, planting) {
+        if (planting == null || planting == "null") return "Not planting"
+        return "Planting " + planting.toLowerCase() + " corn"
+    }
+    display_subcol = [[planting_cb, "planting", false], [", ","plot_size", false], [" hectares", null, true]];
     table_id = "plot";
 """, "", "")
 

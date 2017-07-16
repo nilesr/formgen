@@ -165,7 +165,6 @@ def generate_all(utils, filenames):
                     # For example in cold chain I think there's a csv query that gets a list of countries, and a previous prompt was the
                     # continent, and the filter is something like "context.continent == data('coninent')", then the only things you can
                     # select from the dropdown are countries on that continent
-                    # Not actually implemented yet in update - TODO
                     if "choice_filter" in item:
                         token = gensym()
                         tokens[token] = item["choice_filter"]
@@ -226,7 +225,6 @@ def generate_all(utils, filenames):
                         screen.append("<button class='geopoint' onClick='doAction({dbcol: \""+item["name"]+"\", type: \"geopoint\"}, \"com.google.zxing.client.android.SCAN\", {});' data-dbcol='"+item["name"]+"'>Scan barcode</button>")
                         screen.append("<br />")
                         screen.append("<input type=\"text\" disabled=true id='"+item["name"]+"' " + _class + attrs + " />")
-                    # TODO
                     elif item["type"] in ["linegraph", "bargraph", "piechart"]:
                         screen.append("TODO")
                     # Numbers are easy, and we can query input.validity to check if the user input a number correctly
@@ -263,7 +261,6 @@ def generate_all(utils, filenames):
                         screen.append(" / ")
                         screen.append("<select data-values-list=\"_day\"></select>")
                         screen.append("</span>")
-                        #defaults[item["name"]] = "1970-01-01" + "T00:00:00.000000000";
                     elif item["type"] == "assign":
                         # The only one that's not a prompt
                         screen.append("<span class=\"assign\" "+attrs+"></span>")

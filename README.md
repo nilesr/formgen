@@ -4,14 +4,24 @@
 
 First, clone [the app designer repo](https://github.com/opendatakit/app-designer) and run `grunt adbpush`
 
-Set `appdesigner`, `appname` and `adbranch` in `utils.py` and you should be set. Connect a device and run `make deploy` to generate forms and automatically push them to `/sdcard/opendatakit/:app_name/config/assets/formgen/:table_id/index.html`
+Set the `appdesigner` variable in `utils.py` to get started, then connect a device and run `make deploy appname=your_app_name adbranch=your_branch_on_appdesigner` to generate forms and automatically push them to `/sdcard/opendatakit/:app_name/config/assets/formgen/:table_id/index.html`
+
+To have make remember your app name and app designer branch, add a target to the Makefile. There are two examples to copy from already in there
 
 ## Configuring list/detail views
 
-By default, running `make` will generate a `list.html` and `detail.html` and `adb push` them. These are generic files that you can set your list view or detail view filenames to and they will work ok, however they probably won't do what you need them to do. To add table specific configuration, edit `custom.py`. There are two functions in there that will be pretty helpful
+By default, running `make` will generate a `list.html` and `detail.html` and `adb push` them. These are generic files that you can set your list view or detail view filenames to and they will work ok, however they probably won't do what you need them to do. To add table specific configuration, create `app_specific_yourappnamehere.py`. Copy the first four lines from one of the existing templates, or just copy and paste this in
 
-	make_table(filename, customHtml, customCss, customJsOnload, customJsSearch, customJsGeneric)
-	make_detail(filename, customHtml, customCss, customJsOnload, customJsGeneric)
+	import sys
+	sys.path.append(".")
+	import custom_helper
+	helper = custom_helper.helper();
+
+That will let you access these helpful functions
+	
+	helper.make_table(filename, customHtml, customCss, customJsOnload, customJsSearch, customJsGeneric)
+	helper.make_detail(filename, customHtml, customCss, customJsOnload, customJsGeneric)
+	helper.make_index(filename, customJs, customCss)
 
 Since it's python, you can use docstrings (triple quotes) to enter multiple lines in the fields. If you have a lot of CSS or something, you might want to extract it to another file and pass in something like `open("form_style.css").read()` instead
 
@@ -109,6 +119,62 @@ For `make_detail`, you almost certainly need to set `main_col` to something, so 
 
 For joins, set `global_join` the same as lists. You can also set `global_which_cols_to_select` if needed.
 
-By default, it will display every single column in the list. To configure how it gets shown, set colmap
+By default, it will display every single column in the list. To configure how it gets shown, set `colmap`.
 
-TODO more documentation
+`colmap` is a list of pairs describing which columns to show. If a colmap is set, a column is not displayed in the detail view unless it is found in `colmap`. Each pair is in the form of `[column_id, text_to_display]`, and the ul on the screen will appear as `text_to_display: value_of_that_column`.
+
+If you pass in a literal boolean true as the text to display, the translated column name is sued as the text to display, and the data displayed is pretty printed.
+
+If you pass in a literal boolean false as the text to display, the translated column name is sued as the text to display, and the data displayed is the raw data from the database, or if it was a select one/select multiple, it will be translated.
+
+If you pass a function as the text to display, it is called with three arguments, `e`, `c` and `d`. `e` is the li element that will be appended, `c` is the value of the reqested column from the database, and `d` is the odkData success callback result. Whatever the function returns is displayed to the screen.
+
+So for an imaginary cold chain deployment in the US, you might write this
+
+	colmap = [
+		["refrig_count", "Number of refrigerators"],
+		["facility_type", true],
+		["city", function(e, c, d) {
+			return "Located in <b>" + c + "</b>, <b>" + d.getData(0, "state") + "</b>;
+		}];
+	]
+
+And the result might look like this:
+
+<b>Number of refrigerators</b>: 12<br />
+<b>Facility Type</b>: Dispensary<br />
+Located in <b>Atlanta</b>, <b>Georgia</b>
+
+#### Menus
+
+In customJs you need to set `menu`. A `menu` is either a triplet of strings `["Value to display on the screen", "table_id", "something appended to the list view path]`. So for example, to open a list of `health_facilities` where admin_region is Dowa, you would set
+
+	menu = ["Title", "health_facilities", "admin_region = ?/Dowa"
+	
+If you pass in a boolean true for the title, it assumes you want a group by, interprets the third value in the triplet as a column id and attempts to pull the localized column name from the metadata of the table you listed. If you're not going to use this functionality and your button isn't going to open a list view, you can just set the second value to null.
+
+You can set the second value to the magic `_html` and the third value will be understood as a relative path and passed to `odkTables.launchHTML`. 
+
+A menu can also have embedded menus, simply pass a list as the third element in the triplet. For example:
+
+A menu can also be like `["title", "table id", another_menu]`.
+
+	menu = ["Main Title", null, [
+			// Will display all health facilities
+			["View All Health Facilities", "health_facility", ""],
+			// Will group by admin region and display "By Admin Region" for the button's text	
+			[true, "health_facility", "admin_region"],
+			["Launch another page", "_html", "assets/config/some_other_page.html"],
+			["This is an embedded menu", "health_facility", [
+				[true, "health_facility", "delivery_type"],
+				["By Reserve Stock Requirement", "health_facility", "vaccine_reserve_stock_requirement"]
+			]]
+		]]
+
+You also need to set the `list_views` variable to a dictionary. So for the above example,
+
+	list_views = {
+		"health_facilities": "config/assets/aa_health_facilities_list.html"
+	}
+
+If you didn't create a custom list view file, you can leave it blank and it will default to `config/assets/table.html`, just make sure you specified an instance column in your xlsx.

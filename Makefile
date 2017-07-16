@@ -16,3 +16,4 @@ all:
 	python3 -c "import sys; sys.path.append('.'); import utils; utils.make('$(appname)', '$(adbranch)', $(push))"
 clean:
 	rm -rf __pycache__ ||:
+.PHONY: coldchain deploy-coldchain development deploy-development deploy-multiapp all clean
