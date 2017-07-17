@@ -2,9 +2,9 @@
 
 ## Getting started
 
-First, clone [the app designer repo](https://github.com/opendatakit/app-designer) and run `grunt adbpush`
+First, clone [the app designer repo](https://github.com/opendatakit/app-designer), and set the path of where you cloned it to in the `appdesigner` variable in `utils.py`
 
-Set the `appdesigner` variable in `utils.py` to get started, then connect a device and run `make deploy appname=your_app_name adbranch=your_branch_on_appdesigner` to generate forms and automatically push them to `/sdcard/opendatakit/:app_name/config/assets/formgen/:table_id/index.html`
+Then run `make all appname=your_app_name` to generate forms and automatically copy them to your app designer repo. Change `all` to `deploy` to have them sent to a connected device as well.
 
 To have make remember your app name and app designer branch, add a target to the Makefile. There are two examples to copy from already in there
 
@@ -180,7 +180,8 @@ A menu can also have embedded menus, simply pass a list as the third element in 
 You also need to set the `list_views` variable to a dictionary. So for the above example,
 
 	list_views = {
-		"health_facilities": "config/assets/aa_health_facilities_list.html"
+		"health_facility": "config/assets/aa_health_facility_list.html",
+		"refrigerators": "config/assets/aa_refrigerators_list.html"
 	}
 
 If you didn't create a custom list view file, you can leave it blank and it will default to `config/assets/table.html`, just make sure you specified an instance column in your xlsx.

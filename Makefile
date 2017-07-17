@@ -1,19 +1,19 @@
 push := False
 appname := fail
-adbranch := fail
 coldchain: appname = coldchain
-coldchain: adbranch = cold-chain-demo
-coldchain: all clean
-deploy-coldchain: push = True
-deploy-coldchain: coldchain
-development: appname = default
-development: adbranch = development
-development: all clean
-deploy-development: push = True
-deploy-development: development
-deploy-multiapp: deploy-coldchain deploy-development
+coldchain: all
+deploy-coldchain: appname = coldchain
+deploy-coldchain: deploy
+default: appname = default
+default: all
+deploy-default: appname = default
+deploy-default: deploy
+
+deploy: push = True
+deploy: all
 all:
-	python3 -c "import sys; sys.path.append('.'); import utils; utils.make('$(appname)', '$(adbranch)', $(push))"
+	python3 -c "import sys; sys.path.append('.'); import utils; utils.make('$(appname)', $(push))"
+	make clean
 clean:
 	rm -rf __pycache__ ||:
-.PHONY: coldchain deploy-coldchain development deploy-development deploy-multiapp all clean
+.PHONY: coldchain deploy-coldchain default deploy-default deploy-multiapp deploy all clean

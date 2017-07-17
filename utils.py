@@ -72,23 +72,22 @@ class utils():
         self.stashed = False
         if len(result.strip()) > 0:
             self.stashed = True
-            #self.adrun(["git", "stash"], False)
+            self.adrun(["git", "stash"], False)
         self.adrun(["git", "checkout", adbranch], False)
     def restore_ad(self):
         self.adrun(["git", "checkout", self.oldbranch], False)
         if self.stashed:
-            pass
-            #self.adrun(["git", "stash", "pop"], False)
-    def make(self, appname, adbranch, push):
-        if appname == "fail" or adbranch == "fail":
+            self.adrun(["git", "stash", "pop"], False)
+    def make(self, appname, push):
+        if appname == "fail":# or adbranch == "fail":
             raise Exception("No branch or appname given")
         self.queue = []
         self.appname = appname
-        self.adbranch = adbranch
+        #self.adbranch = adbranch
         if self.appdesigner[-1] == "/": self.appdesigner = self.appdesigner[:-1]
         ad_subpath = self.appdesigner + "/app/config/assets"
         static_files = ["formgen_common.js", "form_generator.js", "form_generator.css", "generate_common.js", "generate_detail.css", "generate_detail.js", "generate_index.css", "generate_index.js", "generate_table.css", "generate_table.js"]
-        self.checkout(adbranch)
+        #self.checkout(adbranch)
         #import form_generator, generate_table, generate_tables, generate_detail, generate_common, custom
         self.filenames, choices, which = form_generator.generate_all(self, self.filenames)
 
@@ -133,6 +132,6 @@ class utils():
         for f in dirs:
             print("rm -rf " + f)
             shutil.rmtree(f);
-        self.restore_ad();
+        #self.restore_ad();
 
-def make(appname, adbranch, push): utils().make(appname, adbranch, push)
+def make(appname, push): utils().make(appname, push)
