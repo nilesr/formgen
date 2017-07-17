@@ -1,8 +1,8 @@
 var generic_callback = function generic_callback(e, c, d, which, pretty, optional_col_name) {
 	if (optional_col_name == null || optional_col_name == undefined || typeof(optional_col_name) != "string") {
-      optional_col_name = displayCol(which, d.getMetadata());
+	  optional_col_name = displayCol(which, d.getMetadata());
 	} else {
-	    optional_col_name = _tu(optional_col_name);
+		optional_col_name = _tu(optional_col_name);
 	}
 	wrapper = function(i) {
 		//console.log(which);
