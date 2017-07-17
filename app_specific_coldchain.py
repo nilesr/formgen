@@ -76,7 +76,7 @@ helper.make_detail("aa_refrigerators_detail.html", """
         btn.addEventListener("click", function() {
             odkTables.openDetailView(null, "refrigerator_types", model_row_id);
         });
-        build_generic_callback("model_id", true)(e, c, d)
+        build_generic_callback("model_id", true, _tu("Model ID"))(e, c, d)
         return "";
     }
     var hf_callback = function hf_callback(e, c, d) {
@@ -130,7 +130,7 @@ helper.make_detail("aa_refrigerators_detail.html", """
         ["tracking_id", build_generic_callback("tracking_id", false, "Tracking Number")],
         ["voltage_regulator", build_generic_callback("voltage_regulator", true)],
         ["refrigerator_id", build_generic_callback("refrigerator_id", true)],
-        ["date_serviced", build_generic_callback("date_serviced", function(i) { return i.split("T")[0]; })]
+        ["date_serviced", build_generic_callback("date_serviced", function(i) { return i.split("T")[0]; }, _tu("Date Serviced"))]
     ];
 """, "")
 
@@ -274,7 +274,7 @@ helper.make_detail("aa_m_logs_detail.html", "", "", """
     main_col = "refrigerator_id";
     colmap = [
         ['refrigerator_id', false],
-        ['date_serviced', function(e, c, d) { return "<b>" + _tu("Date Serviced:") + "</b> " + c.split("T")[0]; }],
+        ['date_serviced', function(e, c, d) { return "<b>" + _tu("Date Serviced") + ":</b> " + c.split("T")[0]; }],
         ['notes', false]
     ]
 """, "")
@@ -313,12 +313,46 @@ def make_map(val):
 #print(hierarchy)
 as_list = make_map("_start")
 # as_list now like ["_start", null, [...]]
-as_list = as_list[2]
-# as_list now like [...]
+#as_list = as_list[2]
 import json
-as_list = json.dumps(as_list)[1:-1]
-# as_list now like ...
-#print(json.dumps(as_list, indent = 4))
+#as_list = json.dumps(as_list)[1:-1]
+as_list[0] = "PATH Cold Chain Demo"
+as_list[2].append(
+    ["View Data", None, [
+        ["View Health Facilities", "health_facility", [
+            ["View All", "health_facility", ""],
+            [True, "health_facility", "admin_region"],
+            [True, "health_facility", "facility_type"],
+            ["Ownership", "health_facility", "facility_ownership"],
+            ["More", "health_facility", [
+                [True, "health_facility", "delivery_type"],
+                [True, "health_facility", "electricity_source"],
+                [True, "health_facility", "storage_type"],
+                [True, "health_facility", "solar_suitable_climate"],
+                [True, "health_facility", "solar_suitable_site"],
+                [True, "health_facility", "vaccine_supply_mode"],
+                ["By Reserve Stock Requirement", "health_facility", "vaccine_reserve_stock_requirement"]
+            ]]
+        ]], ["View Refrigerators", "refrigerators", [
+            ["View All", "refrigerators", ""],
+            ["By Facility", "refrigerators", "facility_name"],
+            ["By Model", "refrigerators", "catalog_id"],
+            ["By Year", "refrigerators", "year"],
+            ["More", "refrigerators", [
+                ["By Use", "refrigerators", "utilization"],
+                ["By Working Status", "refrigerators", "working_status"],
+                ["By Reason Not Working", "refrigerators", "reason_not_working"]
+            ]]
+        ]], ["View Refrigerator Models", "refrigerator_types", [
+            ["View All", "refrigerator_types", ""],
+            ["By Manufacturer", "refrigerator_types", "manufacturer"],
+            ["By Equipment Type", "refrigerator_types", "equipment_type"],
+            ["More", "refrigerator_types", [
+                ["By Climate Zone", "refrigerator_types", "climate_zone"]
+            ]]
+        ]]
+    ]]
+)
 
 helper.make_index("index.html", """
 var metadata = {};
@@ -327,43 +361,10 @@ list_views = {
     "refrigerators": "config/assets/aa_refrigerators_list.html",
     "refrigerator_types": "config/assets/aa_refrigerator_types_list.html",
 }
-menu = ["PATH Cold Chain Demo", null, [
-        """ + as_list + """,
-        ["View Data", null, [
-            ["View Health Facilities", "health_facility", [
-                ["View All", "health_facility", ""],
-                [true, "health_facility", "admin_region"],
-                [true, "health_facility", "facility_type"],
-                ["Ownership", "health_facility", "facility_ownership"],
-                ["More", "health_facility", [
-                    [true, "health_facility", "delivery_type"],
-                    [true, "health_facility", "electricity_source"],
-                    [true, "health_facility", "storage_type"],
-                    [true, "health_facility", "solar_suitable_climate"],
-                    [true, "health_facility", "solar_suitable_site"],
-                    [true, "health_facility", "vaccine_supply_mode"],
-                    ["By Reserve Stock Requirement", "health_facility", "vaccine_reserve_stock_requirement"]
-                ]]
-            ]], ["View Refrigerators", "refrigerators", [
-                ["View All", "refrigerators", ""],
-                ["By Facility", "refrigerators", "facility_name"],
-                ["By Model", "refrigerators", "catalog_id"],
-                ["By Year", "refrigerators", "year"],
-                ["More", "refrigerators", [
-                    ["By Use", "refrigerators", "utilization"],
-                    ["By Working Status", "refrigerators", "working_status"],
-                    ["By Reason Not Working", "refrigerators", "reason_not_working"]
-                ]]
-            ]], ["View Refrigerator Models", "refrigerator_types", [
-                ["View All", "refrigerator_types", ""],
-                ["By Manufacturer", "refrigerator_types", "manufacturer"],
-                ["By Equipment Type", "refrigerator_types", "equipment_type"],
-                ["More", "refrigerator_types", [
-                    ["By Climate Zone", "refrigerator_types", "climate_zone"]
-                ]]
-            ]]
-        ]]
-    ]];
+//menu = ["PATH Cold Chain Demo", null,
+        //""" + "as_list" + """
+    //];
+menu = """+json.dumps(as_list)+"""
         """, """
 body {
     background: url('/coldchain/config/assets/img/hallway.jpg') no-repeat center/cover fixed;
@@ -516,7 +517,7 @@ helper.translations = {
         "default": True,
         "es": "Aggregar Frigorífico"
     }},
-    "Date Serviced:": {"text": {
+    "Date Serviced": {"text": {
         "default": True,
         "es": "Fecha de Ultimo Revisión (Mantener)"
     }},
@@ -613,24 +614,28 @@ helper.translations = {
         "es": "Frigoríficos: "
     }},
     "Tracking Number": {"text": {
-        "english": True,
+        "default": True,
         "es": "Código de seguimiento"
     }},
     "Status": {"text": {
-        "english": True,
+        "default": True,
         "es": "Estatus"
     }},
     "Year Installed": {"text": {
-        "english": True,
+        "default": True,
         "es": "Año de instalación"
     }},
     "Manufacturer: ": {"text": {
-        "english": True,
+        "default": True,
         "es": "Fabricante: "
     }},
     "refrigerators in health facilities in the admin region ?": {"text": {
-        "english": True,
+        "default": True,
         "es": " frigoríficos los que Están en una Facilidad de Salud lo que Está en el Región de Administración ?"
+    }},
+    "Model ID": {"text": {
+        "default": True,
+        "es": "ID de Modelo"
     }},
 }
 
