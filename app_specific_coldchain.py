@@ -623,5 +623,9 @@ helper.translations = {
         "english": True,
         "es": "Año de instalación"
     }},
+    "Manufacturer: ": {"text": {
+        "english": True,
+        "spanish": "Fabricante: "
+    }},
 }
 

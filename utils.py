@@ -128,9 +128,11 @@ class utils():
             if f[0] == "/" or f[:2] == "..": continue # RELATIVE PATHS ONLY, DON'T WANT TO END UP REMOVING /home OR /Users OR SOMETHING BAD
             if len(f.split("/")) > 1:
                 dirs.add(f.split("/")[0])
-            do_command(push, ["rm", f])
+            print("rm " + f)
+            os.remove(f)
         for f in dirs:
-            do_command(push, ["rm", "-rf", f])
+            print("rm -rf " + f)
+            shutil.rmtree(f);
         self.restore_ad();
 
 def make(appname, adbranch, push): utils().make(appname, adbranch, push)
