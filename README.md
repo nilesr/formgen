@@ -6,7 +6,7 @@ First, clone [the app designer repo](https://github.com/opendatakit/app-designer
 
 Then run `make all appname=your_app_name` to generate forms and automatically copy them to your app designer repo. Change `all` to `deploy` to have them sent to a connected device as well.
 
-To have make remember your app name and app designer branch, add a target to the Makefile. There are two examples to copy from already in there
+To have `make` remember your app name, add a target to the Makefile. There are two examples to copy from already in there
 
 ## Configuring list/detail views
 
@@ -45,7 +45,7 @@ You can set `display_subcol` if you want more things displayed, like this
 
 That display "Specialty: Ulong" on one line then "Seattle, Belltown" on the next
 
-// TODO screenshot
+![](ss.png)
 
 The second thing in the triplet is the column ID, and the third thing in the triplet is whether to add a newline after that triplet
 
@@ -76,7 +76,7 @@ Another example from selects:
 
 which can display lines like "Didn't see anything", "Saw a robin", or "Saw an egret" on each row
 
-I'm pretty sure the callback functions can return html but I'd have to check. (TODO that)
+The callback functions can return html too.
 
 When you enter something into the search box, first it tries to find results `WHERE :display_col LIKE %:search%`
 
@@ -204,7 +204,7 @@ Most of the above configuration involves setting strings that will be displayed 
 		"Refrigerators: ": {"text": {
 			"default": True,
 			"spanish": "Frigoríficos: "
-		}},
+		}}
 	}
 		
 would do exactly what you expect. You can pass in the boolean literal true to avoid duplicating the input string if they are the same
