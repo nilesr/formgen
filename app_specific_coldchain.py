@@ -301,6 +301,7 @@ def make_admin_region(val):
     subquery = "(SELECT date_serviced FROM m_logs WHERE m_logs.refrigerator_id = refrigerators.refrigerator_id ORDER BY date_serviced DESC LIMIT 1)"
     return [val, "health_facility", [
         ["View All Health Facilities", "health_facility", "admin_region = ?/" + val],
+        ["View All Refrigerators", "refrigerators", "STATIC/SELECT * FROM refrigerators JOIN health_facility ON refrigerators.facility_row_id = health_facility._id JOIN refrigerator_types ON refrigerators.model_row_id = refrigerator_types._id WHERE health_facility.admin_region = ?/[\""+val+"\"]/"+"refrigerators in health facilities in the admin region ?"],
         ["View All Refrigerators Not Serviced In The Last Six Months", "refrigerators", "STATIC/SELECT * FROM refrigerators JOIN health_facility ON refrigerators.facility_row_id = health_facility._id JOIN refrigerator_types ON refrigerators.model_row_id = refrigerator_types._id WHERE health_facility.admin_region = ? AND ("+subquery+" IS NULL OR (julianday(datetime('now')) - julianday("+subquery+")) > (6 * 30))/[\""+val+"\"]/refrigerators in health facilities in the admin region ? that haven't been serviced in the last 180 days or have no service records"],
     ]];
 def make_map(val):
@@ -625,7 +626,11 @@ helper.translations = {
     }},
     "Manufacturer: ": {"text": {
         "english": True,
-        "spanish": "Fabricante: "
+        "es": "Fabricante: "
+    }},
+    "refrigerators in health facilities in the admin region ?": {"text": {
+        "english": True,
+        "es": " frigoríficos los que Están en una Facilidad de Salud lo que Está en el Región de Administración ?"
     }},
 }
 
