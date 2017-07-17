@@ -114,11 +114,15 @@ class utils():
             do_command(push, command)
             command = ["adb", "push", f, "/sdcard/opendatakit/" + appname + "/config/assets/" + f]
             do_command(push, command)
+            dest = ad_subpath + "/" + "/".join(f.split("/")[:-1])
+            print("mkdir -p " + dest);
             try:
-                os.makedirs(ad_subpath + "/" + "/".join(f.split("/")[:-1]))
+                os.makedirs(dest)
             except FileExistsError:
                 pass
-            shutil.copyfile(f, ad_subpath + "/" + f);
+            dest = ad_subpath + "/" + f
+            print("cp " + f + " " + dest)
+            shutil.copyfile(f, dest);
         dirs = set()
         for f in self.filenames:
             if f[0] == "/" or f[:2] == "..": continue # RELATIVE PATHS ONLY, DON'T WANT TO END UP REMOVING /home OR /Users OR SOMETHING BAD

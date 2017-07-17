@@ -5,9 +5,9 @@ var generic_callback = function generic_callback(e, c, d, which, pretty, optiona
 	    optional_col_name = _tu(optional_col_name);
 	}
 	wrapper = function(i) {
-		console.log(which);
-		console.log(i);
-		console.log(_tc(table_id, which, i));
+		//console.log(which);
+		//console.log(i);
+		//console.log(_tc(table_id, which, i));
 		return _tc(table_id, which, i);
 	};
 	if (pretty) wrapper = function(i) { return window.pretty(_tc(table_id, which, i.toString())); };
