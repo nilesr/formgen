@@ -72,12 +72,13 @@ class utils():
         self.stashed = False
         if len(result.strip()) > 0:
             self.stashed = True
-            self.adrun(["git", "stash"], False)
+            #self.adrun(["git", "stash"], False)
         self.adrun(["git", "checkout", adbranch], False)
     def restore_ad(self):
         self.adrun(["git", "checkout", self.oldbranch], False)
         if self.stashed:
-            self.adrun(["git", "stash", "pop"], False)
+            pass
+            #self.adrun(["git", "stash", "pop"], False)
     def make(self, appname, adbranch, push):
         if appname == "fail" or adbranch == "fail":
             raise Exception("No branch or appname given")

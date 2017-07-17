@@ -13,6 +13,8 @@ def make_index(utils, filename, customJs, customCss):
         """ + customCss + """
         </style>
         <script>
+            var list_views = {};
+            var menu = ["Empty menu!", null, ""]
             // BEGIN CONFIG
             """ + customJs + """
             // END CONFIG

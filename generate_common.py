@@ -6,6 +6,6 @@ def make(utils, filename, user_translations, choices, which):
 */
 var all_choices = """ + json.dumps(choices) + """;
 var cols_that_need_choices = """ + json.dumps(which) + """;
-var appname = """ + utils.appname + """
+var appname = """ + json.dumps(utils.appname) + """
 var user_translations = """+json.dumps(user_translations)
     open(filename, "w").write(basejs)
