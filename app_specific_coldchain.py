@@ -130,7 +130,12 @@ helper.make_detail("aa_refrigerators_detail.html", """
         ["tracking_id", build_generic_callback("tracking_id", false, "Tracking Number")],
         ["voltage_regulator", build_generic_callback("voltage_regulator", true)],
         ["refrigerator_id", build_generic_callback("refrigerator_id", true)],
-        ["date_serviced", build_generic_callback("date_serviced", function(i) { return i.split("T")[0]; }, _tu("Date Serviced"))]
+        ["date_serviced", build_generic_callback("date_serviced", function(i) {
+            if (i == "No Records") {
+                return _tu(i);
+            }
+            return i.split("T")[0];
+        }, _tu("Date Serviced"))]
     ];
 """, "")
 
@@ -313,10 +318,10 @@ def make_map(val):
 #print(hierarchy)
 as_list = make_map("_start")
 # as_list now like ["_start", null, [...]]
-#as_list = as_list[2]
 import json
-#as_list = json.dumps(as_list)[1:-1]
 as_list[0] = "PATH Cold Chain Demo"
+# as_list now like ["PATH Cold Chain Demo", null, [...]]
+# append to the [...] our own option
 as_list[2].append(
     ["View Data", None, [
         ["View Health Facilities", "health_facility", [
@@ -361,9 +366,6 @@ list_views = {
     "refrigerators": "config/assets/aa_refrigerators_list.html",
     "refrigerator_types": "config/assets/aa_refrigerator_types_list.html",
 }
-//menu = ["PATH Cold Chain Demo", null,
-        //""" + "as_list" + """
-    //];
 menu = """+json.dumps(as_list)+"""
         """, """
 body {
@@ -399,7 +401,7 @@ helper.translations = {
     }},
     "By Reserve Stock Requirement": {"text": {
         "default": True,
-        "es": "De Requisito de Reserva"
+        "es": "En Grupos de Requisito de Reserva"
     }},
     "View Refrigerators": {"text": {
         "default": True,
@@ -636,6 +638,14 @@ helper.translations = {
     "Model ID": {"text": {
         "default": True,
         "es": "ID de Modelo"
+    }},
+    "View All Refrigerators": {"text": {
+        "default": True,
+        "es": "Ver Todos los Frigoríficos"
+    }},
+    "No Records": {"text": {
+        "default": True,
+        "es": "Sin Registro"
     }},
 }
 
