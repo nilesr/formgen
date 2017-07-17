@@ -141,9 +141,9 @@ So for an imaginary cold chain deployment in the US, you might write this
 
 And the result might look like this:
 
-<b>Number of refrigerators</b>: 12<br />
-<b>Facility Type</b>: Dispensary<br />
-Located in <b>Atlanta</b>, <b>Georgia</b>
+**Number of refrigerators**: 12<br />
+**Facility Type**: Dispensary<br />
+Located in **Atlanta**, **Georgia**
 
 ### Menus
 
