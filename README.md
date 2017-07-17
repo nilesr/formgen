@@ -147,17 +147,22 @@ Located in <b>Atlanta</b>, <b>Georgia</b>
 
 ### Menus
 
-In customJs you need to set `menu`. A `menu` is either a triplet of strings `["Value to display on the screen", "table_id", "something appended to the list view path]`. So for example, to open a list of `health_facilities` where admin_region is Dowa, you would set
+In customJs you need to set `menu`. A `menu` is either a triplet of strings `["Value to display on the screen", "table_id", "something appended to the list view path]`. So for example, to make a buttom that opens a list of `health_facilities` where admin_region is Dowa, you would set
 
-	menu = ["Title", "health_facilities", "admin_region = ?/Dowa"
+	menu = ["Menu Title", null, [
+		["Button text", "health_facility", "admin_region = ?/Dowa"]
+	]]
 	
-If you pass in a boolean true for the title, it assumes you want a group by, interprets the third value in the triplet as a column id and attempts to pull the localized column name from the metadata of the table you listed. If you're not going to use this functionality and your button isn't going to open a list view, you can just set the second value to null.
+	
+You only need to set the table id on the buttons that will open a list view, or on menus that contain a button that's going to open a group by and you want the name of the column that you're going to group by to be automatically translated by setting a literal boolean `true` as the button text.
+
+If you pass in a boolean true for the title, it assumes you want a group by, interprets the third value in the triplet as a column id and attempts to pull the localized column name from the metadata of the table you listed. If you want to use this, you must set a table id for the submenu that this button is inside.
+
+If you're not going to use this functionality and your button isn't going to open a list view, you can just set the second value to null.  If you don't intend to use this feature, for performance reasons you should set the table id to on the menu that the button is in, otherwise the menu can't be displayed to the screen until the metadata for that table has been retrieved from the database.
 
 You can set the second value to the magic `_html` and the third value will be understood as a relative path and passed to `odkTables.launchHTML`. 
 
 A menu can also have embedded menus, simply pass a list as the third element in the triplet. For example:
-
-A menu can also be like `["title", "table id", another_menu]`.
 
 	menu = ["Main Title", null, [
 			// Will display all health facilities
@@ -168,6 +173,7 @@ A menu can also be like `["title", "table id", another_menu]`.
 			["This is an embedded menu", "health_facility", [
 				[true, "health_facility", "delivery_type"],
 				["By Reserve Stock Requirement", "health_facility", "vaccine_reserve_stock_requirement"]
+				["All refrigerators in the health facility Dowa that were installed before 1995", "refrigerators", "STATIC/SELECT * FROM refrigerators JOIN health_facility ON health_facility._id = refrigerators.facility_row_id WHERE health_facility.admin_region = ? AND refrigerators.year < 1995/[\"Dowa\"]/refrigerators in health facilities in the admin region ? that were installed before 1995"]
 			]]
 		]]
 
@@ -207,6 +213,6 @@ Total list of things translated using these translations:
 - Button text in indexes
 - The first string in a triplet in display_subcol in a list view
 - Strings to be displayed in allowed_group_bys in a list view
-- Human readable "what is being selected" explanations in table views, ?s replaced with bindargs of the query.
+- Human readable "what is being selected" explanations in list views opened with the `STATIC` selector, ?s replaced with bindargs of the query.
 
 You can also call the `_tu` function in your custom javascript to retrieve something from helper.translations in the user's currently selected locale

@@ -248,7 +248,7 @@ helper.make_detail("aa_health_facility_detail.html", """
         document.getElementById("refrig_with_this_hfid_count").innerText = d.getData(0, "refrig_with_this_hfid_count");
         document.getElementById("addref").addEventListener("click", function() {
             var defaults = {"facility_row_id": d.getData(0, "_id")}
-            if (allowed_tables.indexOf("refrigerators") > 0) {
+            if (allowed_tables.indexOf("refrigerators") >= 0) {
                 var id = newGuid();
                 odkData.addRow("m_logs", defaults, id, function() {
                     // Escape the LIMIT 1
@@ -318,7 +318,7 @@ for i in range(len(levels) - 1):
             hierarchy[row[i]].add(row[i+1])
 def make_admin_region(val):
     subquery = "(SELECT date_serviced FROM m_logs WHERE m_logs.refrigerator_id = refrigerators.refrigerator_id ORDER BY date_serviced DESC LIMIT 1)"
-    return [val, "health_facility", [
+    return [val, None, [
         ["View All Health Facilities", "health_facility", "admin_region = ?/" + val],
         ["View All Refrigerators", "refrigerators", "STATIC/SELECT * FROM refrigerators JOIN health_facility ON refrigerators.facility_row_id = health_facility._id JOIN refrigerator_types ON refrigerators.model_row_id = refrigerator_types._id WHERE health_facility.admin_region = ?/[\""+val+"\"]/"+"refrigerators in health facilities in the admin region ?"],
         ["View All Refrigerators Not Serviced In The Last Six Months", "refrigerators", "STATIC/SELECT * FROM refrigerators JOIN health_facility ON refrigerators.facility_row_id = health_facility._id JOIN refrigerator_types ON refrigerators.model_row_id = refrigerator_types._id WHERE health_facility.admin_region = ? AND ("+subquery+" IS NULL OR (julianday(datetime('now')) - julianday("+subquery+")) > (6 * 30))/[\""+val+"\"]/refrigerators in health facilities in the admin region ? that haven't been serviced in the last 180 days or have no service records"],
@@ -374,7 +374,6 @@ as_list[2].append(
 )
 
 helper.make_index("index.html", """
-var metadata = {};
 list_views = {
     "health_facility": "config/assets/aa_health_facility_list.html",
     "refrigerators": "config/assets/aa_refrigerators_list.html",

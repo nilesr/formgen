@@ -13,8 +13,9 @@ def make_index(utils, filename, customJs, customCss):
         """ + customCss + """
         </style>
         <script>
+            var metadata = {};
             var list_views = {};
-            var menu = ["Empty menu!", null, ""]
+            var menu = ["Empty menu!", null, []];
             // BEGIN CONFIG
             """ + customJs + """
             // END CONFIG
