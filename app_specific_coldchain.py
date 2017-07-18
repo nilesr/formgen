@@ -47,7 +47,7 @@ helper.make_table("aa_refrigerators_list.html", "", "", """
 	display_subcol = [["", "model_id", true], ["Healthcare Facility: ", "facility_name", true]];
 	display_col = "refrigerator_id"
 	table_id = "refrigerators";
-	allowed_group_bys = [["facility_row_id", "Facility"], ["model_row_id", "Model"], ["reason_not_working", true], ["utilization", "Use"], ["working_status", true], ["year", true]]
+	allowed_group_bys = [["facility_row_id", "Facility"], ["model_row_id", "Model"], "reason_not_working", ["utilization", "Use"], "working_status", "year"]
 """, "", "")
 
 helper.make_table("aa_health_facility_list.html", "", "", """
