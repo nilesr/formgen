@@ -343,19 +343,23 @@ for i in range(len(levels) - 1):
 		hierarchy["_start"].add(row[0])
 		if row[i] != row[i + 1]:
 			hierarchy[row[i]].add(row[i+1])
-def make_admin_region(val):
+paths = {}
+def make_admin_region(val, path):
+	# path is like "/1/3/0"
+	# needs to be like "#1/3/0" before it goes into `paths`
+	paths[val.upper()] = "#" + path[1:];
 	subquery = "(SELECT date_serviced FROM m_logs WHERE m_logs.refrigerator_id = refrigerators.refrigerator_id ORDER BY date_serviced DESC LIMIT 1)"
 	return [val, None, [
 		["View All Health Facilities", "health_facility", "admin_region = ?/" + val],
 		["View All Refrigerators", "refrigerators", "STATIC/SELECT * FROM refrigerators JOIN health_facility ON refrigerators.facility_row_id = health_facility._id JOIN refrigerator_types ON refrigerators.model_row_id = refrigerator_types._id WHERE health_facility.admin_region = ?/[\""+val+"\"]/"+"refrigerators in health facilities in the admin region ?"],
 		["View All Refrigerators Not Serviced In The Last Six Months", "refrigerators", "STATIC/SELECT * FROM refrigerators JOIN health_facility ON refrigerators.facility_row_id = health_facility._id JOIN refrigerator_types ON refrigerators.model_row_id = refrigerator_types._id WHERE health_facility.admin_region = ? AND ("+subquery+" IS NULL OR (julianday(datetime('now')) - julianday("+subquery+")) > (6 * 30))/[\""+val+"\"]/refrigerators in health facilities in the admin region ? that haven't been serviced in the last 180 days or have no service records"],
 	]];
-def make_map(val):
-	if len(hierarchy[val]) == 0: return make_admin_region(val)
+def make_map(val, path = ""):
+	if len(hierarchy[val]) == 0: return make_admin_region(val, path)
 	# These two lines aren't needed, but they make it so the order in the list doesn't change every time you regenerate
 	hierarchy[val] = list(hierarchy[val])
 	hierarchy[val].sort()
-	return [val, None, [make_map(x) for x in hierarchy[val]]]
+	return [val, None, [make_map(hierarchy[val][i], path + "/" + str(i)) for i in range(len(hierarchy[val]))]]
 #print(hierarchy)
 as_list = make_map("_start")
 # as_list now like ["_start", null, [...]]
@@ -399,9 +403,9 @@ as_list[2].append(
 		]]
 	]]
 )
+
 as_list[2].append(
-	["GRID EXAMPLE", None, [[val[0], "health_facility", "admin_region = ?/" + val[0]] for val in c.execute("SELECT regionlevel3 from t2;")]]
-	#["GRID EXAMPLE", None, [make_admin_region(val[0]) for val in c.execute("SELECT regionlevel3 from t2;")]]
+	["All Regions", None, [[val[0], "_html", "config/assets/index.html" + paths[val[0].upper()]] for val in c.execute("SELECT regionlevel3 from t2;")]]
 )
 
 helper.make_index("index.html", """
@@ -410,7 +414,28 @@ list_views = {
 	"refrigerators": "config/assets/aa_refrigerators_list.html",
 	"refrigerator_types": "config/assets/aa_refrigerator_types_list.html",
 }
-menu = """+json.dumps(as_list)+"""
+menu = """+json.dumps(as_list)+""";
+paths = """+json.dumps(paths)+""";
+if (window.location.hash.substr(1).length == 0) {
+	odkData.getRoles(function(r) {
+		// TEMP DEBUG TEST
+		//r = ["GROUP_ADMIN_REGION_MCHINJI"];
+		//r = ["GROUP_ADMIN_REGION_MZIMBA_SOUTH"];
+		for (var i = 0; i < r.length; i++) {
+			if (r[i].indexOf("GROUP_ADMIN_REGION_") == 0) {
+				// Doesn't work right on things with more than 3 underscores in them
+				//var region = r[i].split("_", 4)[3];
+				var region = r[i].replace("GROUP_ADMIN_REGION_", "");
+				// replace all occurrences
+				region = region.replace(/_/g, " ");
+				window.location.hash = paths[region];
+				alert(region);
+				window.location.reload();
+				break;
+			}
+		}
+	});
+}
 		""", """
 body {
 	background: url('/coldchain/config/assets/img/hallway.jpg') no-repeat center/cover fixed;
@@ -694,6 +719,10 @@ helper.translations = {
 	"View All ": {"text": {
 		"default": True,
 		"es": "Ver Todos los "
+	}},
+	"All Regions": {"text": {
+		"default": True,
+		"es": "Todos"
 	}},
 }
 
