@@ -307,6 +307,7 @@ var queries = """ + queries + """;
 var table_id = '""" + table + """';
 var tokens = """ + json.dumps(tokens) + """
 var has_dates = """ + ("true" if has_dates else "false") + """
+window.table = table_id; // HACK for display_update_result
 	</script>
 	<script src="../../form_generator.js"></script>
 </head>
@@ -334,8 +335,8 @@ var has_dates = """ + ("true" if has_dates else "false") + """
 				src = "/sdcard/opendatakit/" + utils.appname + "/config/tables/" + table + "/forms/" + table + "/" + fn
 				dest_folder = "/sdcard/opendatakit/" + utils.appname + "/config/assets/formgen/" + table + "/"
 				dest = dest_folder + fn
-				utils.queue.append(["adb", "shell", "mkdir", "-p", dest_folder])
-				utils.queue.append(["adb", "shell", "cp", "-rv", src, dest])
+				#utils.queue.append(["adb", "shell", "mkdir", "-p", dest_folder])
+				#utils.queue.append(["adb", "shell", "cp", "-rv", src, dest])
 			filenames.append("formgen/" + table + "/index.html")
 		except:
 			if skipped:
