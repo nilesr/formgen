@@ -1,27 +1,21 @@
 push := False
 appname := fail
+all:
+	python3 -c "import sys; sys.path.append('.'); import utils; utils.make('$(appname)', $(push))"
+	make clean
+deploy: push = True
+deploy: all
+clean:
+	rm -rf __pycache__ ||:
+.PHONY: coldchain deploy-coldchain default deploy-default deploy-multiapp deploy all clean
+
 coldchain: appname = coldchain
-coldchain: all coldchain-cleanup
+coldchain: all
 deploy-coldchain: appname = coldchain
-deploy-coldchain: deploy coldchain-cleanup
+deploy-coldchain: deploy
 
 default: appname = default
 default: all
 deploy-default: appname = default
 deploy-default: deploy
 
-coldchain-cleanup:
-	rm /home/niles/Documents/odk/app-designer/app/config/assets/tables.html
-	rm /home/niles/Documents/odk/app-designer/app/config/assets/table.html
-	rm /home/niles/Documents/odk/app-designer/app/config/assets/detail.html
-	mv /home/niles/Documents/odk/app-designer/app/config/assets/formgen/m_logs .
-	rm -rf /home/niles/Documents/odk/app-designer/app/config/assets/formgen/*
-	mv m_logs /home/niles/Documents/odk/app-designer/app/config/assets/formgen/
-deploy: push = True
-deploy: all
-all:
-	python3 -c "import sys; sys.path.append('.'); import utils; utils.make('$(appname)', $(push))"
-	make clean
-clean:
-	rm -rf __pycache__ ||:
-.PHONY: coldchain deploy-coldchain default deploy-default deploy-multiapp deploy all clean

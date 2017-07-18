@@ -21,9 +21,10 @@ helper.make_table("aa_refrigerator_types_list.html", "", """
 	}
 """, """
 	var makepicture = function makepicture(e, c, d, i) {
+		if (c == null || c == "null") return "No picture available";
 		return "<div class='img-wrapper'><img class='refrig-img' src='" + odkCommon.getRowFileAsUrl(table_id, d.getData(i, "_id"), c) + "' /></div>";
 	}
-	allowed_tables = [];
+	//allowed_tables = [];
 	display_subcol = [["Manufacturer: ", "manufacturer", true], ["Model ID: ", "model_id", true], [makepicture, "refrigerator_picture_uriFragment", true]];
 	allowed_group_bys = ["manufacturer", "climate_zone", "equipment_type"]
 	display_col = "catalog_id"
@@ -42,7 +43,7 @@ helper.make_table("aa_refrigerator_types_list.html", "", """
 """, "", "")
 
 helper.make_table("aa_refrigerators_list.html", "", "", """
-	allowed_tables = [];
+	//allowed_tables = [];
 	global_join = "refrigerator_types ON refrigerators.model_row_id = refrigerator_types._id JOIN health_facility ON refrigerators.facility_row_id = health_facility._id"
 	display_subcol = [["", "model_id", true], ["Healthcare Facility: ", "facility_name", true]];
 	display_col = "refrigerator_id"
@@ -51,7 +52,7 @@ helper.make_table("aa_refrigerators_list.html", "", "", """
 """, "", "")
 
 helper.make_table("aa_health_facility_list.html", "", "", """
-	allowed_tables = [];
+	//allowed_tables = [];
 	display_col = "facility_name"
 	table_id = "health_facility";
 	allowed_group_bys = ["admin_region", "climate_zone", "delivery_type", "electricity_source", ["facility_ownership", "Ownership"], "facility_type", "storage_type", "solar_suitable_climate", "solar_suitable_site", "vaccine_supply_mode", "vaccine_reserve_stock_requirement"];
@@ -61,7 +62,7 @@ helper.make_table("aa_health_facility_list.html", "", "", """
 """, "", "")
 
 helper.make_table("aa_m_logs_list.html", "", "", """
-	allowed_tables = [];
+	//allowed_tables = [];
 	display_subcol = [["", "refrigerator_id", false]];
 	allowed_group_bys = ["manufacturer", "climate_zone", "equipment_type"]
 	display_col = "date_serviced"
@@ -142,7 +143,7 @@ helper.make_detail("aa_refrigerators_detail.html", """
 		return "";
 	}
 
-	allowed_tables = ["m_logs"];
+	//allowed_tables = ["m_logs"];
 	main_col = "";
 	global_join = "refrigerator_types ON refrigerators.model_row_id = refrigerator_types._id JOIN health_facility ON refrigerators.facility_row_id = health_facility._id"
 	global_which_cols_to_select = "*"
@@ -190,7 +191,7 @@ helper.make_detail("aa_refrigerator_types_detail.html", """
 
 	document.getElementById("mi").innerText = _tu("Model Information")
 
-	allowed_tables = [];
+	//allowed_tables = [];
 	main_col = "";
 	global_which_cols_to_select = "*, (SELECT COUNT(*) FROM refrigerators WHERE model_row_id = refrigerator_types._id) as refrig_with_this_model_count"
 	var mid_callback = function mid_callback(e, c, d) {
@@ -262,7 +263,7 @@ helper.make_detail("aa_health_facility_detail.html", """
 	</div>
 		""", open("refrigerator_detail.css").read(), open("refrigerator_detail.js", "r").read() + """
 
-	allowed_tables = [];
+	//allowed_tables = [];
 	main_col = "";
 	global_which_cols_to_select = "*, (SELECT COUNT(*) FROM refrigerators WHERE facility_row_id = health_facility._id) as refrig_with_this_hfid_count"
 	var fname_callback = function fname_callback(e, c, d) {
@@ -722,6 +723,10 @@ helper.translations = {
 	"All Regions": {"text": {
 		"default": True,
 		"es": "Todos"
+	}},
+	"No picture available": {"text": {
+		"default": True,
+		"es": "Sin Foto"
 	}},
 }
 
