@@ -87,8 +87,8 @@ window.display = function display(thing) {
 
 	// Insert it into odkCommonDefinitions so that we can pass it to localizeTokenField, which
 	// only takes a key into odkCommonDefinitions because the whole translation system was designed poorly
-	var id = newGuid();
-	window.odkCommonDefinitions._tokens[id] = thing;
+	//var id = newGuid();
+	//window.odkCommonDefinitions._tokens[id] = thing;
 
 	// i18nFieldNames is usually ["text", "audio", "video", "image"]
 	// Since an object might have multiple of these, like {"text": "Egret selected", "image": "media/egret.jpeg"}
@@ -100,14 +100,15 @@ window.display = function display(thing) {
 		if (preferred_locale == null) {
 			preferred_locale = odkCommon.getPreferredLocale();
 		}
-		this_result = odkCommon.localizeTokenField(preferred_locale, id, field);
+		//this_result = odkCommon.localizeTokenField(preferred_locale, id, field);
+		this_result = odkCommon.localizeTokenField(preferred_locale, thing, field);
 		if (this_result === true) return true; // used in __tr for passthrough translations
 		result = display_update_result(result, this_result, field);
 	}
 	//if (result.length === 0) {
 		//return _t("Couldn't translate ") + JSON.stringify(thing);
 	//}
-	odkCommonDefinitions[id] = null; // let it be garbage collected
+	//odkCommonDefinitions[id] = null; // let it be garbage collected
 	return result;
 };
 
@@ -255,24 +256,17 @@ window._tu = function(s) {
 	//odkData.addRow("m_logs", {"notes": "_tu failed to translate '''" + s + "''' on the page " + window.location.href}, newGuid());
 	return s;
 }
-window._tc = function(table, column, text) {
-	if (cols_that_need_choices[table] != undefined) {
-		if (column in cols_that_need_choices[table]) {
-			choice_list = cols_that_need_choices[table][column];
-			var cs = all_choices[table];
-			for (var i = 0; i < cs.length; i++) {
-			  if (cs[i]["choice_list_name"] == choice_list && cs[i]["data_value"] == text) {
-				  return display(cs[i]["display"])
-			  }
-			}
-			// other in a select one with other row
-			return text;
-		}
-		// not a column with choices
+window._tc = function(d, column, text) {
+	if (d.getColumnChoicesList(column) == null) {
+		// not a prompt type that needs choices
 		return text;
 	}
-	// wtf
-	return text;
+	var toTranslate = d.getColumnChoiceDataValueObject(column, text);
+	if (toTranslate == null) {
+		// user-entered other value in a select-one-with-other
+		return text;
+	}
+	return display(toTranslate.display);
 }
 
 

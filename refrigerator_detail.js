@@ -4,8 +4,8 @@ var generic_callback = function generic_callback(e, c, d, which, pretty, optiona
 	} else {
 		optional_col_name = _tu(optional_col_name);
 	}
-	wrapper = function(i) { return _tc(table_id, which, i); };
-	if (pretty) wrapper = function(i) { return window.pretty(_tc(table_id, which, i.toString())); };
+	wrapper = function(i) { return _tc(d, which, i); };
+	if (pretty) wrapper = function(i) { return window.pretty(_tc(d, which, i.toString())); };
 	document.getElementById("inject-" + which).innerHTML = "<b>" + optional_col_name + "</b>: " + wrapper(c);
 	document.getElementById("inject-" + which).classList.add("li-inner");
 }
