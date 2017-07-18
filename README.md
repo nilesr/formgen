@@ -43,7 +43,7 @@ You can set `display_subcol` if you want more things displayed, like this
 
 	display_subcol = [["Specialty: ", "ttName", true], ["", "District", false], [", ", "Neighborhood", true]];
 
-That display "Specialty: Ulong" on one line then "Seattle, Belltown" on the next
+That display "Specialty: Herbal" on one line then "Seattle, Belltown" on the next
 
 ![](ss.png)
 
@@ -53,20 +53,20 @@ If the first thing in the triplet is a string, the string is printed immediately
 
 If the first thing is a function, it's called with the second argument set to the column value, and whatever the function returns is displayed. For example:
 
-	var sc_callback = function(e, d) {
-		  if (d == "Ulong") {
-			  return "This tea house specializes in Ulong Tea - Yuck!"
+	var sc_callback = function(e, c, d, i) {
+		  if (c == "Black") {
+			  return "This tea house specializes in Black Tea - Yuck!"
 		  } else {
-			  return "Specialty: " +  d;
+			  return "Specialty: " +  c;
 		  }
 	};
 	display_subcol = [[sc_callback, "ttName", true]]
 
-would display a snide remark about the tea houses specialty if it specializes in Ulong, otherwise display it normally
+would display a snide remark about the tea houses specialty if it specializes in Black Tea, otherwise display it normally
 
 Another example from selects:
 
-	var cb = function(elem, bird) {
+	var cb = function(e, bird, d, i) {
 		if (bird == null || bird == undefined || bird.trim().length == 0) return "Didn't see anything";
 		var n = ""
 		if ("aeiou".indexOf(bird[0].toLowerCase()) >= 0) n = "n"
@@ -75,6 +75,8 @@ Another example from selects:
 	display_subcol = [[cb, "bird", true]];
 
 which can display lines like "Didn't see anything", "Saw a robin", or "Saw an egret" on each row
+
+The four arguments are `e`, the dom element that the text will be displayed inside of, `c`, the database value of the requested column, `d`, the odkData object and `i`, the index of the row. So if you had a callback that needed data from another column, you can get it using `d.getData(i, "some_other_column")`
 
 The callback functions can return html too.
 
