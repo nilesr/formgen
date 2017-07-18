@@ -7,36 +7,38 @@ helper = custom_helper.helper();
 
 # Cold chain demo
 helper.make_table("aa_refrigerator_types_list.html", "", """
-    .refrig-img {
-        max-width: 45%;
-    }
-    .li {
-        font-size: 150%;
-    }
-    .buttons > button {
-        font-size: 22px;
-    }
-    .img-wrapper {
-        text-align: center;
-    }
+	.refrig-img {
+		max-width: 45%;
+	}
+	.li {
+		font-size: 150%;
+	}
+	.buttons > button {
+		font-size: 22px;
+	}
+	.img-wrapper {
+		text-align: center;
+	}
 """, """
-    var makepicture = function makepicture(e, c, d, i) {
-        return "<div class='img-wrapper'><img class='refrig-img' src='" + odkCommon.getRowFileAsUrl(table_id, d.getData(i, "_id"), c) + "' /></div>";
-    }
+	var makepicture = function makepicture(e, c, d, i) {
+		return "<div class='img-wrapper'><img class='refrig-img' src='" + odkCommon.getRowFileAsUrl(table_id, d.getData(i, "_id"), c) + "' /></div>";
+	}
 	allowed_tables = [];
 	display_subcol = [["Manufacturer: ", "manufacturer", true], ["Model ID: ", "model_id", true], [makepicture, "refrigerator_picture_uriFragment", true]];
 	allowed_group_bys = ["manufacturer", "climate_zone", "equipment_type"]
 	display_col = "catalog_id"
 	table_id = "refrigerator_types";
 	// Dirty hacks beyond this point
-	var option = document.createElement("option");
-	option.value = 5;
-	option.innerText = 5;
-	var l = document.getElementById("limit");
-	l.appendChild(option);
-	l.selectedIndex = l.children.length - 1;
-	limit = 5;
-	newLimit();
+	if (global_group_by == null || global_group_by == undefined || global_group_by.trim().length == 0) {
+		var option = document.createElement("option");
+		option.value = 5;
+		option.innerText = 5;
+		var l = document.getElementById("limit");
+		l.appendChild(option);
+		l.selectedIndex = l.children.length - 1;
+		limit = 5;
+		newLimit();
+	}
 """, "", "")
 
 helper.make_table("aa_refrigerators_list.html", "", "", """
@@ -398,8 +400,8 @@ as_list[2].append(
 	]]
 )
 as_list[2].append(
-    ["GRID EXAMPLE", None, [[val[0], "health_facility", "admin_region = ?/" + val[0]] for val in c.execute("SELECT regionlevel3 from t2;")]]
-    #["GRID EXAMPLE", None, [make_admin_region(val[0]) for val in c.execute("SELECT regionlevel3 from t2;")]]
+	["GRID EXAMPLE", None, [[val[0], "health_facility", "admin_region = ?/" + val[0]] for val in c.execute("SELECT regionlevel3 from t2;")]]
+	#["GRID EXAMPLE", None, [make_admin_region(val[0]) for val in c.execute("SELECT regionlevel3 from t2;")]]
 )
 
 helper.make_index("index.html", """
@@ -685,13 +687,13 @@ helper.translations = {
 		"default": True,
 		"es": "Sin Registro"
 	}},
-    "Model ID: ": {"text": {
-        "default": True,
-        "es": "ID de Modelo: "
-    }},
-    "View All ": {"text": {
-        "default": True,
-        "es": "Ver Todos los "
-    }},
+	"Model ID: ": {"text": {
+		"default": True,
+		"es": "ID de Modelo: "
+	}},
+	"View All ": {"text": {
+		"default": True,
+		"es": "Ver Todos los "
+	}},
 }
 
