@@ -429,7 +429,6 @@ if (window.location.hash.substr(1).length == 0) {
 				// replace all occurrences
 				region = region.replace(/_/g, " ");
 				window.location.hash = paths[region];
-				alert(region);
 				window.location.reload();
 				break;
 			}
