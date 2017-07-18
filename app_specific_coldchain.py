@@ -367,6 +367,10 @@ import json
 as_list[0] = "PATH Cold Chain Demo"
 # as_list now like ["PATH Cold Chain Demo", null, [...]]
 # append to the [...] our own option
+
+as_list[2].append(
+	["All Regions", None, [[val[0], "_html", "config/assets/index.html" + paths[val[0].upper()]] for val in c.execute("SELECT regionlevel3 from t2;")]]
+)
 as_list[2].append(
 	["View Data", None, [
 		["View Health Facilities", "health_facility", [
@@ -402,10 +406,6 @@ as_list[2].append(
 			]]
 		]]
 	]]
-)
-
-as_list[2].append(
-	["All Regions", None, [[val[0], "_html", "config/assets/index.html" + paths[val[0].upper()]] for val in c.execute("SELECT regionlevel3 from t2;")]]
 )
 
 helper.make_index("index.html", """
