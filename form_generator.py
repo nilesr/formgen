@@ -190,7 +190,7 @@ def generate_all(utils, filenames):
 							# like MediaChooseImageActivity or MediaCaptureVideoActivity
 							act = "org.opendatakit.survey.activities.Media" + action + hrtype + "Activity"
 							# Button with text "Choose Picture" or "Take Picture" or "Choose Video", or etc...
-							screen.append("<button onClick='doAction({dbcol: \""+item["name"]+"\", type: \"image\"}, \""+act+"\", makeIntent(survey, \""+act+"\", \""+item["name"]+"\"));' data-dbcol='"+item["name"]+"'>" + action + " " + ("Picture" if hrtype == "Image" else hrtype) + "</button>")
+							screen.append("<button onClick='doAction({dbcol: \""+item["name"]+"\", type: \"image\"}, \""+act+"\", makeIntent(survey, \""+act+"\", \""+item["name"]+"\"));' data-dbcol='"+item["name"]+"'><span class='formgen-specific-translate'>" + action + " " + ("Picture" if hrtype == "Image" else hrtype) + "</span></button>")
 						# We will make two input elements, one with data-dbcol set to ":dbcol_uriFragment" and one with it set to ":dbcol_contentType"
 						# Both will be disabled so the user can't edit them. Neither will have a label, and the contentType one will be hidden so
 						# the user only sees the uri one 
