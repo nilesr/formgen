@@ -399,6 +399,7 @@ as_list[2].append(
 )
 as_list[2].append(
     ["GRID EXAMPLE", None, [[val[0], "health_facility", "admin_region = ?/" + val[0]] for val in c.execute("SELECT regionlevel3 from t2;")]]
+    #["GRID EXAMPLE", None, [make_admin_region(val[0]) for val in c.execute("SELECT regionlevel3 from t2;")]]
 )
 
 helper.make_index("index.html", """

@@ -14,7 +14,9 @@ coldchain-cleanup:
 	rm /home/niles/Documents/odk/app-designer/app/config/assets/tables.html
 	rm /home/niles/Documents/odk/app-designer/app/config/assets/table.html
 	rm /home/niles/Documents/odk/app-designer/app/config/assets/detail.html
-	rm -rf /home/niles/Documents/odk/app-designer/app/config/assets/formgen
+	mv /home/niles/Documents/odk/app-designer/app/config/assets/formgen/m_logs .
+	rm -rf /home/niles/Documents/odk/app-designer/app/config/assets/formgen/*
+	mv m_logs /home/niles/Documents/odk/app-designer/app/config/assets/formgen/
 deploy: push = True
 deploy: all
 all:
