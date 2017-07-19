@@ -406,7 +406,7 @@ var doSearch = function doSearch() {
 		// we may have been passed html via global_human_readable_what
 		document.getElementById("navigation-text").innerHTML = newtext;
 		// for each row in the result set, make an element and add it to `list`
-		// heirarchy looks something like this
+		// hierarchy looks something like this
 		// li
 		//	  displays
 		//		  main display column value
