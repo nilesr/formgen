@@ -209,7 +209,7 @@ def generate_all(utils, filenames):
 						elif hrtype == "Video":
 							screen.append("<video style='display: none;' class='image video' data-dbcol='"+item["name"]+"'></video>")
 					elif item["type"] == "geopoint":
-						screen.append("<button class='geopoint' onClick='doAction({dbcol: \""+item["name"]+"\", type: \"geopoint\"}, \"org.opendatakit.survey.activities.GeoPointActivity\", makeIntent(survey, \"org.opendatakit.survey.activities.GeoPointActivity\"));' data-dbcol='"+item["name"]+"'>Record location</button>")
+						screen.append("<button class='geopoint' onClick='doAction({dbcol: \""+item["name"]+"\", type: \"geopoint\"}, \"org.opendatakit.survey.activities.GeoPointActivity\", makeIntent(survey, \"org.opendatakit.survey.activities.GeoPointActivity\"));' data-dbcol='"+item["name"]+"'><span class='formgen-specific-translate'>Record location</span></button>")
 						# Will make four input fields, each with data-dbcol set to ":dbcol_:suffix" for these four suffixes
 						for suffix in ["latitude", "longitude", "altitude", "accuracy"]:
 							column_id = item["name"] + "_" + suffix
