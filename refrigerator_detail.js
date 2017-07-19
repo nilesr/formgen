@@ -6,6 +6,7 @@ var generic_callback = function generic_callback(e, c, d, which, pretty, optiona
 	}
 	wrapper = function(i) { return _tc(d, which, i); };
 	if (pretty) wrapper = function(i) { return window.pretty(_tc(d, which, i.toString())); };
+	if (c == null) c = "null"; // because null.toString() will throw an exception
 	document.getElementById("inject-" + which).innerHTML = "<b>" + optional_col_name + "</b>: " + wrapper(c);
 	document.getElementById("inject-" + which).classList.add("li-inner");
 }
