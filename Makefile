@@ -10,9 +10,13 @@ clean:
 .PHONY: coldchain deploy-coldchain default deploy-default deploy-multiapp deploy all clean
 
 coldchain: appname = coldchain
-coldchain: all
+coldchain: all coldchain-cleanup
 deploy-coldchain: appname = coldchain
-deploy-coldchain: deploy
+deploy-coldchain: deploy coldchain-cleanup
+coldchain-cleanup:
+	rm -rf /home/niles/Documents/odk/app-designer/app/config/assets/formgen
+	rm /home/niles/Documents/odk/app-designer/app/config/assets/form_generator.js
+	rm /home/niles/Documents/odk/app-designer/app/config/assets/form_generator.css
 
 default: appname = default
 default: all

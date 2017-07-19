@@ -24,7 +24,7 @@ helper.make_table("aa_refrigerator_types_list.html", "", """
 		if (c == null || c == "null") return "No picture available";
 		return "<div class='img-wrapper'><img class='refrig-img' src='" + odkCommon.getRowFileAsUrl(table_id, d.getData(i, "_id"), c) + "' /></div>";
 	}
-	//allowed_tables = [];
+	allowed_tables = [];
 	display_subcol = [["Manufacturer: ", "manufacturer", true], ["Model ID: ", "model_id", true], [makepicture, "refrigerator_picture_uriFragment", true]];
 	allowed_group_bys = ["manufacturer", "climate_zone", "equipment_type"]
 	display_col = "catalog_id"
@@ -40,33 +40,37 @@ helper.make_table("aa_refrigerator_types_list.html", "", """
 		limit = 5;
 		newLimit();
 	}
+	document.getElementById("add").style.display = "none";
 """, "", "")
 
 helper.make_table("aa_refrigerators_list.html", "", "", """
-	//allowed_tables = [];
+	allowed_tables = [];
 	global_join = "refrigerator_types ON refrigerators.model_row_id = refrigerator_types._id JOIN health_facility ON refrigerators.facility_row_id = health_facility._id"
 	display_subcol = [["", "model_id", true], ["Healthcare Facility: ", "facility_name", true]];
 	display_col = "refrigerator_id"
 	table_id = "refrigerators";
 	allowed_group_bys = [["facility_row_id", "Facility"], ["model_row_id", "Model"], "reason_not_working", ["utilization", "Use"], "working_status", "year"]
+	document.getElementById("add").style.display = "none";
 """, "", "")
 
 helper.make_table("aa_health_facility_list.html", "", "", """
-	//allowed_tables = [];
+	allowed_tables = [];
 	display_col = "facility_name"
 	table_id = "health_facility";
 	allowed_group_bys = ["admin_region", "climate_zone", "delivery_type", "electricity_source", ["facility_ownership", "Ownership"], "facility_type", "storage_type", "solar_suitable_climate", "solar_suitable_site", "vaccine_supply_mode", "vaccine_reserve_stock_requirement"];
 
 	global_which_cols_to_select = "*, (SELECT COUNT(*) FROM refrigerators WHERE facility_row_id = health_facility._id) AS refrigerator_count"
 	display_subcol = [["Facility ID: ", "facility_id", true], ["Refrigerators: ", "refrigerator_count", true]]
+	document.getElementById("add").style.display = "none";
 """, "", "")
 
 helper.make_table("aa_m_logs_list.html", "", "", """
-	//allowed_tables = [];
+	allowed_tables = [];
 	display_subcol = [["", "refrigerator_id", false]];
 	allowed_group_bys = ["manufacturer", "climate_zone", "equipment_type"]
 	display_col = "date_serviced"
 	table_id = "m_logs";
+	document.getElementById("add").style.display = "none";
 """, "", "")
 
 
@@ -86,8 +90,10 @@ helper.make_detail("aa_refrigerators_detail.html", """
 		<li id='inject-date_serviced'></li>
 	</ul>
 	<button disabled id='open_model'></button>
-	<br />
-	<button disabled id='open_hf'></button>
+	<!--
+		<br />
+		<button disabled id='open_hf'></button>
+	-->
 	<br />
 	<button disabled id='add_m_log'></button>
 	<br />
@@ -108,15 +114,16 @@ helper.make_detail("aa_refrigerators_detail.html", """
 		return "";
 	}
 	var hf_callback = function hf_callback(e, c, d) {
-		console.log(d.getData(0, "facility_name"));
-		var btn = document.getElementById("open_hf");
-		btn.innerText = _tu("Health Facility Information");
-		var hf = d.getData(0, "facility_name"); // from join, not actually the hf id
-		var hf_row_id = d.getData(0, "facility_row_id");
-		btn.disabled = false;
-		btn.addEventListener("click", function() {
-			odkTables.openDetailView(null, "health_facility", hf_row_id, "config/assets/aa_health_facility_detail.html#health_facility/" + hf_row_id);
-		});
+		/*
+			var btn = document.getElementById("open_hf");
+			btn.innerText = _tu("Health Facility Information");
+			var hf = d.getData(0, "facility_name"); // from join, not actually the hf id
+			var hf_row_id = d.getData(0, "facility_row_id");
+			btn.disabled = false;
+			btn.addEventListener("click", function() {
+				odkTables.openDetailView(null, "health_facility", hf_row_id, "config/assets/aa_health_facility_detail.html#health_facility/" + hf_row_id);
+			});
+		*/
 		build_generic_callback("facility_name", true, "Facility")(e, c, d)
 		document.getElementById("add_m_log").disabled = false;
 		document.getElementById("add_m_log").innerText = _tu("Add Maintenance Record");
@@ -144,6 +151,7 @@ helper.make_detail("aa_refrigerators_detail.html", """
 	}
 
 	//allowed_tables = ["m_logs"];
+	allowed_tables = [];
 	main_col = "";
 	global_join = "refrigerator_types ON refrigerators.model_row_id = refrigerator_types._id JOIN health_facility ON refrigerators.facility_row_id = health_facility._id"
 	global_which_cols_to_select = "*"
@@ -191,7 +199,7 @@ helper.make_detail("aa_refrigerator_types_detail.html", """
 
 	document.getElementById("mi").innerText = _tu("Model Information")
 
-	//allowed_tables = [];
+	allowed_tables = [];
 	main_col = "";
 	global_which_cols_to_select = "*, (SELECT COUNT(*) FROM refrigerators WHERE model_row_id = refrigerator_types._id) as refrig_with_this_model_count"
 	var mid_callback = function mid_callback(e, c, d) {
@@ -263,7 +271,7 @@ helper.make_detail("aa_health_facility_detail.html", """
 	</div>
 		""", open("refrigerator_detail.css").read(), open("refrigerator_detail.js", "r").read() + """
 
-	//allowed_tables = [];
+	allowed_tables = [];
 	main_col = "";
 	global_which_cols_to_select = "*, (SELECT COUNT(*) FROM refrigerators WHERE facility_row_id = health_facility._id) as refrig_with_this_hfid_count"
 	var fname_callback = function fname_callback(e, c, d) {
@@ -271,11 +279,14 @@ helper.make_detail("aa_health_facility_detail.html", """
 		document.getElementById("refrigerator_inventory").innerHTML = _tu("Refrigerator Inventory (<span id='refrig_with_this_hfid_count'>Loading...</span>)")
 		document.getElementById("refrigerator_inventory").disabled = false;
 		document.getElementById("refrigerator_inventory").addEventListener("click", function click() {
-			odkTables.launchHTML(null, "config/assets/aa_refrigerators_list.html#refrigerators/facility_row_id = ?/" + row_id);
+			odkTables.launchHTML(null, "config/assets/aa_refrigerators_list.html#refrigerators/health_facility.facility_name = ?/" + d.getData(0, "facility_name"));
 		});
 		document.getElementById("refrig_with_this_hfid_count").innerText = d.getData(0, "refrig_with_this_hfid_count");
 		document.getElementById("addref").addEventListener("click", function() {
-			var defaults = {"facility_row_id": d.getData(0, "_id")}
+			var defaults = {"facility_row_id": d.getData(0, "_id")}; // TODO - Get admin region information in there too
+			defaults["regionLevel1"] = d.getData(0, "regionLevel1");
+			defaults["regionLevel2"] = d.getData(0, "regionLevel2");
+			defaults["adminRegion"] = d.getData(0, "admin_region");
 			if (allowed_tables.indexOf("refrigerators") >= 0) {
 				var id = newGuid();
 				odkData.addRow("m_logs", defaults, id, function() {
@@ -344,19 +355,10 @@ for i in range(len(levels) - 1):
 		hierarchy["_start"].add(row[0])
 		if row[i] != row[i + 1]:
 			hierarchy[row[i]].add(row[i+1])
-paths = {}
-def make_admin_region(val, path):
-	# path is like "/1/3/0"
-	# needs to be like "#1/3/0" before it goes into `paths`
-	paths[val.upper()] = "#" + path[1:];
-	subquery = "(SELECT date_serviced FROM m_logs WHERE m_logs.refrigerator_id = refrigerators.refrigerator_id ORDER BY date_serviced DESC LIMIT 1)"
-	return [val, None, [
-		["View All Health Facilities", "health_facility", "admin_region = ?/" + val],
-		["View All Refrigerators", "refrigerators", "STATIC/SELECT * FROM refrigerators JOIN health_facility ON refrigerators.facility_row_id = health_facility._id JOIN refrigerator_types ON refrigerators.model_row_id = refrigerator_types._id WHERE health_facility.admin_region = ?/[\""+val+"\"]/"+"refrigerators in health facilities in the admin region ?"],
-		["View All Refrigerators Not Serviced In The Last Six Months", "refrigerators", "STATIC/SELECT * FROM refrigerators JOIN health_facility ON refrigerators.facility_row_id = health_facility._id JOIN refrigerator_types ON refrigerators.model_row_id = refrigerator_types._id WHERE health_facility.admin_region = ? AND ("+subquery+" IS NULL OR (julianday(datetime('now')) - julianday("+subquery+")) > (6 * 30))/[\""+val+"\"]/refrigerators in health facilities in the admin region ? that haven't been serviced in the last 180 days or have no service records"],
-	]];
+def make_admin_region(val):
+	return [val, "_html", "config/assets/admin_region.html#" + val + ":"];
 def make_map(val, path = ""):
-	if len(hierarchy[val]) == 0: return make_admin_region(val, path)
+	if len(hierarchy[val]) == 0: return make_admin_region(val)
 	# These two lines aren't needed, but they make it so the order in the list doesn't change every time you regenerate
 	hierarchy[val] = list(hierarchy[val])
 	hierarchy[val].sort()
@@ -370,7 +372,7 @@ as_list[0] = "PATH Cold Chain Demo"
 # append to the [...] our own option
 
 as_list[2].append(
-	["All Regions", None, [[val[0], "_html", "config/assets/index.html" + paths[val[0].upper()]] for val in c.execute("SELECT regionlevel3 from t2;")]]
+	["All Regions", None, [[val[0], "_html", "config/assets/admin_region.html#" + val[0] + ":"] for val in c.execute("SELECT regionlevel3 from t2;")]]
 )
 as_list[2].append(
 	["View Data", None, [
@@ -416,7 +418,6 @@ list_views = {
 	"refrigerator_types": "config/assets/aa_refrigerator_types_list.html",
 }
 menu = """+json.dumps(as_list)+""";
-paths = """+json.dumps(paths)+""";
 if (window.location.hash.substr(1).length == 0) {
 	odkData.getRoles(function(r) {
 		// TEMP DEBUG TEST
@@ -429,14 +430,71 @@ if (window.location.hash.substr(1).length == 0) {
 				var region = r[i].replace("GROUP_ADMIN_REGION_", "");
 				// replace all occurrences
 				region = region.replace(/_/g, " ");
-				window.location.hash = paths[region];
-				window.location.reload();
+				//window.location.hash = paths[region];
+				//window.location.reload();
+				odkTables.launchHTML(null, "config/assets/admin_region.html#" + region + ":");
 				break;
 			}
 		}
 	});
 }
 		""", """
+body {
+	background: url('/coldchain/config/assets/img/hallway.jpg') no-repeat center/cover fixed;
+}
+		""")
+
+def make_val_accepting_index(code):
+	return """
+	var hash = window.location.hash.substr(1);
+	var val = hash.split(":")[0];
+	window.location.hash = "#" + hash.split(":").slice(1)
+	menu = ["Loading...", null, []];
+	""" + code
+
+helper.make_index("admin_region.html", """
+list_views = {
+	"health_facility": "config/assets/aa_health_facility_list.html",
+	"refrigerators": "config/assets/aa_refrigerators_list.html",
+}
+""" + make_val_accepting_index("""
+var subquery = "(SELECT date_serviced FROM m_logs WHERE m_logs.refrigerator_id = refrigerators.refrigerator_id ORDER BY date_serviced DESC LIMIT 1)"
+menu = [val, null, [
+	["View All Health Facilities", "health_facility", "admin_region = ?/" + val],
+	["View All Refrigerators", "refrigerators", "STATIC/SELECT * FROM refrigerators JOIN health_facility ON refrigerators.facility_row_id = health_facility._id JOIN refrigerator_types ON refrigerators.model_row_id = refrigerator_types._id WHERE health_facility.admin_region = ?/[\\""+val+"\\"]/"+"refrigerators in health facilities in the admin region ?"],
+	["View All Refrigerators Not Serviced In The Last Six Months", "refrigerators", "STATIC/SELECT * FROM refrigerators JOIN health_facility ON refrigerators.facility_row_id = health_facility._id JOIN refrigerator_types ON refrigerators.model_row_id = refrigerator_types._id WHERE health_facility.admin_region = ? AND ("+subquery+" IS NULL OR (julianday(datetime('now')) - julianday("+subquery+")) > (6 * 30))/[\\""+val+"\\"]/refrigerators in health facilities in the admin region ? that haven't been serviced in the last 180 days or have no service records"],
+	["Filter By Type", "_html", "config/assets/admin_region_filter.html#" + val + ":"]
+]];
+		"""), """
+body {
+	background: url('/coldchain/config/assets/img/hallway.jpg') no-repeat center/cover fixed;
+}
+		""")
+
+helper.make_index("admin_region_filter.html", """
+list_views = {
+	"health_facility": "config/assets/aa_health_facility_list.html",
+}
+""" + make_val_accepting_index("""
+	odkData.arbitraryQuery("health_facility", "SELECT * FROM health_facility WHERE admin_region LIKE ? GROUP BY facility_type", [val], 100, 0, function(d) {
+		if (d.getCount() == 0) {
+			// TODO LOCALIZE
+			menu = ["Admin region " + val + " has no health facilities!", null, []];
+			doMenu();
+		} else {
+			var val = d.getData(0, "admin_region");
+			// TODO LOCALIZE
+			menu = ["Filtering " + val, null, []]
+			for (var i = 0; i < d.getCount(); i++) {
+				var ftype = d.getData(i, "facility_type")
+				menu[2] = menu[2].concat(0);
+				// TODO localize "View "
+				menu[2][menu[2].length - 1] = ["View " + _tc(d, "facility_type", ftype) + "s", "health_facility", "STATIC/SELECT * FROM health_facility WHERE admin_region = ? AND facility_type = ?/"+JSON.stringify([val, ftype])+"/health facilities in the admin region ? of the type ?"];
+			}
+			doMenu();
+		}
+	}, function(e) { alert(e); });
+		"""), """
 body {
 	background: url('/coldchain/config/assets/img/hallway.jpg') no-repeat center/cover fixed;
 }
@@ -728,5 +786,9 @@ helper.translations = {
 		"default": True,
 		"es": "Sin Foto"
 	}},
+	"health facilities in the admin region ? of the type ?": {"text": {
+		"default": True,
+		"es": "facilidades de salud en el región de administración ? del tipo ?"
+	}}
 }
 
