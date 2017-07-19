@@ -307,7 +307,6 @@ var queries = """ + queries + """;
 var table_id = '""" + table + """';
 var tokens = """ + json.dumps(tokens) + """
 var has_dates = """ + ("true" if has_dates else "false") + """
-window.table = table_id; // HACK for display_update_result
 	</script>
 	<script src="../../form_generator.js"></script>
 </head>
