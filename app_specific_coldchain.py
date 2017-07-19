@@ -392,18 +392,18 @@ as_list[2].append(
 			["View All", "refrigerators", ""],
 			["By Facility", "refrigerators", "facility_name"],
 			["By Model", "refrigerators", "catalog_id"],
-			["By Year", "refrigerators", "year"],
+			[True, "refrigerators", "year"],
 			["More", "refrigerators", [
 				["By Use", "refrigerators", "utilization"],
-				["By Working Status", "refrigerators", "working_status"],
-				["By Reason Not Working", "refrigerators", "reason_not_working"]
+				[True, "refrigerators", "working_status"],
+				[True, "refrigerators", "reason_not_working"]
 			]]
 		]], ["View Refrigerator Models", "refrigerator_types", [
 			["View All", "refrigerator_types", ""],
-			["By Manufacturer", "refrigerator_types", "manufacturer"],
-			["By Equipment Type", "refrigerator_types", "equipment_type"],
+			[True, "refrigerator_types", "manufacturer"],
+			[True, "refrigerator_types", "equipment_type"],
 			["More", "refrigerator_types", [
-				["By Climate Zone", "refrigerator_types", "climate_zone"]
+				[True, "refrigerator_types", "climate_zone"]
 			]]
 		]]
 	]]
