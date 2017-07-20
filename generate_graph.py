@@ -17,7 +17,7 @@ def make(utils, filename, customCss):
 	</head>
 	<body onLoad='ol();'>
 		<div class='button' id="title"></div>
-		<div id="graph"></div>
+		<div id="key"></div>
 	</body>
 </html>
 	"""
