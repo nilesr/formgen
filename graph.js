@@ -52,7 +52,6 @@ var ol = function ol() {
 			document.getElementById("key").innerText = _t("No results")
 		} else {
 			doGraph(d);
-			document.getElementById("key").style.marginTop = (w + 30).toString() + "px";
 		}
 	}, function(e) {
 		alert(e);
@@ -119,16 +118,17 @@ var doGraph = function doGraph(d) {
 		var color = newColor();
 		drawSegment(center_x, center_y, current_percent, percent, color);
 		current_percent += percent;
+		// add to key
 		var label = document.createElement("div");
 		var square = document.createElement("span");
 		square.style.backgroundColor = color;
-		//square.style.border = "1px solid black";
 		square.style.width = square.style.height = "30px";
 		square.style.display = "inline-block";
 		label.appendChild(square);
 		label.appendChild(document.createTextNode(" " + _tu(_tc(d, graph_col, val))+ " - " + pretty_percent(percent)));
 		document.getElementById("key").appendChild(label);
 	}
+	document.getElementById("key").style.marginTop = (canvas.height + 30).toString() + "px";
 }
 var pretty_percent = function pretty_percent(n) {
 	var s = (n * 100).toString();

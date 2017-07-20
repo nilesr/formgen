@@ -377,7 +377,7 @@ as_list[2].append(
 	["View Data", None, [
 		# TODO LOCALIZE FROM HERE
 		["View Health Facilities", None, [
-			["Filter By Region/Type", "", ""], # TODO TODO
+			#["Filter By Region/Type", "_html", "config/assets/index.html"],
 			["Search By Name/ID", "health_facility", ""]
 		]],
 		["View Inventory", None, [
@@ -799,6 +799,66 @@ helper.translations = {
 	"health facilities in the admin region ? of the type ?": {"text": {
 		"default": True,
 		"es": "facilidades de salud en el región de administración ? del tipo ?"
-	}}
+	}},
+	"None": {"text": {
+		"default": True,
+		"es": "Ninguno"
+	}},
+	"20+ years": {"text": {
+		"default": True,
+		"es": "Más que 20 años"
+	}},
+	"15-20 years": {"text": {
+		"default": True,
+		"es": "15-20 años"
+	}},
+	"12-15 years": {"text": {
+		"default": True,
+		"es": "12-15 años"
+	}},
+	"10-12 years": {"text": {
+		"default": True,
+		"es": "10-12 años"
+	}},
+	"9 years": {"text": {
+		"default": True,
+		"es": "9 años"
+	}},
+	"8 years": {"text": {
+		"default": True,
+		"es": "8 años"
+	}},
+	"7 years": {"text": {
+		"default": True,
+		"es": "7 años"
+	}},
+	"6 years": {"text": {
+		"default": True,
+		"es": "6 años"
+	}},
+	"5 years": {"text": {
+		"default": True,
+		"es": "5 años"
+	}},
+	"4 years": {"text": {
+		"default": True,
+		"es": "4 años"
+	}},
+	"3 years": {"text": {
+		"default": True,
+		"es": "3 años"
+	}},
+	"2 years": {"text": {
+		"default": True,
+		"es": "2 años"
+	}},
+	"1 years": {"text": {
+		"default": True,
+		"es": "1 años"
+	}},
+	"Within 6 months": {"text": {
+		"default": True,
+		"es": "Menos que 6 meses"
+	}},
 }
 
