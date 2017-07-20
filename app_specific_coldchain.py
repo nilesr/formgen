@@ -7,6 +7,10 @@ helper = custom_helper.helper();
 
 global_allowed_tables = "allowed_tables = [];\n"
 global_block_add = "document.getElementById(\"add\").style.display = \"none\";\n"
+hallway = """
+body {
+	background: url('/coldchain/config/assets/img/hallway.jpg') no-repeat center/cover fixed;
+}"""
 helper.make_table("aa_refrigerator_types_list.html", "", """
 	.refrig-img {
 		max-width: 45%;
@@ -367,10 +371,12 @@ as_list[0] = "PATH Cold Chain Demo"
 as_list[2].append(
 	["All Regions", None, [[val[0], "_html", "config/assets/admin_region.html#" + val[0] + ":"] for val in c.execute("SELECT regionlevel3 from t2;")]]
 )
+helper.static_files.append("inv_by_grid_power.html");
 as_list[2].append(
 	["View Data", None, [
 		["View Health Facilities", "health_facility", [
 			["View All", "health_facility", ""],
+			["Filter by Grid Power", "_html", "config/assets/inv_by_grid_power.html"], # TODO LOCALIZE !!!!!
 			[True, "health_facility", "admin_region"],
 			[True, "health_facility", "facility_type"],
 			["Ownership", "health_facility", "facility_ownership"],
@@ -444,11 +450,7 @@ if (window.location.hash.substr(1).length == 0) {
 		}
 	});
 }
-		""", """
-body {
-	background: url('/coldchain/config/assets/img/hallway.jpg') no-repeat center/cover fixed;
-}
-		""")
+		""", hallway)
 
 def make_val_accepting_index(code):
 	return """
@@ -471,11 +473,7 @@ menu = [val, null, [
 	["View All Refrigerators Not Serviced In The Last Six Months", "refrigerators", "STATIC/SELECT * FROM refrigerators JOIN health_facility ON refrigerators.facility_row_id = health_facility._id JOIN refrigerator_types ON refrigerators.model_row_id = refrigerator_types._id WHERE health_facility.admin_region = ? AND ("+subquery+" IS NULL OR (julianday(datetime('now')) - julianday("+subquery+")) > (6 * 30))/[\\""+val+"\\"]/refrigerators in health facilities in the admin region ? that haven't been serviced in the last 180 days or have no service records"],
 	["Filter By Type", "_html", "config/assets/admin_region_filter.html#" + val + ":"]
 ]];
-		"""), """
-body {
-	background: url('/coldchain/config/assets/img/hallway.jpg') no-repeat center/cover fixed;
-}
-		""")
+		"""), hallway)
 
 helper.make_index("admin_region_filter.html", """
 list_views = {
@@ -500,12 +498,13 @@ list_views = {
 			doMenu();
 		}
 	}, function(e) { alert(e); });
-		"""), """
-body {
-	background: url('/coldchain/config/assets/img/hallway.jpg') no-repeat center/cover fixed;
-}
-		""")
+		"""), hallway)
 
+helper.make_graph("cc_graph.html", hallway + """
+#graph {
+	background-color: rgba(0, 0, 0, 0.8);
+}
+""");
 
 helper.translations = {
 	"PATH Cold Chain Demo": {"text": {

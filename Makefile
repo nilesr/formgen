@@ -17,6 +17,10 @@ coldchain-cleanup:
 	rm -rf /home/niles/Documents/odk/app-designer/app/config/assets/formgen
 	rm /home/niles/Documents/odk/app-designer/app/config/assets/form_generator.js
 	rm /home/niles/Documents/odk/app-designer/app/config/assets/form_generator.css
+	rm /home/niles/Documents/odk/app-designer/app/config/assets/graph.html
+	rm /home/niles/Documents/odk/app-designer/app/config/assets/detail.html
+	rm /home/niles/Documents/odk/app-designer/app/config/assets/table.html
+	rm /home/niles/Documents/odk/app-designer/app/config/assets/tables.html
 
 default: appname = default
 default: all

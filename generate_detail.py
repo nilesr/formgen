@@ -11,8 +11,8 @@ def make(utils, filename, customHtml, customCss, customJsOl, customJsGeneric):
 		<meta http-equiv="content-type" content="text/html; charset=UTF-8">
 		<script type="text/javascript" src="/""" + utils.appname + """/system/js/odkCommon.js"></script>
 		<script type="text/javascript" src="/""" + utils.appname + """/system/js/odkData.js"></script>
-		<script type="text/javascript" src="formgen_common.js"></script>
 		<script type="text/javascript" src="/""" + utils.appname + """/system/tables/js/odkTables.js"></script>
+		<script type="text/javascript" src="formgen_common.js"></script>
 		<script type="text/javascript" src="generate_common.js"></script>
 		<link href="generate_detail.css" rel="stylesheet" />
 		<style>
