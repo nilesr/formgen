@@ -5,7 +5,8 @@ import custom_helper
 helper = custom_helper.helper();
 
 
-# Cold chain demo
+global_allowed_tables = "allowed_tables = [];\n"
+global_block_add = "document.getElementById(\"add\").style.display = \"none\";\n"
 helper.make_table("aa_refrigerator_types_list.html", "", """
 	.refrig-img {
 		max-width: 45%;
@@ -19,12 +20,11 @@ helper.make_table("aa_refrigerator_types_list.html", "", """
 	.img-wrapper {
 		text-align: center;
 	}
-""", """
+""", global_allowed_tables + global_block_add + """
 	var makepicture = function makepicture(e, c, d, i) {
 		if (c == null || c == "null") return "No picture available";
 		return "<div class='img-wrapper'><img class='refrig-img' src='" + odkCommon.getRowFileAsUrl(table_id, d.getData(i, "_id"), c) + "' /></div>";
 	}
-	allowed_tables = [];
 	display_subcol = [["Manufacturer: ", "manufacturer", true], ["Model ID: ", "model_id", true], [makepicture, "refrigerator_picture_uriFragment", true]];
 	allowed_group_bys = ["manufacturer", "climate_zone", "equipment_type"]
 	display_col = "catalog_id"
@@ -40,32 +40,29 @@ helper.make_table("aa_refrigerator_types_list.html", "", """
 		limit = 5;
 		newLimit();
 	}
-	document.getElementById("add").style.display = "none";
 """, "", "")
 
-helper.make_table("aa_refrigerators_list.html", "", "", """
-	allowed_tables = [];
+helper.make_table("aa_refrigerators_list.html", "", "", global_allowed_tables + global_block_add + """
 	global_join = "refrigerator_types ON refrigerators.model_row_id = refrigerator_types._id JOIN health_facility ON refrigerators.facility_row_id = health_facility._id"
 	display_subcol = [["", "model_id", true], ["Healthcare Facility: ", "facility_name", true]];
 	display_col = "refrigerator_id"
 	table_id = "refrigerators";
 	allowed_group_bys = [["facility_row_id", "Facility"], ["model_row_id", "Model"], "reason_not_working", ["utilization", "Use"], "working_status", "year"]
-	document.getElementById("add").style.display = "none";
 """, "", "")
 
-helper.make_table("aa_health_facility_list.html", "", "", """
-	allowed_tables = [];
+hf_cols_to_select = "*, (SELECT COUNT(*) FROM refrigerators WHERE facility_row_id = health_facility._id) AS refrigerator_count"
+
+helper.make_table("aa_health_facility_list.html", "", "", global_allowed_tables + global_block_add + """
 	display_col = "facility_name"
 	table_id = "health_facility";
 	allowed_group_bys = ["admin_region", "climate_zone", "delivery_type", "electricity_source", ["facility_ownership", "Ownership"], "facility_type", "storage_type", "solar_suitable_climate", "solar_suitable_site", "vaccine_supply_mode", "vaccine_reserve_stock_requirement"];
 
-	global_which_cols_to_select = "*, (SELECT COUNT(*) FROM refrigerators WHERE facility_row_id = health_facility._id) AS refrigerator_count"
+	global_which_cols_to_select = \""""+hf_cols_to_select+"""\"
 	display_subcol = [["Facility ID: ", "facility_id", true], ["Refrigerators: ", "refrigerator_count", true]]
 	document.getElementById("add").style.display = "none";
 """, "", "")
 
-helper.make_table("aa_m_logs_list.html", "", "", """
-	allowed_tables = [];
+helper.make_table("aa_m_logs_list.html", "", "", global_allowed_tables + global_block_add + """
 	display_subcol = [["", "refrigerator_id", false]];
 	allowed_group_bys = ["manufacturer", "climate_zone", "equipment_type"]
 	display_col = "date_serviced"
@@ -99,7 +96,7 @@ helper.make_detail("aa_refrigerators_detail.html", """
 	<br />
 	<button disabled id='view_m_log'></button>
 	<br />
-		""", open("refrigerator_detail.css").read(), open("refrigerator_detail.js", "r").read() + """
+		""", open("refrigerator_detail.css").read(), open("refrigerator_detail.js", "r").read() + global_allowed_tables + """
 	document.getElementById("bfi").innerText = _tu("Basic Refrigerator Information")
 	var model_callback = function model_callback(e, c, d) {
 		var btn = document.getElementById("open_model");
@@ -150,8 +147,6 @@ helper.make_detail("aa_refrigerators_detail.html", """
 		return "";
 	}
 
-	//allowed_tables = ["m_logs"];
-	allowed_tables = [];
 	main_col = "";
 	global_join = "refrigerator_types ON refrigerators.model_row_id = refrigerator_types._id JOIN health_facility ON refrigerators.facility_row_id = health_facility._id"
 	global_which_cols_to_select = "*"
@@ -195,11 +190,10 @@ helper.make_detail("aa_refrigerator_types_detail.html", """
 	<div style="text-align: center;">
 		<button disabled id='open_model'>Loading...</button>
 	</div>
-		""", open("refrigerator_detail.css").read(), open("refrigerator_detail.js", "r").read() + """
+		""", open("refrigerator_detail.css").read(), open("refrigerator_detail.js", "r").read() + global_allowed_tables + """
 
 	document.getElementById("mi").innerText = _tu("Model Information")
 
-	allowed_tables = [];
 	main_col = "";
 	global_which_cols_to_select = "*, (SELECT COUNT(*) FROM refrigerators WHERE model_row_id = refrigerator_types._id) as refrig_with_this_model_count"
 	var mid_callback = function mid_callback(e, c, d) {
@@ -269,9 +263,8 @@ helper.make_detail("aa_health_facility_detail.html", """
 		<br />
 		<button id="addref"></button>
 	</div>
-		""", open("refrigerator_detail.css").read(), open("refrigerator_detail.js", "r").read() + """
+		""", open("refrigerator_detail.css").read(), open("refrigerator_detail.js", "r").read() + global_allowed_tables + """
 
-	allowed_tables = [];
 	main_col = "";
 	global_which_cols_to_select = "*, (SELECT COUNT(*) FROM refrigerators WHERE facility_row_id = health_facility._id) as refrig_with_this_hfid_count"
 	var fname_callback = function fname_callback(e, c, d) {
@@ -418,6 +411,19 @@ list_views = {
 	"refrigerator_types": "config/assets/aa_refrigerator_types_list.html",
 }
 menu = """+json.dumps(as_list)+""";
+var addhf = function addhf() {
+	odkTables.addRowWithSurvey(null, "health_facility", "health_facility", null, null);
+}
+var addrf = function addrf() {
+	odkTables.addRowWithSurvey(null, "refrigerators", "refrigerators", null, null);
+}
+menu[2] = menu[2].concat(0);
+menu[2][menu[2].length - 1] = ["Administrative Actions", null, [
+		// TODO LOCALIZE
+		["Add Health Facility", "_js", addhf],
+		["Add Refrigerator", "_js", addrf]
+	]]
+
 if (window.location.hash.substr(1).length == 0) {
 	odkData.getRoles(function(r) {
 		// TEMP DEBUG TEST
@@ -489,7 +495,7 @@ list_views = {
 				var ftype = d.getData(i, "facility_type")
 				menu[2] = menu[2].concat(0);
 				// TODO localize "View "
-				menu[2][menu[2].length - 1] = ["View " + _tc(d, "facility_type", ftype) + "s", "health_facility", "STATIC/SELECT * FROM health_facility WHERE admin_region = ? AND facility_type = ?/"+JSON.stringify([val, ftype])+"/health facilities in the admin region ? of the type ?"];
+				menu[2][menu[2].length - 1] = ["View " + _tc(d, "facility_type", ftype) + "s", "health_facility", "STATIC/SELECT """+hf_cols_to_select+""" FROM health_facility WHERE admin_region = ? AND facility_type = ?/"+JSON.stringify([val, ftype])+"/health facilities in the admin region ? of the type ?"];
 			}
 			doMenu();
 		}

@@ -1,4 +1,4 @@
-def make_index(utils, filename, customJs, customCss):
+def make(utils, filename, customJs, customCss):
 	basehtml = """
 <!doctype html>
 <html>

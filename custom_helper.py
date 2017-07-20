@@ -20,7 +20,7 @@ class helper():
 			elif q[0] == "table":
 				generate_table.make(utils, *(q[1:]))
 			elif q[0] == "index":
-				generate_index.make_index(utils, *(q[1:]))
+				generate_index.make(utils, *(q[1:]))
 			else:
 				print("Bad type in queue " + q[0]);
 				sys.exit(0);
