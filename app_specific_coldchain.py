@@ -372,6 +372,7 @@ as_list[2].append(
 	["All Regions", None, [[val[0], "_html", "config/assets/admin_region.html#" + val[0] + ":"] for val in c.execute("SELECT regionlevel3 from t2;")]]
 )
 helper.static_files.append("inv_by_grid_power.html");
+helper.static_files.append("inv_by_age.html");
 as_list[2].append(
 	["View Data", None, [
 		["View Health Facilities", "health_facility", [
@@ -391,6 +392,7 @@ as_list[2].append(
 			]]
 		]], ["View Refrigerators", "refrigerators", [
 			["View All", "refrigerators", ""],
+			["Filter by Age", "_html", "config/assets/inv_by_age.html"], # TODO LOCALIZE !!!!!
 			["By Facility", "refrigerators", "facility_name"],
 			["By Model", "refrigerators", "catalog_id"],
 			[True, "refrigerators", "year"],
