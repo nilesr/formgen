@@ -346,7 +346,7 @@ c.executemany("INSERT INTO t2 (regionLevel2, regionLevel3) VALUES (?, ?);", rows
 
 import collections
 hierarchy = collections.defaultdict(lambda: set())
-levels = ["Region level 1", "Region level 2", "Admin Region"]
+levels = ["regionLevel1", "regionLevel2", "adminRegion"]
 for i in range(len(levels) - 1):
 	for row in c.execute("SELECT regionLevel1, t1.regionLevel2, regionLevel3 FROM t1 JOIN t2 ON t1.regionLevel2 = t2.regionLevel2;"):
 		hierarchy["_start"].add(row[0])
@@ -354,12 +354,16 @@ for i in range(len(levels) - 1):
 			hierarchy[row[i]].add(row[i+1])
 def make_admin_region(val):
 	return [val, "_html", "config/assets/admin_region.html#" + val + ":"];
-def make_map(val, path = ""):
+def make_map(val, depth = 0):
 	if len(hierarchy[val]) == 0: return make_admin_region(val)
 	# These two lines aren't needed, but they make it so the order in the list doesn't change every time you regenerate
 	hierarchy[val] = list(hierarchy[val])
 	hierarchy[val].sort()
-	return [val, None, [make_map(hierarchy[val][i], path + "/" + str(i)) for i in range(len(hierarchy[val]))]]
+	submenu = [make_map(hierarchy[val][i], depth + 1) for i in range(len(hierarchy[val]))]
+	# if depth >= 2:
+	if depth >= 2 or val == "North":
+		submenu = [["Filter By Type", "_html", "config/assets/admin_region_filter.html#" + val + ":"]] + submenu
+	return [val, None, submenu];
 #print(hierarchy)
 as_list = make_map("_start")
 # as_list now like ["_start", null, [...]]
@@ -489,22 +493,44 @@ list_views = {
 	"health_facility": "config/assets/aa_health_facility_list.html",
 }
 """ + make_val_accepting_index("""
-	odkData.arbitraryQuery("health_facility", "SELECT * FROM health_facility WHERE admin_region LIKE ? GROUP BY facility_type", [val], 100, 0, function(d) {
+	odkData.arbitraryQuery("health_facility", "SELECT * FROM health_facility WHERE admin_region LIKE ? OR regionLevel2 LIKE ? GROUP BY facility_type", [val, val], 100, 0, function(d) {
 		if (d.getCount() == 0) {
 			// TODO LOCALIZE
 			menu = ["Admin region " + val + " has no health facilities!", null, []];
 			doMenu();
 		} else {
-			var val = d.getData(0, "admin_region");
-			// TODO LOCALIZE
-			menu = ["Filtering " + val, null, []]
+			var distinct_admin_regions = 0;
+			var all_regions = [];
 			for (var i = 0; i < d.getCount(); i++) {
-				var ftype = d.getData(i, "facility_type")
-				menu[2] = menu[2].concat(0);
-				// TODO LOCALIZE "View "
-				menu[2][menu[2].length - 1] = ["View " + _tc(d, "facility_type", ftype) + "s", "health_facility", "STATIC/SELECT """+hf_cols_to_select+""" FROM health_facility WHERE admin_region = ? AND facility_type = ?/"+JSON.stringify([val, ftype])+"/health facilities in the admin region ? of the type ?"];
+				var this_admin_region = d.getData(i, "admin_region")
+				if (all_regions.indexOf(this_admin_region) == -1) {
+					all_regions = all_regions.concat(this_admin_region);
+					distinct_admin_regions++;
+				}
 			}
-			doMenu();
+			if (distinct_admin_regions == 1) {
+				var val = d.getData(0, "admin_region");
+				// TODO LOCALIZE
+				menu = ["Filtering " + val, null, []]
+				for (var i = 0; i < d.getCount(); i++) {
+					var ftype = d.getData(i, "facility_type")
+					menu[2] = menu[2].concat(0);
+					// TODO LOCALIZE "View "
+					menu[2][menu[2].length - 1] = ["View " + _tc(d, "facility_type", ftype) + "s", "health_facility", "STATIC/SELECT """+hf_cols_to_select+""" FROM health_facility WHERE admin_region = ? AND facility_type = ?/"+JSON.stringify([val, ftype])+"/health facilities in the admin region ? of the type ?"];
+				}
+				doMenu();
+			} else {
+				var val = d.getData(0, "regionLevel2");
+				// TODO LOCALIZE
+				menu = ["Filtering " + val, null, []]
+				for (var i = 0; i < d.getCount(); i++) {
+					var ftype = d.getData(i, "facility_type")
+					menu[2] = menu[2].concat(0);
+					// TODO LOCALIZE "View "
+					menu[2][menu[2].length - 1] = ["View " + _tc(d, "facility_type", ftype) + "s", "health_facility", "STATIC/SELECT """+hf_cols_to_select+""" FROM health_facility WHERE regionLevel2 = ? AND facility_type = ?/"+JSON.stringify([val, ftype])+"/health facilities in region level 2 ? of the type ?"];
+				}
+				doMenu();
+			}
 		}
 	}, function(e) { alert(e); });
 		"""), hallway)
