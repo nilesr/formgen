@@ -375,38 +375,49 @@ helper.static_files.append("inv_by_grid_power.html");
 helper.static_files.append("inv_by_age.html");
 as_list[2].append(
 	["View Data", None, [
-		["View Health Facilities", "health_facility", [
-			["View All", "health_facility", ""],
-			["Filter by Grid Power", "_html", "config/assets/inv_by_grid_power.html"], # TODO LOCALIZE !!!!!
-			[True, "health_facility", "admin_region"],
-			[True, "health_facility", "facility_type"],
-			["Ownership", "health_facility", "facility_ownership"],
-			["More", "health_facility", [
-				[True, "health_facility", "delivery_type"],
-				[True, "health_facility", "electricity_source"],
-				[True, "health_facility", "storage_type"],
-				[True, "health_facility", "solar_suitable_climate"],
-				[True, "health_facility", "solar_suitable_site"],
-				[True, "health_facility", "vaccine_supply_mode"],
-				["By Reserve Stock Requirement", "health_facility", "vaccine_reserve_stock_requirement"]
-			]]
-		]], ["View Refrigerators", "refrigerators", [
-			["View All", "refrigerators", ""],
-			["Filter by Age", "_html", "config/assets/inv_by_age.html"], # TODO LOCALIZE !!!!!
-			["By Facility", "refrigerators", "facility_name"],
-			["By Model", "refrigerators", "catalog_id"],
-			[True, "refrigerators", "year"],
-			["More", "refrigerators", [
-				["By Use", "refrigerators", "utilization"],
-				[True, "refrigerators", "working_status"],
-				[True, "refrigerators", "reason_not_working"]
-			]]
-		]], ["View Refrigerator Models", "refrigerator_types", [
-			["View All", "refrigerator_types", ""],
-			[True, "refrigerator_types", "manufacturer"],
-			[True, "refrigerator_types", "equipment_type"],
-			["More", "refrigerator_types", [
-				[True, "refrigerator_types", "climate_zone"]
+		# TODO LOCALIZE FROM HERE
+		["View Health Facilities", None, [
+			["Filter By Region/Type", "", ""], # TODO TODO
+			["Search By Name/ID", "health_facility", ""]
+		]],
+		["View Inventory", None, [
+			["Refrigerator Age", "_html", "config/assets/inv_by_age.html"],
+			["Facility Grid Power Availability", "_html", "config/assets/inv_by_grid_power.html"]
+		]],
+		["View Refrigerator Models", "refrigerator_types", ""],
+		# TODO TO HERE
+		["More Options", None, [ # TODO LOCALIZE
+			["View Health Facilities", "health_facility", [
+				["View All", "health_facility", ""],
+				[True, "health_facility", "admin_region"],
+				[True, "health_facility", "facility_type"],
+				["Ownership", "health_facility", "facility_ownership"],
+				["More", "health_facility", [
+					[True, "health_facility", "delivery_type"],
+					[True, "health_facility", "electricity_source"],
+					[True, "health_facility", "storage_type"],
+					[True, "health_facility", "solar_suitable_climate"],
+					[True, "health_facility", "solar_suitable_site"],
+					[True, "health_facility", "vaccine_supply_mode"],
+					["By Reserve Stock Requirement", "health_facility", "vaccine_reserve_stock_requirement"]
+				]]
+			]], ["View Refrigerators", "refrigerators", [
+				["View All", "refrigerators", ""],
+				["By Facility", "refrigerators", "facility_name"],
+				["By Model", "refrigerators", "catalog_id"],
+				[True, "refrigerators", "year"],
+				["More", "refrigerators", [
+					["By Use", "refrigerators", "utilization"],
+					[True, "refrigerators", "working_status"],
+					[True, "refrigerators", "reason_not_working"]
+				]]
+			]], ["View Refrigerator Models", "refrigerator_types", [
+				["View All", "refrigerator_types", ""],
+				[True, "refrigerator_types", "manufacturer"],
+				[True, "refrigerator_types", "equipment_type"],
+				["More", "refrigerator_types", [
+					[True, "refrigerator_types", "climate_zone"]
+				]]
 			]]
 		]]
 	]]
@@ -439,13 +450,9 @@ if (window.location.hash.substr(1).length == 0) {
 		//r = ["GROUP_ADMIN_REGION_MZIMBA_SOUTH"];
 		for (var i = 0; i < r.length; i++) {
 			if (r[i].indexOf("GROUP_ADMIN_REGION_") == 0) {
-				// Doesn't work right on things with more than 3 underscores in them
-				//var region = r[i].split("_", 4)[3];
 				var region = r[i].replace("GROUP_ADMIN_REGION_", "");
 				// replace all occurrences
 				region = region.replace(/_/g, " ");
-				//window.location.hash = paths[region];
-				//window.location.reload();
 				odkTables.launchHTML(null, "config/assets/admin_region.html#" + region + ":");
 				break;
 			}
@@ -494,7 +501,7 @@ list_views = {
 			for (var i = 0; i < d.getCount(); i++) {
 				var ftype = d.getData(i, "facility_type")
 				menu[2] = menu[2].concat(0);
-				// TODO localize "View "
+				// TODO LOCALIZE "View "
 				menu[2][menu[2].length - 1] = ["View " + _tc(d, "facility_type", ftype) + "s", "health_facility", "STATIC/SELECT """+hf_cols_to_select+""" FROM health_facility WHERE admin_region = ? AND facility_type = ?/"+JSON.stringify([val, ftype])+"/health facilities in the admin region ? of the type ?"];
 			}
 			doMenu();
@@ -502,11 +509,7 @@ list_views = {
 	}, function(e) { alert(e); });
 		"""), hallway)
 
-helper.make_graph("cc_graph.html", hallway + """
-#graph {
-	background-color: rgba(0, 0, 0, 0.8);
-}
-""");
+helper.make_graph("cc_graph.html", hallway);
 
 helper.translations = {
 	"PATH Cold Chain Demo": {"text": {

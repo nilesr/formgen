@@ -35,8 +35,8 @@ var ol = function ol() {
 	canvas.style.height = w;
 	canvas.width = w;
 	canvas.height = w;
-	document.getElementById("key").style.marginTop = w + 30 + "px";
 	odkData.arbitraryQuery(table_id, raw, args, 10000, 0, function success(d) {
+		total_total = d.getCount();
 		for (var i = 0; i < d.getCount(); i++) {
 			var val = d.getData(i, graph_col);
 			if (map[val] === undefined) {
@@ -44,12 +44,16 @@ var ol = function ol() {
 				all_values = all_values.concat(val);
 			}
 			map[val]++;
-			total_total++;
 		}
 		all_values.sort(function(a, b) {
 			return map[a] < map[b];
 		});
-		doGraph(d);
+		if (total_total == 0) {
+			document.getElementById("key").innerText = _t("No results")
+		} else {
+			doGraph(d);
+			document.getElementById("key").style.marginTop = (w + 30).toString() + "px";
+		}
 	}, function(e) {
 		alert(e);
 	})
