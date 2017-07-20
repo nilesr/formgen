@@ -288,11 +288,6 @@ def generate_all(utils, filenames):
 <head>
 	<meta http-equiv="content-type" content="text/html; charset=UTF-8">
 	<link rel="stylesheet" href="../../form_generator.css" />
-	<!--
-		<meta content='width=device-width; initial-scale=1.0; maximum-scale=1.0; user-scalable=0;' name='viewport' />
-		<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	-->
-	<title>OpenDataKit Common Javascript Framework</title>
 	<!-- we will typically be at /default/config/assets/formgen/:table_id/index.html, paths are relative to that -->
 	<script type="text/javascript" src="../../formgen_common.js"></script>
 	<script type="text/javascript" src="../../generate_common.js"></script>
@@ -318,9 +313,6 @@ var has_dates = """ + ("true" if has_dates else "false") + """
 		<button id='finalize' style='display: none;' onClick='finalize()'></button>
 	</div>
 	<div class="odk-container" id="odk-container">Please wait...</div>
-	<!--
-		<script type="text/javascript" data-main="survey/js/main" src="libs/require.2.3.2.js"></script>
-	-->
 </body>
 </html>"""
 			if os.path.exists("formgen/" + table):
