@@ -468,8 +468,14 @@ if (window.location.hash.substr(1).length == 0) {
 def make_val_accepting_index(code):
 	return """
 	var hash = window.location.hash.substr(1);
-	var val = hash.split(":")[0];
-	window.location.hash = "#" + hash.split(":").slice(1)
+	var val = ""
+	if (hash.indexOf(":") == -1) {
+		val = odkCommon.getSessionVariable("val");
+	} else {
+		val = hash.split(":")[0];
+		window.location.hash = "#" + hash.split(":").slice(1)
+	}
+	odkCommon.setSessionVariable("val", val);
 	menu = ["Loading...", null, []];
 	""" + code
 
@@ -481,7 +487,7 @@ list_views = {
 """ + make_val_accepting_index("""
 var subquery = "(SELECT date_serviced FROM m_logs WHERE m_logs.refrigerator_id = refrigerators.refrigerator_id ORDER BY date_serviced DESC LIMIT 1)"
 menu = [val, null, [
-	["View All Health Facilities", "health_facility", "admin_region = ?/" + val],
+	["View All Health Facilities", "_js", function() { open_simple_map("health_facility", "admin_region = ?", [val]); }],
 	["View All Refrigerators", "refrigerators", "STATIC/SELECT * FROM refrigerators JOIN health_facility ON refrigerators.facility_row_id = health_facility._id JOIN refrigerator_types ON refrigerators.model_row_id = refrigerator_types._id WHERE health_facility.admin_region = ?/[\\""+val+"\\"]/"+"refrigerators in health facilities in the admin region ?"],
 	["View All Refrigerators Not Serviced In The Last Six Months", "refrigerators", "STATIC/SELECT * FROM refrigerators JOIN health_facility ON refrigerators.facility_row_id = health_facility._id JOIN refrigerator_types ON refrigerators.model_row_id = refrigerator_types._id WHERE health_facility.admin_region = ? AND ("+subquery+" IS NULL OR (julianday(datetime('now')) - julianday("+subquery+")) > (6 * 30))/[\\""+val+"\\"]/refrigerators in health facilities in the admin region ? that haven't been serviced in the last 180 days or have no service records"],
 	["Filter By Type", "_html", "config/assets/admin_region_filter.html#" + val + ":"]
@@ -514,9 +520,12 @@ list_views = {
 				menu = ["Filtering " + val, null, []]
 				for (var i = 0; i < d.getCount(); i++) {
 					var ftype = d.getData(i, "facility_type")
+					var where = "admin_region = ? AND facility_type = ?";
+					var args = [val, ftype];
 					menu[2] = menu[2].concat(0);
-					// TODO LOCALIZE "View "
-					menu[2][menu[2].length - 1] = ["View " + _tc(d, "facility_type", ftype) + "s", "health_facility", "STATIC/SELECT """+hf_cols_to_select+""" FROM health_facility WHERE admin_region = ? AND facility_type = ?/"+JSON.stringify([val, ftype])+"/health facilities in the admin region ? of the type ?"];
+					(function(val, where, args) {
+						menu[2][menu[2].length - 1] = ["View " + _tc(d, "facility_type", ftype) + "s", "_js", function() { odkTables.openTableToMapView(null, "health_facility", where, args, list_views["health_facility"] + "#health_facility/STATIC/SELECT """+hf_cols_to_select+""" FROM health_facility WHERE " + where + "/" + JSON.stringify(args) + "/health facilities in the admin region ? of the type ?"); }]
+					})(val, where, args);
 				}
 				doMenu();
 			} else {
@@ -525,9 +534,13 @@ list_views = {
 				menu = ["Filtering " + val, null, []]
 				for (var i = 0; i < d.getCount(); i++) {
 					var ftype = d.getData(i, "facility_type")
+					var where = "regionLevel2 = ? AND facility_type = ?";
+					var args = [val, ftype];
 					menu[2] = menu[2].concat(0);
 					// TODO LOCALIZE "View "
-					menu[2][menu[2].length - 1] = ["View " + _tc(d, "facility_type", ftype) + "s", "health_facility", "STATIC/SELECT """+hf_cols_to_select+""" FROM health_facility WHERE regionLevel2 = ? AND facility_type = ?/"+JSON.stringify([val, ftype])+"/health facilities in region level 2 ? of the type ?"];
+					(function(val, where, args) {
+						menu[2][menu[2].length - 1] = ["View " + _tc(d, "facility_type", ftype) + "s", "_js", function() { odkTables.openTableToMapView(null, "health_facility", where, args, list_views["health_facility"] + "#health_facility/STATIC/SELECT """+hf_cols_to_select+""" FROM health_facility WHERE " + where + "/" + JSON.stringify(args) + "/health facilities in the region level 2 ? of the type ?"); }]
+					})(val, where, args);
 				}
 				doMenu();
 			}

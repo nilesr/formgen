@@ -255,7 +255,6 @@ window._tu = function(s) {
 	var result = __tr(s);
 	if (result[0] == "ok") return result[1];
 	console.log("_tu could not translate " + s)
-	//odkData.addRow("m_logs", {"notes": "_tu failed to translate '''" + s + "''' on the page " + window.location.href}, newGuid());
 	return s;
 }
 window._tc = function(d, column, text) {
@@ -275,7 +274,9 @@ window._tc = function(d, column, text) {
 	}
 	return result;
 }
-
+var open_simple_map = function open_map(table, where, args) {
+	odkTables.openTableToMapView(null, table, where, args, list_views[table] + "#" + table + "/" + where + "/" + args[0]);
+}
 
 var formgen_specific_translations = {
 	"Prompt for database column ": {"text": {
