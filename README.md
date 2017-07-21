@@ -253,22 +253,24 @@ Open a graph view like this
 	
 So for example
 
-	#pie/refrigerators/normalized_year/SELECT (CASE WHEN year < 2010 THEN 'More than 10 years ago' ELSE 'Within the last 10 years' END) AS normalized_year FROM refrigerators WHERE regionLevel2 = ?/["North"]/Refrigerator Age
+	#pie/refrigerators/normalized_year/SELECT (CASE WHEN year < 2010 THEN 'More than 10 years ago' ELSE 'Within the last 10 years' END) AS normalized_year FROM refrigerators JOIN health_facility ON health_facility._id = refrigerators.facility_row_id WHERE health_facility.regionLevel2 = ?/["North"]/Refrigerator Age
 	
-// TODO Screenshot
+<img src="http://i.imgur.com/6LkMYNg.png" height="400px" />
 
 The strings 'More than 10 years ago', 'Within the last 10 years' and 'Refrigerator Age' will all be translated.
 
 In this example
 
-	#pie/refrigerators/normalized_year/SELECT power_source FROM refrigerators WHERE regionLevel2 = ?/["North"]/Refrigerator Power
+	#pie/refrigerators/power_source/SELECT power_source FROM refrigerators JOIN health_facility ON health_facility._id = refrigerators.facility_row_id WHERE health_facility.regionLevel2 = ?/["North"]/Refrigerator Power
 	
-// TODO Screenshot
+<img src="http://i.imgur.com/QWrn4QV.png" height="400px" />
 	
-The strings ('grid', 'generator', 'unknown', etc...) coming out of the database would be translated without the need to add them to user translations. Since we know the table id and column id, they can be pulled from the choices list in the xlsx. However if that fails, user translations will be checked.
+The strings ('electricity', 'solar', 'unknown', etc...) coming out of the database would be translated without the need to add them to user translations. Since we know the table id and column id, they can be pulled from the choices list in the xlsx. However if that fails, user translations will be checked.
 
 ### Detail views
 
 Expect
 
 	#table_id/row_id
+
+and nothing else.
