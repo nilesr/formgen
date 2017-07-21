@@ -267,6 +267,8 @@ In this example
 	
 The strings ('electricity', 'solar', 'unknown', etc...) coming out of the database would be translated without the need to add them to user translations. Since we know the table id and column id, they can be pulled from the choices list in the xlsx. However if that fails, user translations will be checked.
 
+Bar graphs are the same, just change pie to bar.
+
 ### Detail views
 
 Expect
