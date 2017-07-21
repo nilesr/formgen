@@ -269,6 +269,8 @@ The strings ('electricity', 'solar', 'unknown', etc...) coming out of the databa
 
 Bar graphs are the same, just change pie to bar.
 
+<img src="http://i.imgur.com/nSgeJmT.png" height="400px" />
+
 ### Detail views
 
 Expect

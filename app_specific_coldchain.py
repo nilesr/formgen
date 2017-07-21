@@ -195,6 +195,8 @@ helper.make_detail("aa_refrigerator_types_detail.html", """
 		""", open("refrigerator_detail.css").read(), open("refrigerator_detail.js", "r").read() + global_allowed_tables + """
 
 	document.getElementById("mi").innerText = _tu("Model Information")
+	document.getElementById("edit").style.display = "none";
+	document.getElementById("delete").style.display = "none";
 
 	main_col = "";
 	global_which_cols_to_select = "*, (SELECT COUNT(*) FROM refrigerators WHERE model_row_id = refrigerator_types._id) as refrig_with_this_model_count"
