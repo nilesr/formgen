@@ -379,7 +379,6 @@ helper.static_files.append("inv_by_grid_power.html");
 helper.static_files.append("inv_by_age.html");
 as_list[2].append(
 	["View Data", None, [
-		# TODO LOCALIZE FROM HERE
 		["View Health Facilities", None, [
 			#["Filter By Region/Type", "_html", "config/assets/index.html"],
 			["Search By Name/ID", "health_facility", ""]
@@ -389,8 +388,7 @@ as_list[2].append(
 			["Facility Grid Power Availability", "_html", "config/assets/inv_by_grid_power.html"]
 		]],
 		["View Refrigerator Models", "refrigerator_types", ""],
-		# TODO TO HERE
-		["More Options", None, [ # TODO LOCALIZE
+		["More Options", None, [
 			["View Health Facilities", "health_facility", [
 				["View All", "health_facility", ""],
 				[True, "health_facility", "admin_region"],
@@ -442,7 +440,6 @@ var addrf = function addrf() {
 }
 menu[2] = menu[2].concat(0);
 menu[2][menu[2].length - 1] = ["Administrative Actions", null, [
-		// TODO LOCALIZE
 		["Add Health Facility", "_js", addhf],
 		["Add Refrigerator", "_js", addrf]
 	]]
@@ -501,8 +498,7 @@ list_views = {
 """ + make_val_accepting_index("""
 	odkData.arbitraryQuery("health_facility", "SELECT * FROM health_facility WHERE admin_region LIKE ? OR regionLevel2 LIKE ? GROUP BY facility_type", [val, val], 100, 0, function(d) {
 		if (d.getCount() == 0) {
-			// TODO LOCALIZE
-			menu = ["Admin region " + val + " has no health facilities!", null, []];
+			menu = [_tu("Admin region ") + val + _tu(" has no health facilities!"), null, []];
 			doMenu();
 		} else {
 			var distinct_admin_regions = 0;
@@ -516,8 +512,7 @@ list_views = {
 			}
 			if (distinct_admin_regions == 1) {
 				var val = d.getData(0, "admin_region");
-				// TODO LOCALIZE
-				menu = ["Filtering " + val, null, []]
+				menu = [_tu("Filtering ") + val, null, []]
 				for (var i = 0; i < d.getCount(); i++) {
 					var ftype = d.getData(i, "facility_type")
 					var where = "admin_region = ? AND facility_type = ?";
@@ -530,16 +525,14 @@ list_views = {
 				doMenu();
 			} else {
 				var val = d.getData(0, "regionLevel2");
-				// TODO LOCALIZE
-				menu = ["Filtering " + val, null, []]
+				menu = [_tu("Filtering ") + val, null, []]
 				for (var i = 0; i < d.getCount(); i++) {
 					var ftype = d.getData(i, "facility_type")
 					var where = "regionLevel2 = ? AND facility_type = ?";
 					var args = [val, ftype];
 					menu[2] = menu[2].concat(0);
-					// TODO LOCALIZE "View "
 					(function(val, where, args) {
-						menu[2][menu[2].length - 1] = ["View " + _tc(d, "facility_type", ftype) + "s", "_js", function() { odkTables.openTableToMapView(null, "health_facility", where, args, list_views["health_facility"] + "#health_facility/STATIC/SELECT """+hf_cols_to_select+""" FROM health_facility WHERE " + where + "/" + JSON.stringify(args) + "/health facilities in the region level 2 ? of the type ?"); }]
+						menu[2][menu[2].length - 1] = [_tu("View ") + _tc(d, "facility_type", ftype) + "s", "_js", function() { odkTables.openTableToMapView(null, "health_facility", where, args, list_views["health_facility"] + "#health_facility/STATIC/SELECT """+hf_cols_to_select+""" FROM health_facility WHERE " + where + "/" + JSON.stringify(args) + "/health facilities in the region level 2 ? of the type ?"); }]
 					})(val, where, args);
 				}
 				doMenu();
@@ -898,6 +891,46 @@ helper.translations = {
 	"Within 6 months": {"text": {
 		"default": True,
 		"es": "Menos que 6 meses"
+	}},
+	"More Options": {"text": {
+		"default": True,
+		"es": "Más"
+	}},
+	"Search By Name/ID": {"text": {
+		"default": True,
+		"es": "Buscar Usando Nombre/ID"
+	}},
+	"View Inventory": {"text": {
+		"default": True,
+		"es": "Ver Inventario"
+	}},
+	"Refrigerator Age": {"text": {
+		"default": True,
+		"es": "Antigüedad de Frigoríficos"
+	}},
+	"Facility Grid Power Availability": {"text": {
+		"default": True,
+		"es": "Disponibilidad de Electricidad del Red"
+	}},
+	"Add Health Facility": {"text": {
+		"default": True,
+		"es": "Aggregar Facilidad de Salud"
+	}},
+	"Admin region ": {"text": {
+		"default": True,
+		"es": "¡Región "
+	}},
+	" has no health facilities!": {"text": {
+		"default": True,
+		"es": " no tiene ningunos facilidades de salud!"
+	}},
+	"Filtering ": {"text": {
+		"default": True,
+		"es": "Filtrando "
+	}},
+	"View ": {"text": {
+		"default": True,
+		"es": "Ver Solo "
 	}},
 }
 
