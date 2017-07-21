@@ -33,23 +33,17 @@ helper.make_table("aa_refrigerator_types_list.html", "", """
 	allowed_group_bys = ["manufacturer", "climate_zone", "equipment_type"]
 	display_col = "catalog_id"
 	table_id = "refrigerator_types";
-	// Dirty hacks beyond this point
-	if (global_group_by == null || global_group_by == undefined || global_group_by.trim().length == 0) {
-		var option = document.createElement("option");
-		option.value = 5;
-		option.innerText = 5;
-		var l = document.getElementById("limit");
-		l.appendChild(option);
-		l.selectedIndex = l.children.length - 1;
-		limit = 5;
-		newLimit();
+""", """
+	var stuff = document.getElementsByClassName("buttons");
+	for (var i = 0; i < stuff.length; i++) {
+		stuff[i].style.display = "none";
 	}
-""", "", "")
+""", "")
 
 helper.make_table("aa_refrigerators_list.html", "", "", global_allowed_tables + global_block_add + """
 	global_join = "refrigerator_types ON refrigerators.model_row_id = refrigerator_types._id JOIN health_facility ON refrigerators.facility_row_id = health_facility._id"
 	display_subcol = [["", "model_id", true], ["Healthcare Facility: ", "facility_name", true]];
-	display_col = "refrigerator_id"
+	display_col = "tracking_id"
 	table_id = "refrigerators";
 	allowed_group_bys = [["facility_row_id", "Facility"], ["model_row_id", "Model"], "reason_not_working", ["utilization", "Use"], "working_status", "year"]
 """, "", "")
@@ -284,6 +278,7 @@ helper.make_detail("aa_health_facility_detail.html", """
 			defaults["regionLevel1"] = d.getData(0, "regionLevel1");
 			defaults["regionLevel2"] = d.getData(0, "regionLevel2");
 			defaults["adminRegion"] = d.getData(0, "admin_region");
+			defaults["refrigerator_id"] = newGuid();
 			if (allowed_tables.indexOf("refrigerators") >= 0) {
 				var id = newGuid();
 				odkData.addRow("refrigerators", defaults, id, function() {
@@ -387,7 +382,7 @@ as_list[2].append(
 			["Refrigerator Age", "_html", "config/assets/inv_by_age.html"],
 			["Facility Grid Power Availability", "_html", "config/assets/inv_by_grid_power.html"]
 		]],
-		["View Refrigerator Models", "refrigerator_types", ""],
+		["View Refrigerator Models", "refrigerator_types", "equipment_type"],
 		["More Options", None, [
 			["View Health Facilities", "health_facility", [
 				["View All", "health_facility", ""],
