@@ -495,7 +495,7 @@ list_views = {
 	"health_facility": "config/assets/aa_health_facility_list.html",
 }
 """ + make_val_accepting_index("""
-	odkData.arbitraryQuery("health_facility", "SELECT * FROM health_facility WHERE admin_region LIKE ? OR regionLevel2 LIKE ? GROUP BY facility_type", [val, val], 100, 0, function(d) {
+	odkData.arbitraryQuery("health_facility", "SELECT admin_region, facility_type, regionLevel2, COUNT(facility_type) as cnt FROM health_facility WHERE UPPER(admin_region) = UPPER(?) OR UPPER(regionLevel2) LIKE UPPER(?) GROUP BY facility_type ORDER BY cnt DESC", [val, val], 100, 0, function(d) {
 		if (d.getCount() == 0) {
 			menu = [_tu("Admin region ") + val + _tu(" has no health facilities!"), null, []];
 			doMenu();
@@ -517,9 +517,9 @@ list_views = {
 					var where = "admin_region = ? AND facility_type = ?";
 					var args = [val, ftype];
 					menu[2] = menu[2].concat(0);
-					(function(val, where, args) {
-						menu[2][menu[2].length - 1] = ["View " + _tc(d, "facility_type", ftype) + "s", "_js", function() { odkTables.openTableToMapView(null, "health_facility", where, args, list_views["health_facility"] + "#health_facility/STATIC/SELECT """+hf_cols_to_select+""" FROM health_facility WHERE " + where + "/" + JSON.stringify(args) + "/health facilities in the admin region ? of the type ?"); }]
-					})(val, where, args);
+					(function(val, where, args, d, i) {
+						menu[2][menu[2].length - 1] = ["View " + _tc(d, "facility_type", ftype) + "s (" + d.getData(i, "cnt").toString() + ")", "_js", function() { odkTables.openTableToMapView(null, "health_facility", where, args, list_views["health_facility"] + "#health_facility/STATIC/SELECT """+hf_cols_to_select+""" FROM health_facility WHERE " + where + "/" + JSON.stringify(args) + "/health facilities in the admin region ? of the type ?"); }]
+					})(val, where, args, d, i);
 				}
 				doMenu();
 			} else {
@@ -530,15 +530,19 @@ list_views = {
 					var where = "regionLevel2 = ? AND facility_type = ?";
 					var args = [val, ftype];
 					menu[2] = menu[2].concat(0);
-					(function(val, where, args) {
-						menu[2][menu[2].length - 1] = [_tu("View ") + _tc(d, "facility_type", ftype) + "s", "_js", function() { odkTables.openTableToMapView(null, "health_facility", where, args, list_views["health_facility"] + "#health_facility/STATIC/SELECT """+hf_cols_to_select+""" FROM health_facility WHERE " + where + "/" + JSON.stringify(args) + "/health facilities in the region level 2 ? of the type ?"); }]
-					})(val, where, args);
+					(function(val, where, args, d, i) {
+						menu[2][menu[2].length - 1] = [_tu("View ") + _tc(d, "facility_type", ftype) + "s (" + d.getData(i, "cnt").toString() + ")", "_js", function() { odkTables.openTableToMapView(null, "health_facility", where, args, list_views["health_facility"] + "#health_facility/STATIC/SELECT """+hf_cols_to_select+""" FROM health_facility WHERE " + where + "/" + JSON.stringify(args) + "/health facilities in the region level 2 ? of the type ?"); }]
+					})(val, where, args, d, i);
 				}
 				doMenu();
 			}
 		}
 	}, function(e) { alert(e); });
-		"""), hallway)
+		"""), hallway + """
+			.button {
+				font-size: 60%;
+			}
+		""")
 
 helper.make_graph("cc_graph.html", hallway);
 
