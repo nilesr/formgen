@@ -247,7 +247,7 @@ Everything after that last `/` will be looked up in your user specific translati
 
 ### Graphs
 
-Open a graph view like this
+Open a pie chart view like this
 
 	#pie/table_id/column_to_graph/select statement/json encoded bindargs/translateable title
 	

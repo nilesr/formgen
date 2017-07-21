@@ -18,6 +18,7 @@ def make(utils, filename, customCss):
 	<body onLoad='ol();'>
 		<div class='button' id="title"></div>
 		<div id="key"></div>
+		<div id="bg"></div>
 	</body>
 </html>
 	"""
