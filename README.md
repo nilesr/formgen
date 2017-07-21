@@ -217,3 +217,58 @@ Total list of things translated using these translations:
 - Human readable "what is being selected" explanations in list views opened with the `STATIC` selector, ?s replaced with bindargs of the query.
 
 You can also call the `_tu` function in your custom javascript to retrieve something from helper.translations in the user's currently selected locale
+
+
+## Using detail, list, index and graph views from your own code
+
+When launching a table view, you should pass your arguments through the hash. At the minimum, it expects to be passed
+
+	#table_id
+	
+You can technically omit it if you're opening a list view you generated with `helper.make_table`, but you'll still need it for anything more complicated.
+
+To launch a group by, add the column to group on
+
+	#table_id/column_id
+	
+That will display all the unique values of column_id as if column_id were the `display_col` and `display_subcol` was not set. Clicking a value will open a collection.
+
+To open a collection view, pass in the where clause and argument like one of these
+
+	#table_id/column_id = ?/some_value
+	#table_id/column_id IS NULL/null
+
+For anything more complicated, use the `STATIC` method, which looks like this
+
+	#table_id/STATIC/Selection statement/Json encoded bindargs/Translateable text
+	#table_id/STATIC/SELECT * FROM refrigerators JOIN health_facility ON health_facility._id = refrigerators.facility_row_id WHERE admin_region = ? AND model_row_id = ?/["Dowa", "M25"]/refrigerators at health facilities in the admin region ? with the model number ?
+
+Everything after that last `/` will be looked up in your user specific translations and displayed to the user as an explanation of what they're viewing
+
+### Graphs
+
+Open a graph view like this
+
+	#pie/table_id/column_to_graph/select statement/json encoded bindargs/translateable title
+	
+So for example
+
+	#pie/refrigerators/normalized_year/SELECT (CASE WHEN year < 2010 THEN 'More than 10 years ago' ELSE 'Within the last 10 years' END) AS normalized_year FROM refrigerators WHERE regionLevel2 = ?/["North"]/Refrigerator Age
+	
+// TODO Screenshot
+
+The strings 'More than 10 years ago', 'Within the last 10 years' and 'Refrigerator Age' will all be translated.
+
+In this example
+
+	#pie/refrigerators/normalized_year/SELECT power_source FROM refrigerators WHERE regionLevel2 = ?/["North"]/Refrigerator Power
+	
+// TODO Screenshot
+	
+The strings ('grid', 'generator', 'unknown', etc...) coming out of the database would be translated without the need to add them to user translations. Since we know the table id and column id, they can be pulled from the choices list in the xlsx. However if that fails, user translations will be checked.
+
+### Detail views
+
+Expect
+
+	#table_id/row_id
