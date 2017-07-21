@@ -38,6 +38,10 @@ helper.make_table("aa_refrigerator_types_list.html", "", """
 	for (var i = 0; i < stuff.length; i++) {
 		stuff[i].style.display = "none";
 	}
+	stuff = document.getElementsByClassName("displays");
+	for (var i = 0; i < stuff.length; i++) {
+		stuff[i].style.width = "100%";
+	}
 """, "")
 
 helper.make_table("aa_refrigerators_list.html", "", "", global_allowed_tables + global_block_add + """
