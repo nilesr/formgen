@@ -340,12 +340,14 @@ helper.make_detail("aa_health_facility_detail.html", """
 	document.getElementById("addref").innerText = _tu("Add Refrigerator");
 """, "")
 helper.make_detail("aa_m_logs_detail.html", "", "", """
-	main_col = "refrigerator_id";
+	main_col = "refs_tracking_number";
 	colmap = [
-		['refrigerator_id', false],
+		['refs_tracking_number', "Tracking Number"],
 		['date_serviced', function(e, c, d) { return "<b>" + _tu("Date Serviced") + ":</b> " + c.split("T")[0]; }],
 		['notes', false]
 	]
+	global_join = "refrigerators ON refrigerators.refrigerator_id = m_logs.refrigerator_id"
+	global_which_cols_to_select = "*, refrigerators.tracking_id AS refs_tracking_number"
 """, "")
 
 import sqlite3, csv

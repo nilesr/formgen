@@ -140,6 +140,8 @@ If you pass in a literal boolean false as the text to display, the translated co
 
 If you pass a function as the text to display, it is called with three arguments, `e`, `c` and `d`. `e` is the li element that will be appended, `c` is the value of the reqested column from the database, and `d` is the odkData success callback result. Whatever the function returns is displayed to the screen.
 
+Your `main_col` should be in your `colmap`
+
 So for an imaginary cold chain deployment in the US, you might write this
 
 	colmap = [
