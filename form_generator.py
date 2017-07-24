@@ -325,15 +325,6 @@ var has_dates = """ + ("true" if has_dates else "false") + """
 				subprocess.check_call(["rm", "-rf", "formgen/" + table])
 			os.mkdir("formgen/" + table);
 			open("formgen/" + table + "/index.html", "w").write(basehtml)
-			for f in glob.glob(utils.appdesigner + "/app/config/tables/" + table + "/forms/" + table + "/*"):
-				fn = os.path.basename(f);
-				if fn in ["formDef.json", "properties.csv", "definition.csv", "customStyles.css"] or fn.endswith(".xls") or fn.endswith(".xlsx"):
-					continue
-				src = "/sdcard/opendatakit/" + utils.appname + "/config/tables/" + table + "/forms/" + table + "/" + fn
-				dest_folder = "/sdcard/opendatakit/" + utils.appname + "/config/assets/formgen/" + table + "/"
-				dest = dest_folder + fn
-				#utils.queue.append(["adb", "shell", "mkdir", "-p", dest_folder])
-				#utils.queue.append(["adb", "shell", "cp", "-rv", src, dest])
 			filenames.append("formgen/" + table + "/index.html")
 		except:
 			if skipped:
