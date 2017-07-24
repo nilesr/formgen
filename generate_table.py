@@ -28,6 +28,7 @@ var display_cols = """ + json.dumps(cols) + """
 var allowed_tables = """ + json.dumps(utils.get_allowed_tables()) + """
 // A map of table ids to tokens that can be used to localize their display name
 var localized_tables = """ + json.dumps(utils.get_localized_tables()) + """;
+var display_col_wrapper = null;
 var customJsOl = function customJsOl() {
 	"""+customJsOl+"""
 }

@@ -65,17 +65,28 @@ helper.make_table("aa_health_facility_list.html", "", "", global_allowed_tables 
 """, "", "")
 
 helper.make_table("aa_m_logs_list.html", "", "", global_allowed_tables + global_block_add + """
-	display_subcol = [["", "refrigerator_id", false]];
-	allowed_group_bys = ["manufacturer", "climate_zone", "equipment_type"]
+	var notes_cb = function notes_cb(e, notes) {
+		if (notes == undefined || notes == null) {
+			return "";
+		}
+		return notes;
+	}
+	display_col_wrapper = function display_col_wrapper(d, i, c) {
+		return c.split("T")[0];
+	}
 	display_col = "date_serviced"
+	display_subcol = [["", "refs_tracking_number", true], [notes_cb, "notes", true]];
+	allowed_group_bys = ["manufacturer", "climate_zone", "equipment_type"]
 	table_id = "m_logs";
+	global_join = "refrigerators ON refrigerators.refrigerator_id = m_logs.refrigerator_id"
+	global_which_cols_to_select = "*, refrigerators.refrigerator_id AS refs_refid, refrigerators.tracking_id AS refs_tracking_number"
 	document.getElementById("add").style.display = "none";
 """, "", "")
 
 
 helper.make_detail("aa_refrigerators_detail.html", """
 	<div class="main-col-wrapper">
-		<div id="inject-refrigerator_id">Loading...</div>
+		<div id="inject-tracking_id">Loading...</div>
 	</div>
 	<div class='h4-wrapper'><h4 id='bfi'><h4></div>
 	<ul>
@@ -84,7 +95,9 @@ helper.make_detail("aa_refrigerators_detail.html", """
 		<li id='inject-working_status'></li>
 		<li id='inject-reason_not_working'></li>
 		<li id='inject-model_id'></li>
-		<li id='inject-tracking_id'></li>
+		<!--
+			<li id='inject-tracking_id'></li>
+		-->
 		<li id='inject-voltage_regulator'></li>
 		<li id='inject-date_serviced'></li>
 	</ul>
@@ -143,7 +156,7 @@ helper.make_detail("aa_refrigerators_detail.html", """
 		document.getElementById("view_m_log").disabled = false;
 		document.getElementById("view_m_log").innerText = _tu("View all maintenance logs")
 		document.getElementById("view_m_log").addEventListener("click", function add_m_log() {
-			odkTables.launchHTML(null, "config/assets/aa_m_logs_list.html#m_log/refrigerator_id = ?/" + d.getData(0, "refrigerator_id"));
+			odkTables.launchHTML(null, "config/assets/aa_m_logs_list.html#m_log/STATIC/SELECT *, refrigerators.refrigerator_id AS refs_refid, refrigerators.tracking_id AS refs_tracking_number FROM m_logs JOIN refrigerators ON refrigerators.refrigerator_id = m_logs.refrigerator_id WHERE refs_refid = ?/" + JSON.stringify([d.getData(0, "refrigerator_id")]) + "/maintenance records for the selected refrigerator");
 		});
 
 		return "";
@@ -162,7 +175,7 @@ helper.make_detail("aa_refrigerators_detail.html", """
 		["model_row_id", model_callback],
 		["tracking_id", build_generic_callback("tracking_id", false, "Tracking Number")],
 		["voltage_regulator", build_generic_callback("voltage_regulator", true)],
-		["refrigerator_id", build_generic_callback("refrigerator_id", true)],
+		//["refrigerator_id", build_generic_callback("refrigerator_id", true)],
 		["date_serviced", build_generic_callback("date_serviced", function(i) {
 			if (i == "No Records") {
 				return _tu(i);
@@ -947,5 +960,9 @@ helper.translations = {
 		"default": True,
 		"es": "Ver Solo "
 	}},
+	"maintenance records for the selected refrigerator": {"text": {
+		"default": True,
+		"es": ""
+	}}
 }
 

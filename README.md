@@ -113,6 +113,15 @@ If there's only one pair in the list of `allowed_group_bys`, it's launched autom
 
 If you set `allowed_group_bys` to an empty list, the group by button won't be displayed
 
+You can also set `display_col_wrapper` to a function that returns what should be displayed, like this
+
+	display_col_wrapper = function display_col_wrapper(d, i, c) {
+		return c.split("T")[0];
+	}
+	display_col = "date_serviced"
+
+This would display "2017-03-05" instead of "2017-03-05T00:00:00.0000000" in the `display_col` field
+
 ### Detail views
 
 For `make_detail`, you almost certainly need to set `main_col` to something, so for tea houses
