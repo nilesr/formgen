@@ -122,6 +122,14 @@ You can also set `display_col_wrapper` to a function that returns what should be
 
 This would display "2017-03-05" instead of "2017-03-05T00:00:00.0000000" in the `display_col` field
 
+You can change the behavior of clicking on a row by changing the global `clicked` function. The default implementation is this
+
+	var clicked = function clicked(table_id, row_id) {
+		odkTables.openDetailView({}, table_id, row_id);
+	}
+
+If you wanted to open a detail with sub list view or something, just set clicked to something different in your customJsOl (without the leading `var`)
+
 ### Detail views
 
 For `make_detail`, you almost certainly need to set `main_col` to something, so for tea houses

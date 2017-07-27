@@ -15,15 +15,66 @@ helper.make_table("plot.html", "", "", """
 
 
 helper.make_table("Tea_houses_list.html", "", "", """
+	clicked = function clicked(table_id, row_id) {
+		odkTables.openDetailWithListView(null, table_id, row_id, "config/assets/Tea_houses_detail.html");
+	}
 	global_join = "Tea_types ON Tea_types._id = Tea_houses.Specialty_Type_id"
-	global_which_cols_to_select = "*, Tea_types.Name as ttName"
+	global_which_cols_to_select = "*, Tea_types.Name AS ttName, Tea_houses.Name AS thName"
 	display_subcol = [["Specialty: ", "ttName", true], ["", "District", false], [", ", "Neighborhood", true]];
+	display_col = "thName";
 	table_id = "Tea_houses";
 """, "", "")
+helper.make_table("Tea_inventory_list.html", "", "", """
+	global_join = "Tea_houses ON Tea_houses._id = Tea_inventory.House_id JOIN Tea_types ON Tea_types._id = Tea_inventory.Type_id"
+	global_which_cols_to_select = "*, Tea_types.Name AS ttName, Tea_houses.Name AS thName, Tea_inventory.Name AS tiName"
+	display_subcol = [["Tea House: ", "thName", true], ["Type: ", "ttName", true]];
+	display_col = "tiName";
+	table_id = "Tea_inventory";
+""", "", "")
 helper.make_detail("Tea_houses_detail.html", "", "", """
-	main_col = "Name";
+	main_col = "thName";
 	table_id = "Tea_houses";
+	global_join = "Tea_types ON Tea_types._id = Tea_houses.Specialty_Type_id"
+	global_which_cols_to_select = "*, Tea_types.Name AS ttName, Tea_houses.Name AS thName"
+	var br = function(col, extra) {
+		return function(e, c, d) { return "<b>" + col + "</b>: " + c + (extra ? extra : "<br />"); };
+	}
+	var check = function(col) {
+		return function(e, c, d) {
+			return "<input disabled type='checkbox' " + (c.toUpperCase() == "YES" ? "checked=checked" : "") + " /><b>" + col + "</b>";
+		};
+	}
+	var opened = function(e, c, d) { return "<b>Opened</b>: " + (c == null ? "" : c).split("T")[0]; };
+	colmap = [
+		["thName", function(e, c, d) { return c }],
+		["State", true],
+		["Region", true],
+		["District", true],
+		["Neighborhood", br("Neighborhood")],
+		["ttName", br("Specialty")],
+		["Date_Opened", opened],
+		["Customers", "Number of Customers: "],
+		["Visits", br("Total Number of Visits")],
+		["Location_latitude", "Latitude (GPS): "],
+		["Location_longitude", br("Longitude (GPS)", "<br /><br /><b>Services</b>:")],
+		["Iced", check("Iced")],
+		["Hot", check("Hot")],
+		["WiFi", function(e, c, d) { return check("WiFi")(e, c, d) + "<br /><h3>Contact Information</h3>"; }],
+		["Store_Owner", true],
+		["Phone_Number", "Mobile number: "],
+		["_id", function(e, c, d) {
+			odkData.arbitraryQuery("Tea_inventory", "SELECT COUNT(*) FROM Tea_inventory WHERE House_id = ?", [row_id], 1, 0, function(d) {
+				var count = d.getData(0, "COUNT(*)");
+				document.getElementById("teas").innerText = count + " Tea" + (count == 1 || count == "1" ? "" : "s");
+			}, function(e) {
+				alert(e);
+			});
+			odkTables.setSubListView("Tea_inventory", "House_id = ?", [c], "config/assets/Tea_inventory_list.html#Tea_inventory/House_id = ?/" + c);
+			return "<a onClick='odkTables.openTableToListView(null, \\'Tea_inventory\\', null, null, \\'Tea_inventory_list.html#Tea_inventory/House_id = ?/"+c+"\\')' id='teas'>Loading...</span>"
+		}]
+	]
 """, "")
+helper.make_detail("Tea_inventory_detail.html", "", "", "", "")
 
 helper.make_detail("example_detail.html", "", "", "", "")
 helper.make_table("example_list.html", "", "", """
@@ -39,13 +90,14 @@ helper.make_table("example_list.html", "", "", """
 """, "", "")
 
 
-#make_detail("selects_detail.html", "", "", "", "")
+helper.make_detail("selects_detail.html", "", "", "", "")
 helper.make_table("selects_list.html", "", "", """
-	var cb = function(elem, bird) {
+	var cb = function(elem, bird, d, i) {
 		if (bird == null || bird == undefined || bird.trim().length == 0) return "Didn't see anything";
+		var color = d.getData(i, "color");
 		var n = ""
-		if ("aeiou".indexOf(bird[0].toLowerCase()) >= 0) n = "n"
-		return "Saw a" + n + " " + bird;
+		if ("aeiou".indexOf(color[0].toLowerCase()) >= 0) n = "n"
+		return "Saw a" + n + " " + color + " " + bird;
 	}
 	display_subcol = [[cb, "bird", true]];
 	display_col = "user_name"
@@ -102,7 +154,7 @@ helper.make_index("general.html", """
 """, "")
 helper.make_index("selects_index.html", """
 	list_views = {
-		"exampleForm": "exampleForm_list.html"
+		"selects": "config/assets/selects_list.html"
 	}
 	var newinstance = function newinstance() {
 		var id = newGuid();

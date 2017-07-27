@@ -29,6 +29,9 @@ var allowed_tables = """ + json.dumps(utils.get_allowed_tables()) + """
 // A map of table ids to tokens that can be used to localize their display name
 var localized_tables = """ + json.dumps(utils.get_localized_tables()) + """;
 var display_col_wrapper = null;
+var clicked = function(table_id, row_id) {
+	odkTables.openDetailView({}, table_id, row_id);
+}
 var customJsOl = function customJsOl() {
 	"""+customJsOl+"""
 }
