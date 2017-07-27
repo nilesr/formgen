@@ -79,6 +79,7 @@ def generate_all(utils, filenames):
 			# translations were broken because the DOM molests them and I can't accurately retrieve the text I put in.
 			# The new system keeps them always stored as javascript objects, which is what display takes anyways.
 			tokens = {}
+			requireds = []
 			# Small optimization, won't add all the choices for dates if there are no date prompts in the form
 			has_dates = False
 			for item in formDef["xlsx"]["survey"]:
@@ -109,6 +110,7 @@ def generate_all(utils, filenames):
 					continue
 				# All prompts have a type
 				if "type" in item:
+					print_br = True; # print <br /> twice after each prompt
 					# If we have any rules, wrapp the entire prompt in a series of spans, one for each rule
 					# update() will set style.visibility to "none" or "block" on those spans depending on whether the rule matches or not
 					if len(rules) > 0:
@@ -149,8 +151,10 @@ def generate_all(utils, filenames):
 					# if we already have a placeholder (that might be translated), don't change it, otherwise set
 					# placeholder to Required field
 					if "required" in item:
-						required = "data-required=\"required\" "
-						if len(hint) == 0: required += "placeholder=\"Required field\"";
+						token = gensym()
+						tokens[token] = item["required"]
+						requireds.append([item["name"], token])
+						required = "data-required=\""+token+"\" "
 					# constraint, like "data('weight') < 20", stuff like that
 					if "constraint" in item:
 						token = gensym()
@@ -264,10 +268,11 @@ def generate_all(utils, filenames):
 					elif item["type"] == "assign":
 						# The only one that's not a prompt
 						screen.append("<span class=\"assign\" "+attrs+"></span>")
+						print_br = False
 					else:
 						print("bad type " + item["type"]); die()
 					# prevent an empty screen for pages with only assigns on them
-					if len(screen) > 0:
+					if len(screen) > 0 and print_br:
 						screen.append("<br /><br />")
 					if len(rules) > 0:
 						for rule in rules:
@@ -307,6 +312,7 @@ var choices = """ + choices + """;
 var queries = """ + queries + """;
 var table_id = '""" + table + """';
 var tokens = """ + json.dumps(tokens) + """
+var requireds = """ + json.dumps(requireds) + """
 var has_dates = """ + ("true" if has_dates else "false") + """
 	</script>
 	<script src="../../form_generator.js"></script>

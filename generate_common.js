@@ -571,4 +571,8 @@ var formgen_specific_translations = {
 		"default": true,
 		"es": "Dato requerido"
 	}},
+	"Column ? is required but no value was provided": {"text": {
+		"default": true,
+		"es": "Dato ? es requerido pero no tiene respuesta"
+	}},
 }

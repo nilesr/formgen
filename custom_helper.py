@@ -3,6 +3,7 @@ import generate_table
 import generate_detail
 import generate_index
 import generate_graph
+import generate_tabs
 class helper():
 	def __init__(self):
 		self.filanames = []
@@ -17,6 +18,8 @@ class helper():
 		self.queue.append(["index", filename, customJs, customCss])
 	def make_graph(self, filename, customCss):
 		self.queue.append(["graph", filename, customCss])
+	def make_tabs(self, filename, customJs, customCss):
+		self.queue.append(["tabs", filename, customJs, customCss])
 	def _make(self, utils, filenames):
 		for q in self.queue:
 			if q[0] == "detail":
@@ -27,6 +30,8 @@ class helper():
 				generate_index.make(utils, *(q[1:]))
 			elif q[0] == "graph":
 				generate_graph.make(utils, *(q[1:]))
+			elif q[0] == "tabs":
+				generate_tabs.make(utils, *(q[1:]))
 			else:
 				print("Bad type in queue " + q[0]);
 				sys.exit(0);

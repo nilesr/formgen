@@ -27,3 +27,7 @@ default: all
 deploy-default: appname = default
 deploy-default: deploy
 
+example: appname = example
+example: all
+deploy-example: appname = example
+deploy-example: deploy

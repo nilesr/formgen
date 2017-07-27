@@ -18,6 +18,13 @@ var global_screen_idx = -1;
 // Set to true initially and set to false in onLoad (`ol`) before it calls update()
 var noop = true;
 
+// some user defined javascript (like assigns, query filters) takes place before row_data has been updated with the data
+// that's actually on the screen, so we should poll screen data first
+var _data_wrapper = function _data_wrapper(i) {
+	var sdat = screen_data(i, true);
+	if (sdat == null || sdat == undefined || sdat.length == 0) return row_data[i];
+	return sdat;
+}
 
 // Helper function for constraints, so people can write like "selected(data('color'), 'blue')" and it will return true/false 
 var selected = function selected(value1, value2) {
@@ -40,11 +47,13 @@ var selected = function selected(value1, value2) {
 }
 // Given a dbcol, try and pull the data currently in the prompt object on the screen.
 // Checked in update(), and if it differs from row_data then update knows to go update the database with row_data now
-var screen_data = function screen_data(id) {
+var screen_data = function screen_data(id, optional_no_alert) {
 	// This will throw an error if the requested prompt isn't on the screen
 	var gsp_result = get_screen_prompt(id);
 	if (!gsp_result[0]) {
-		alert(_t("Prompt for database column ") + id + _t(" not found on the screen! Will be stored in the database as null!"))
+		if (optional_no_alert != true) {
+			alert(_t("Prompt for database column ") + id + _t(" not found on the screen! Will be stored in the database as null!"))
+		}
 		return null;
 	}
 	var elem = get_screen_prompt(id)[1]
@@ -229,11 +238,7 @@ var get_choices = function get_choices(which, not_first_time, filter) {
 			var filter_result = true;
 			if (filter != null) {
 				choice_item = choices[j] // used in the eval
-				var data = function _data_wrapper(i) {
-					var sdat = screen_data(i);
-					if (sdat == null || sdat == undefined || sdat.length == 0) return row_data[i];
-					return sdat;
-				}
+				var data = _data_wrapper
 				filter_result = eval(tokens[filter])
 			}
 			if (filter_result) {
@@ -721,14 +726,18 @@ var update = function update(delta) {
 	// If an assign hasn't been put in the database yet, eval it and put that in,
 	// then remind ourselves that we need to call updateOrInsert later
 	var elems = document.getElementsByClassName("assign");
+	var data = _data_wrapper;
 	for (var i = 0; i < elems.length; i++) {
 		var elem = elems[i];
 		var col = elem.getAttribute("data-dbcol");
-		if (row_data[col] == null || row_data[col] == undefined || row_data[col].trim().length == 0) {
-			// the "data-calculation" attribute holds a key to a string in `tokens` that we can eval to get the result
-			row_data[col] = eval(tokens[elem.getAttribute("data-calculation")]).toString()
-			num_updated++;
+		// the "data-calculation" attribute holds a key to a string in `tokens` that we can eval to get the result
+		row_data[col] = eval(tokens[elem.getAttribute("data-calculation")]).toString()
+		// If it's on the screen, let us update it from row_data later
+		var gsp_result = get_screen_prompt(col);
+		if (gsp_result[0]) {
+			gsp_result[1].setAttribute("data-data_populated", "");
 		}
+		num_updated++;
 	}
 
 	// TRANSLATION LOGIC
@@ -862,7 +871,8 @@ var update = function update(delta) {
 			}
 		}
 		// Checks if the field is required
-		if (elems[i].getAttribute("data-required") != null) {
+		var required = elems[i].getAttribute("data-required");
+		if (required != null && eval(tokens[required])) {
 			elems[i].placeholder = _t("Required field")
 			var entered = screen_data(col);
 			if (entered == null || entered.length == 0) {
@@ -903,11 +913,16 @@ var update = function update(delta) {
 		updateOrInsert()
 	}
 
+	// If statements may be run more than once, so let's cache their results in this validates object
+	var validates = {}
 	// For each of the if statements, eval it then set the display style on it if applicable
 	var spans = document.getElementsByClassName("validate");
 	for (var i = 0; i < spans.length; i++) {
 		var rule = spans[i].getAttribute("data-validate-rule");
-		if (eval(tokens[rule])) {
+		if (validates[rule] == undefined) {
+			validates[rule] = eval(tokens[rule]);
+		}
+		if (validates[rule]) {
 			spans[i].style.display = "block";
 		} else {
 			spans[i].style.display = "none";
@@ -983,8 +998,17 @@ var get_screen_prompt = function get_screen_prompt(id) {
 }
 // Function to insert the row into the database one last time (does that by calling update()), then sets savepoint type to complete and finishes
 var finalize = function finalize() {  
-	odkCommon.setSessionVariable(table_id + ":" + row_id + ":global_screen_idx", 0);
 	update(0);
+	// Make sure all required fields were provided
+	for (var i = 0; i < requireds.length; i++) {
+		var column = requireds[i][0];
+		var js = requireds[i][1];
+		if ((data(column) == null || data(column) == undefined || (typeof(data(column)) == "string" && data(column).trim().length == 0)) && eval(tokens[js])) {
+			alert(_t("Column ? is required but no value was provided").replace("?", column))
+			return;
+		}
+	}
+	odkCommon.setSessionVariable(table_id + ":" + row_id + ":global_screen_idx", 0);
 	// Escape the LIMIT 1
 	odkData.arbitraryQuery(table_id, "UPDATE " + table_id + " SET _savepoint_type = ? WHERE _id = ?;--", ["COMPLETE", row_id], 1000, 0, function success_callback(d) {
 		console.log("Set _savepoint_type to COMPLETE successfully");
@@ -1044,8 +1068,8 @@ var ol = function onLoad() {
 			choices = choices.concat({choice_list_name: "_year", data_value: i.toString(), display: i.toString(), notranslate: true})
 		}
 	}
-	choices = choices.concat({"choice_list_name": "_yesno", "data_value": "true", "display": {"text": _t("yes")}});
 	choices = choices.concat({"choice_list_name": "_yesno", "data_value": "false", "display": {"text": _t("no")}});
+	choices = choices.concat({"choice_list_name": "_yesno", "data_value": "true", "display": {"text": _t("yes")}});
 	// Get the row id from the url, or makes a new id if it can't get it
 	row_id = window.location.hash.substr(1);
 	if (row_id.length == 0) {
