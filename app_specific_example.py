@@ -25,9 +25,15 @@ helper.make_detail("Tea_houses_detail.html", "", "", """
 	table_id = "Tea_houses";
 """, "")
 
-helper.make_detail("exampleForm_detail.html", "", "", "", "")
-helper.make_table("exampleForm_list.html", "", "", """
-		//display_subcol = [["", "rating", false], ["/10", null, true]];
+helper.make_detail("example_detail.html", "", "", "", "")
+helper.make_table("example_list.html", "", "", """
+		var ack = function(_, c) {
+			if (c == "true") {
+				return "Does acknowledge <i><span style='color: red; font-weight: bold;>html</html>";
+			}
+			return "Doesn't acknowledge!";
+		}
+		display_subcol = [[ack, "has_html", false], ["/10", null, true]];
 		display_col = "name"
 		table_id = "exampleForm";
 """, "", "")
@@ -51,23 +57,39 @@ helper.make_tabs("index.html", """
 	var tabs = [
 		["General Demo", "general.html"],
 		["Tea Houses", "th_index.html"],
+		["Selects Demo", "selects_index.html"],
 		// TODO
-		["Selects Demo", "404.html"],
+		/*
 		["Plot Demo", "404.html"],
+		*/
 	]
 """, "")
 
 helper.make_index("th_index.html", """
 	list_views = {
-		"Tea_houses": "Tea_houses_list.html",
-		"Tea_types": "Tea_types_list.html",
-		"Tea_inventory": "Tea_inventory_list.html",
+		"Tea_houses": "config/assets/Tea_houses_list.html",
+		"Tea_types": "config/assets/Tea_types_list.html",
+		"Tea_inventory": "config/assets/Tea_inventory_list.html",
 	}
-	menu = ["TODO", null, []];
+	var newinstance = function newinstance(table) {
+		return function() {
+			var id = newGuid();
+			odkTables.launchHTML(null, "config/assets/formgen/"+table+"#" + id);
+		}
+	}
+	menu = ["Tea Demo", null, [
+		["View Tea Houses (try searching for \\"Hill\\")", "Tea_houses", ""],
+		["View Tea Houses on a Map", "_js", function() { odkTables.openTableToMapView(null, "Tea_Houses", null, null, "config/assets/Tea_houses_list.html"); }],
+		["New tea house", "_js", newinstance("Tea_houses")],
+		["View Tea Types", "Tea_types", ""],
+		["Add Tea Type", "_js", newinstance("Tea_types")],
+		["View Tea Inventory", "Tea_inventory", ""],
+		["Add Tea Inventory Entry", "_js", newinstance("Tea_inventory")]
+	]]
 """, "")
 helper.make_index("general.html", """
 	list_views = {
-		"exampleForm": "exampleForm_list.html"
+		"exampleForm": "config/assets/example_list.html"
 	}
 	var newinstance = function newinstance() {
 		var id = newGuid();
@@ -78,3 +100,17 @@ helper.make_index("general.html", """
 		["View Responses", "exampleForm", ""]
 	]]
 """, "")
+helper.make_index("selects_index.html", """
+	list_views = {
+		"exampleForm": "exampleForm_list.html"
+	}
+	var newinstance = function newinstance() {
+		var id = newGuid();
+		odkTables.launchHTML(null, "config/assets/formgen/selects#" + id);
+	}
+	menu = ["Selects Demo", null, [
+		["New Instance", "_js", newinstance],
+		["View Responses", "selects", ""]
+	]]
+""", "")
+
