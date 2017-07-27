@@ -65,16 +65,44 @@ helper.make_detail("Tea_houses_detail.html", "", "", """
 		["_id", function(e, c, d) {
 			odkData.arbitraryQuery("Tea_inventory", "SELECT COUNT(*) FROM Tea_inventory WHERE House_id = ?", [row_id], 1, 0, function(d) {
 				var count = d.getData(0, "COUNT(*)");
-				document.getElementById("teas").innerText = count + " Tea" + (count == 1 || count == "1" ? "" : "s");
+				var teas = document.getElementById("teas")
+				teas.style.color = "blue";
+				teas.style.textDecoration = "underline";
+				teas.innerText = count + " Tea" + (count == 1 || count == "1" ? "" : "s");
+				teas.addEventListener("click", function() {
+					odkTables.openTableToListView({}, "Tea_inventory", "House_id = ?", [c], "config/assets/Tea_inventory_list.html#Tea_inventory/House_id = ?/" + c);
+				});
 			}, function(e) {
 				alert(e);
 			});
 			odkTables.setSubListView("Tea_inventory", "House_id = ?", [c], "config/assets/Tea_inventory_list.html#Tea_inventory/House_id = ?/" + c);
-			return "<a onClick='odkTables.openTableToListView(null, \\'Tea_inventory\\', null, null, \\'Tea_inventory_list.html#Tea_inventory/House_id = ?/"+c+"\\')' id='teas'>Loading...</span>"
+			return "<span onClick='odkTables.openTableToListView(null, \\'Tea_inventory\\', null, null, \\'Tea_inventory_list.html#Tea_inventory/House_id = ?/"+c+"\\')' id='teas'>Loading...</span>"
 		}]
 	]
 """, "")
-helper.make_detail("Tea_inventory_detail.html", "", "", "", "")
+helper.make_detail("Tea_inventory_detail.html", "", "", """
+
+	main_col = "tiName";
+	table_id = "Tea_inventory";
+	global_join = "Tea_houses ON Tea_houses._id = Tea_inventory.House_id JOIN Tea_types ON Tea_types._id = Tea_inventory.Type_id"
+	global_which_cols_to_select = "*, Tea_types.Name AS ttName, Tea_houses.Name AS thName, Tea_inventory.Name AS tiName"
+	var check = function(col) {
+		return function(e, c, d) {
+			return "<input disabled type='checkbox' " + (c.toUpperCase() == "YES" ? "checked=checked" : "") + " /><b>" + col + "</b>";
+		};
+	}
+	colmap = [
+		["tiName", function(e, c, d) { return c }],
+		["ttName", "Type: "],
+		["Price_8oz", false],
+		["Price_12oz", false],
+		["Price_16oz", function(e, c, d) { return "<b>16oz</b>: " + c + "<br /><br /><b>Offered</b>:" }],
+		["Iced", check("Iced")],
+		["Hot", check("Hot")],
+		["Loose_Leaf", check("Loose Leaf")],
+		["Bags", check("Bags")],
+	]
+""", "")
 
 helper.make_detail("example_detail.html", "", "", "", "")
 helper.make_table("example_list.html", "", "", """
@@ -133,12 +161,32 @@ helper.make_index("th_index.html", """
 		["View Tea Houses (try searching for \\"Hill\\")", "Tea_houses", ""],
 		["View Tea Houses on a Map", "_js", function() { odkTables.openTableToMapView(null, "Tea_Houses", null, null, "config/assets/Tea_houses_list.html"); }],
 		["New tea house", "_js", newinstance("Tea_houses")],
+		["View Teas", "Tea_inventory", ""],
+		["Add Tea", "_js", newinstance("Tea_inventory")],
 		["View Tea Types", "Tea_types", ""],
 		["Add Tea Type", "_js", newinstance("Tea_types")],
-		["View Tea Inventory", "Tea_inventory", ""],
-		["Add Tea Inventory Entry", "_js", newinstance("Tea_inventory")]
 	]]
-""", "")
+""", """
+body {
+	background: url('img/teaBackground.jpg') no-repeat center/cover fixed;
+}
+#title {
+	width: 100%;
+	display: block;
+	box-shadow: none;
+	color: white;
+	font-family: arial;
+	border-bottom: 2px solid #38c0f4;
+	background: none;
+	margin-left: 0px;
+	margin-right: 0px;
+	font-size: 35px;
+	padding-top: 5px;
+	padding-bottom: 5px;
+	margin-bottom: 25px;
+	font-weight: bold;
+}
+""")
 helper.make_index("general.html", """
 	list_views = {
 		"exampleForm": "config/assets/example_list.html"
