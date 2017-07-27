@@ -23,6 +23,9 @@ helper.make_table("Tea_houses_list.html", "", "", """
 	display_subcol = [["Specialty: ", "ttName", true], ["", "District", false], [", ", "Neighborhood", true]];
 	display_col = "thName";
 	table_id = "Tea_houses";
+	allowed_group_bys = [
+		"District", "Neighborhood", "State", "WiFi", "Hot", "Iced", "State", ["ttName", "Specialty"]
+	]
 """, "", "")
 helper.make_table("Tea_inventory_list.html", "", "", """
 	global_join = "Tea_houses ON Tea_houses._id = Tea_inventory.House_id JOIN Tea_types ON Tea_types._id = Tea_inventory.Type_id"
@@ -30,6 +33,9 @@ helper.make_table("Tea_inventory_list.html", "", "", """
 	display_subcol = [["Tea House: ", "thName", true], ["Type: ", "ttName", true]];
 	display_col = "tiName";
 	table_id = "Tea_inventory";
+	allowed_group_bys = [
+		["thName", "House"], ["ttName", "Type"], "Iced", "Hot", "Bags", "Loose_Leaf"
+	]
 """, "", "")
 helper.make_table("Tea_types_list.html", "", "", """
 	var extras_cb = function extras_cb(e, c, d, i) {
@@ -43,6 +49,9 @@ helper.make_table("Tea_types_list.html", "", "", """
 	display_subcol = [["Origin: ", "Origin", true], [extras_cb, "_id", true]];
 	display_col = "Name";
 	table_id = "Tea_types";
+	allowed_group_bys = [
+		"Origin", "Caffeinated, "Fermented"
+	]
 """, "", "")
 detail_helper_js = """
 	var br = function(col, extra) {
@@ -174,6 +183,7 @@ helper.make_index("th_index.html", """
 		["View Tea Houses on a Map", "_js", function() { odkTables.openTableToMapView(null, "Tea_Houses", null, null, "config/assets/Tea_houses_list.html"); }],
 		["New tea house", "_js", newinstance("Tea_houses")],
 		["View Teas", "Tea_inventory", ""],
+		["View Teas by Tea House", "Tea_inventory", "thName"],
 		["Add Tea", "_js", newinstance("Tea_inventory")],
 		["View Tea Types", "Tea_types", ""],
 		["Add Tea Type", "_js", newinstance("Tea_types")],

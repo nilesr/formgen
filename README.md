@@ -22,6 +22,8 @@ That will let you access these helpful functions
 	helper.make_table(filename, customHtml, customCss, customJsOnload, customJsSearch, customJsGeneric)
 	helper.make_detail(filename, customHtml, customCss, customJsOnload, customJsGeneric)
 	helper.make_index(filename, customJs, customCss)
+	helper.make_graph(filename, customCss)
+	helper.make_tabs(filename, customJs, customCss)
 
 Since it's python, you can use docstrings (triple quotes) to enter multiple lines in the fields. If you have a lot of CSS or something, you might want to extract it to another file and pass in something like `open("form_style.css").read()` instead
 
@@ -204,6 +206,20 @@ You also need to set the `list_views` variable to a dictionary. So for the above
 	}
 
 If you didn't create a custom list view file, you can leave it blank and it will default to `config/assets/table.html`, just make sure you specified an instance column in your xlsx.
+
+### Tabs
+
+You can make a page that has tabs like this
+
+	helper.make_tabs("index.html", """
+		var tabs = [
+			["Some tab name", "first_page.html"],
+			["Tab Two", "second_page.html"],
+			["Tab Three", "third_page.html"],
+		]
+	""", "")
+
+An iframe with `src` set to the second element in the pair will take up the rest of the page below the header
 
 ### Translations
 
