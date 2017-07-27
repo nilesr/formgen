@@ -107,12 +107,12 @@ helper.make_detail("Tea_inventory_detail.html", "", "", """
 helper.make_detail("example_detail.html", "", "", "", "")
 helper.make_table("example_list.html", "", "", """
 		var ack = function(_, c) {
-			if (c == "true") {
-				return "Does acknowledge <i><span style='color: red; font-weight: bold;>html</html>";
+			if (c == true) {
+				return "Does acknowledge <i><span style='color: red; font-weight: bold;'>html</html>";
 			}
 			return "Doesn't acknowledge!";
 		}
-		display_subcol = [[ack, "has_html", false], ["/10", null, true]];
+		display_subcol = [[ack, "has_html", false]];
 		display_col = "name"
 		table_id = "exampleForm";
 """, "", "")
