@@ -5,7 +5,7 @@ helper = custom_helper.helper();
 
 
 helper.make_table("plot.html", "", "", """
-	var plating_cb = function(elem, planting) {
+	var planting_cb = function(elem, planting) {
 		if (planting == null || planting == "null") return "Not planting"
 		return "Planting " + planting.toLowerCase() + " corn"
 	}
