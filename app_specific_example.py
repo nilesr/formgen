@@ -234,5 +234,9 @@ helper.make_index("selects_index.html", """
 		["New Instance", "_js", newinstance],
 		["View Responses", "selects", ""]
 	]]
-""", "")
+""", """
+body {
+	background: url('img/bird.png') no-repeat center/cover fixed;
+}
+""")
 
