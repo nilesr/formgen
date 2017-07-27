@@ -80,6 +80,7 @@ def generate_all(utils, filenames):
 			# The new system keeps them always stored as javascript objects, which is what display takes anyways.
 			tokens = {}
 			requireds = []
+			hack_for_acknowledges = []
 			# Small optimization, won't add all the choices for dates if there are no date prompts in the form
 			has_dates = False
 			for item in formDef["xlsx"]["survey"]:
@@ -255,6 +256,7 @@ def generate_all(utils, filenames):
 						screen.append("<select data-values-list=\""+item["values_list"]+"\"")
 						screen.append(attrs + _class + "></select>")
 					elif item["type"] == "acknowledge":
+						hack_for_acknowledges.append(item["name"])
 						screen.append("<select data-values-list=\"_yesno\" " + attrs + _class + "></select>")
 					elif item["type"] == "date":
 						has_dates = True;
@@ -311,9 +313,10 @@ var screens = """ + json.dumps(screens) + """;
 var choices = """ + choices + """;
 var queries = """ + queries + """;
 var table_id = '""" + table + """';
-var tokens = """ + json.dumps(tokens) + """
-var requireds = """ + json.dumps(requireds) + """
-var has_dates = """ + ("true" if has_dates else "false") + """
+var tokens = """ + json.dumps(tokens) + """;
+var requireds = """ + json.dumps(requireds) + """;
+var has_dates = """ + ("true" if has_dates else "false") + """;
+var hack_for_acknowledges = """+json.dumps(hack_for_acknowledges)+""";
 	</script>
 	<script src="../../form_generator.js"></script>
 </head>
