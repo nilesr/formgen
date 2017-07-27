@@ -504,8 +504,15 @@ var makeIntent = function makeIntent(package, activity, optional_dbcol) {
 // Helper function used by update() whenever something on the screen has changed and we should put row_data in the database
 // Also sets savepoint type to incomplete
 var updateOrInsert = function updateOrInsert() {
+	var temp_row_data = row_data;
+	for (var i = 0; i < hack_for_acknowledges.length; i++) {
+		var col = hack_for_acknowledges[i];
+		if (typeof(temp_row_data[col]) == "string") {
+			temp_row_data[col] = temp_row_data[col].toUpperCase() == "TRUE" ? 1 : 0;
+		}
+	}
 	if (!row_exists) {
-		odkData.addRow(table_id, row_data, row_id, function(d) {
+		odkData.addRow(table_id, temp_row_data, row_id, function(d) {
 			row_exists = true;
 		}, function(d) {
 			if (d.indexOf("ActionNotAuthorizedException") >= 0) {
@@ -524,13 +531,6 @@ var updateOrInsert = function updateOrInsert() {
 		// acknowledges MUST go into the database as integer 1 or 0, don't ask me why
 		// But we can't do that in screen_data/changeElement/row_data because survey stores it in the javascript as
 		// true/false and that's what a bunch of constraints/validations/if statements expect
-		var temp_row_data = row_data;
-		for (var i = 0; i < hack_for_acknowledges.length; i++) {
-			var col = hack_for_acknowledges[i];
-			if (typeof(temp_row_data[col]) == "string") {
-				temp_row_data[col] = temp_row_data[col].toUpperCase() == "TRUE" ? 1 : 0;
-			}
-		}
 		odkData.updateRow(table_id, temp_row_data, row_id, function(){}, function() {
 			alert(_t("Unexpected failure to save row"));
 			console.log(arguments);
