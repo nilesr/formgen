@@ -159,10 +159,7 @@ helper.make_tabs("index.html", """
 		["General Demo", "general.html"],
 		["Tea Houses", "th_index.html"],
 		["Selects Demo", "selects_index.html"],
-		// TODO
-		/*
-		["Plot Demo", "404.html"],
-		*/
+		["Plot Demo", "plot_index.html"]
 	]
 """, "")
 
@@ -221,7 +218,11 @@ helper.make_index("general.html", """
 		["New Instance", "_js", newinstance],
 		["View Responses", "exampleForm", ""]
 	]]
-""", "")
+""", """
+body {
+	background: url('img/hallway.jpg') no-repeat center/cover fixed;
+}
+""")
 helper.make_index("selects_index.html", """
 	list_views = {
 		"selects": "config/assets/selects_list.html"
@@ -237,6 +238,21 @@ helper.make_index("selects_index.html", """
 """, """
 body {
 	background: url('img/bird.png') no-repeat center/cover fixed;
+}
+""")
+helper.make_index("plot_index.html", """
+	list_views = {
+		//"selects": "config/assets/selects_list.html"
+	}
+	var todo = function() {alert("TODO")};
+	menu = ["Plots Demo", null, [
+		["View Plots", "_js", todo],
+		["View Visits", "_js", todo],
+		["View Reports", "_js", todo]
+	]]
+""", """
+body {
+	background: url('img/Agriculture_in_Malawi_by_Joachim_Huber_CClicense.jpg') no-repeat center/cover fixed;
 }
 """)
 
