@@ -4,16 +4,6 @@ import custom_helper
 helper = custom_helper.helper();
 
 
-helper.make_table("plot.html", "", "", """
-	var planting_cb = function(elem, planting) {
-		if (planting == null || planting == "null") return "Not planting"
-		return "Planting " + planting.toLowerCase() + " corn"
-	}
-	display_subcol = [[planting_cb, "planting", false], [", ","plot_size", false], [" hectares", null, true]];
-	table_id = "plot";
-""", "", "")
-
-
 helper.make_table("Tea_houses_list.html", "", "", """
 	clicked = function clicked(table_id, row_id) {
 		odkTables.openDetailWithListView(null, table_id, row_id, "config/assets/Tea_houses_detail.html");
@@ -57,10 +47,23 @@ detail_helper_js = """
 	var br = function(col, extra) {
 		return function(e, c, d) { return "<b>" + col + "</b>: " + c + (extra ? extra : "<br />"); };
 	}
-	var check = function(col) {
+	var check = function(col, accepting, type) {
+		if (accepting === undefined) {
+			accepting = function(e, c, d) {
+				return c.toUpperCase() == "YES";
+			}
+		}
+		if (type === undefined) type = "checkbox"
 		return function(e, c, d) {
-			return "<input disabled type='checkbox' " + (c.toUpperCase() == "YES" ? "checked=checked" : "") + " /><b>" + col + "</b>";
+			return "<input disabled type='"+type+"' " + (accepting(e, c, d) ? "checked=checked" : "") + " /><b>" + col + "</b>";
 		};
+	}
+	var selected = function(a, b) {
+		if (a == null) return false;
+		if (a[0] == "[") {
+			return jsonParse(a).indexOf(b) >= 0;
+		}
+		return a.toUpperCase() == b.toUpperCase();
 	}
 """
 helper.make_detail("Tea_houses_detail.html", "", "", detail_helper_js + """
@@ -162,6 +165,22 @@ helper.make_tabs("index.html", """
 		["Plot Demo", "plot_index.html"]
 	]
 """, "")
+no_button_title = """
+#title {
+	width: 100%;
+	display: block;
+	box-shadow: none;
+	font-family: arial;
+	border-bottom: 2px solid #38c0f4;
+	background: none;
+	margin-left: 0px;
+	margin-right: 0px;
+	font-size: 35px;
+	padding-top: 5px;
+	padding-bottom: 5px;
+	margin-bottom: 25px;
+	font-weight: bold;
+}"""
 
 helper.make_index("th_index.html", """
 	list_views = {
@@ -190,22 +209,9 @@ body {
 	background: url('img/teaBackground.jpg') no-repeat center/cover fixed;
 }
 #title {
-	width: 100%;
-	display: block;
-	box-shadow: none;
 	color: white;
-	font-family: arial;
-	border-bottom: 2px solid #38c0f4;
-	background: none;
-	margin-left: 0px;
-	margin-right: 0px;
-	font-size: 35px;
-	padding-top: 5px;
-	padding-bottom: 5px;
-	margin-bottom: 25px;
-	font-weight: bold;
 }
-""")
+""" + no_button_title)
 helper.make_index("general.html", """
 	list_views = {
 		"exampleForm": "config/assets/example_list.html"
@@ -239,18 +245,169 @@ helper.make_index("selects_index.html", """
 body {
 	background: url('img/bird.png') no-repeat center/cover fixed;
 }
+#title {
+	color: black;
+}
 """)
 helper.make_index("plot_index.html", """
 	list_views = {
-		//"selects": "config/assets/selects_list.html"
+		"plot": "config/assets/plot_list.html",
+		"visit": "config/assets/visit_list.html",
 	}
 	var todo = function() {alert("TODO")};
 	menu = ["Plots Demo", null, [
-		["View Plots", "_js", todo],
-		["View Visits", "_js", todo],
+		["View Plots", "plot", ""],
+		["View Plots on a Map", "_js", function() { odkTables.openTableToMapView(null, "plot", null, null, "config/assets/plot_list.html#plot") }],
+		["View Visits", "visit", ""],
 		["View Reports", "_js", todo]
 	]]
 """, """
+body {
+	background: url('img/Agriculture_in_Malawi_by_Joachim_Huber_CClicense.jpg') no-repeat center/cover fixed;
+}
+""" + no_button_title)
+
+helper.make_table("plot_list.html", "", "", """
+	var planting_cb = function(elem, planting) {
+		if (planting == null || planting == "null") return "Not planting"
+		return "Planting " + planting.toLowerCase() + " corn"
+	}
+	display_col = "plot_name";
+	display_subcol = [[planting_cb, "planting", false], [", ","plot_size", false], [" hectares", null, true]];
+	table_id = "plot";
+""", "", "")
+helper.make_table("visit_list.html", "", """
+.li {
+	width: 140px;
+	height: 140px;
+	margin: 5px;
+	display: inline-block;
+	border-radius: 10px; /* TEST */
+	background-color: #E0FFFF;
+	text-align: center;
+	color: black;
+}
+body {
+	color: white;
+	background-color: #004656;
+}
+.status, .buttons/*, #navigation, #header, #search*/ {
+	display: none;
+}
+#list {
+	padding: 0;
+}
+.main-display {
+	padding-top: 40px;
+	padding-bottom: 15px;
+}
+""", """
+	display_col = "date";
+	display_col_wrapper = function display_col_wrapper(d, i, c) {
+		return c.split("T")[0];
+	}
+	global_cols_to_select = "visit.*, plot.plot_name AS plot_name";
+	global_join = "plot ON plot._id = visit.plot_id";
+	display_subcol = [["", "plot_name", true]];
+	table_id = "visit";
+""", """
+	stuff = document.getElementsByClassName("displays");
+	for (var i = 0; i < stuff.length; i++) {
+		stuff[i].style.width = "100%";
+	}
+""", "")
+
+
+
+helper.make_detail("plot_detail.html", "", """
+	body {
+		text-align: center;
+	}
+	ul {
+		list-style-type: none;
+	}
+	button {
+		background-color: lightgrey;
+		border: 3px solid darkgrey;
+		color: black;
+		border-radius: 6px;
+		padding: 9px 30px;
+	}
+	#rest {
+		font-size: 125%;
+	}
+""" + no_button_title, detail_helper_js + """
+	main_col = "plot_name";
+	table_id = "plot";
+	global_which_cols_to_select = "plot.*, COUNT(*) AS num_visits"
+	global_join = "visit ON plot._id = visit.plot_id"
+	// UNTESTED
+	colmap = [
+		["plot_name", function(e, c, d) { return c }],
+		["location_latitude", "Latitude: "],
+		["location_longitude", br("Longitude")],
+		["planting", "Crop: "],
+		["num_visits", function(e, c, d) {
+			num = Number(c);
+			return "<span style=\\"color: blue; text-decoration: underline;\\" onClick='openVisits(\\""+d.getData(0, '_id')+"\\")'>" + c + " visit" + (num == 1 ? "" : "s") + "</span>";
+		}],
+		[null, function(e, c, d) { return loadingDone(); }],
+	]
+	document.getElementById("header").id = "title"
+""", """
+	var openVisits = function(id) {
+		odkTables.openTableToListView(null, "visit", "plot_name = ?", [id], "config/assets/visit_list.html#visit/plot_name = ?/" + id);
+	}
+	var graph = function() {
+		odkTables.launchHTML(null, "config/assets/plot_graph.html#bar/visit/" + JSON.stringify(["date", "plant_height"]) + "/SELECT date, plant_height FROM visit WHERE plot_id = ?/" + JSON.stringify([row_id]) + "/History of plot " + cached_d.getData(0, "plot_name"));
+	}
+	var newVisit = function() {
+		// TODO
+		alert("TODO");
+	}
+	var loadingDone = function() {
+		return "<button onClick='graph()'>View Graph</button><br /><button onClick='newVisit()'>New Visit</button><br /><button onClick='alert(\\"TODO\\")'>Compare Plots</button>"
+	}
+""")
+helper.make_detail("visit_detail.html", "", "", detail_helper_js + """
+	main_col = "date";
+	table_id = "visit";
+	global_which_cols_to_select = "visit.*, plot.plot_name AS plot_name"
+	global_join = "plot ON plot._id = visit.plot_id"
+	// UNTESTED
+	colmap = [
+		["date", function(e, c, d) { return "Visit on " + c.split("T")[0]; }],
+		["plot_name", true],
+		["plant_height", br("Plant height", "cm")],
+		["plant_health", function(e, c, d) {
+			var retVal = "<b>Plant Health</b>:<br />";
+			retVal += check("Good", function(e, c, d) { return selected(c, "good"); }, "radio")(e, c, d) + "<br />";
+			retVal += check("Fair", function(e, c, d) { return selected(c, "fair"); }, "radio")(e, c, d) + "<br />";
+			retVal += check("Bad", function(e, c, d) { return selected(c, "bad"); }, "radio")(e, c, d);
+			return retVal;
+		}],
+		["soil", function(e, c, d) {
+			var retVal = "<b>Soil</b>: <br />";
+			retVal += check("Medium Sand", function(e, c, d) { return selected(c, "medium_sand"); }, "radio")(e, c, d) + "<br />";
+			retVal += check("Fine Sand", function(e, c, d) { return selected(c, "fine_sand"); }, "radio")(e, c, d) + "<br />";
+			retVal += check("Sandy Loam", function(e, c, d) { return selected(c, "sandy_loam"); }, "radio")(e, c, d) + "<br />";
+			retVal += check("Loam", function(e, c, d) { return selected(c, "loam"); }, "radio")(e, c, d);
+			return retVal;
+		}],
+		["pests", function(e, c, d) {
+			var retVal = "<b>Pests</b>: <br />"
+			retVal += check("Earworm", function(e, c, d) { return selected(c, "earworm"); })(e, c, d) + "<br />";
+			retVal += check("Stink Bug", function(e, c, d) { return selected(c, "stinkbug"); })(e, c, d) + "<br />"; // THIS ONE UNTESTED
+			retVal += check("Beetle", function(e, c, d) { return selected(c, "beetle"); })(e, c, d) + "<br />";
+			retVal += check("Cutworm", function(e, c, d) { return selected(c, "cutworm"); })(e, c, d) + "<br />";
+			retVal += "<h3>Observations: </h3>"
+			return retVal;
+		}],
+		["observations", function(e, c, d) { return c; }],
+	]
+""", "")
+
+helper.make_graph("plot_graph.html", """
 body {
 	background: url('img/Agriculture_in_Malawi_by_Joachim_Huber_CClicense.jpg') no-repeat center/cover fixed;
 }

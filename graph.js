@@ -11,6 +11,10 @@ var total_total = 0;
 var canvas = document.createElement("canvas");
 
 var parseReallyDirtyInt = function parseReallyDirtyInt(val) {
+	if (val.length == 29 && val.indexOf("T") == 10) {
+		// It's a date
+		return odkCommon.toDateFromOdkTimeStamp(val).getTime();
+	}
 	var newstr = ""
 	for (var i = 0; i < val.length; i++) {
 		if ("0123456789.".indexOf(val[i]) >= 0) {
@@ -132,7 +136,13 @@ var add_key = function add_key(color, val, d, percent) {
 	square.style.width = square.style.height = "30px";
 	square.style.display = "inline-block";
 	label.appendChild(square);
-	label.appendChild(document.createTextNode(" " + _tu(_tc(d, graph_cols[0], val))+ " - " + pretty_percent(percent)));
+	var label_text = val;
+	if (val.length == 29 && val[10] == "T") {
+		label_text = val.split("T")[0]
+	} else {
+		label_text = _tu(_tc(d, graph_cols[0], val));
+	}
+	label.appendChild(document.createTextNode(" " + label_text + " - " + pretty_percent(percent)));
 	document.getElementById("key").appendChild(label);
 }
 var doPie = function doPie(d) {
