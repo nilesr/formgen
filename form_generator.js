@@ -26,23 +26,13 @@ var _data_wrapper = function _data_wrapper(i) {
 		if (gsp_result[1].getAttribute("data-data_populated") == "done") {
 			return screen_data(i);
 		} else {
-			return false;
+			throw -1;
 		}
 	} else {
 		return row_data[i];
 	}
 }
 
-// After struggling with this for more than two hours, my approach to query filters still doesn't work
-// Originally, all prompts would have a data-data_populated indicating that they had been set from the database,
-// and choices would have a data-populated indicating that they had their choices set properly. Selects with choice filters
-// wouldn't have data-data_populated set until they had been loaded from the database successfully. For example, if we can't
-// set region level 2 to "south east" because region level 1 is empty and so the query filter doesn't allow "south east" in the
-// options, then we don't set data-data_populated and we back off. Every time we call updateAllSelects, if it's unable to restore
-// from the saved value (because it's no longer a valid option), it will only change row_data if data-data_populated
-// was set to done. If not, it assumes update() will try and change the screen value again. This should work, and it
-// does work about 80% of the time, but the choice filter might return
-var running_queries = -100;
 
 // Helper function for constraints, so people can write like "selected(data('color'), 'blue')" and it will return true/false 
 var selected = function selected(value1, value2) {
@@ -235,7 +225,6 @@ var do_csv_xhr = function do_csv_xhr(choice_id, filename, callback) {
 				console.log(e);
 			}
 			console.log("XHR complete: " + choice_id)
-			running_queries--;
 			// don't ask me why we have to call it twice, but it fixes regionlevel1/regionlevel2/adminregion
 			// sometimes
 			update(0);
@@ -262,7 +251,11 @@ var get_choices = function get_choices(which, not_first_time, filter) {
 			if (filter != null) {
 				choice_item = choices[j] // used in the eval
 				var data = _data_wrapper
-				filter_result = eval(tokens[filter])
+				try {
+					filter_result = eval(tokens[filter])
+				} catch (e) {
+					if (e == -1) filter_result = false;
+				}
 			}
 			if (filter_result) {
 				// concat on a list will merge them
@@ -286,7 +279,6 @@ var get_choices = function get_choices(which, not_first_time, filter) {
 	// Otherwise check queries
 	for (var j = 0; j < queries.length; j++) {
 		if (queries[j].query_name == which) {
-			running_queries++;
 			if (queries[j].query_type == "linked_table") {
 				do_cross_table_query(which, queries[j]);
 				// false to let update() know that more choices will be added, so we'll be called again later
@@ -348,7 +340,6 @@ var do_cross_table_query = function do_cross_table_query(which, query) {
 			}
 		}
 		// make update() call get_choices again now that we've added things to the global `choices` list
-		running_queries--;
 		update(0);
 	}, function failure_callback(e) {
 		alert(_t("Unexpected failure") + " " + e);
@@ -427,7 +418,6 @@ var changeElement = function changeElement(elem, newdata) {
 	} else if (elem.tagName == "SELECT") {
 		// This handles regular old dropdown menus
 
-		if (running_queries > 0 && elem.hasAttribute("data-choice-filter")) return "failure";
 
 		// fix for acknowledges
 		if (typeof(newdata) == "boolean") {
@@ -461,7 +451,6 @@ var changeElement = function changeElement(elem, newdata) {
 		// Set the selected option on the dropdown menu
 		elem.selectedIndex = index;
 	} else if (elem.classList.contains("select-multiple")) {
-		if (running_queries > 0 && elem.hasAttribute("data-choice-filter")) return "failure";
 		// For select multiples, json parse what we're supposed to set the prompt to
 		if (!newdata || newdata.length == 0) {
 			newdata = [];
@@ -481,7 +470,6 @@ var changeElement = function changeElement(elem, newdata) {
 			}
 		}
 	} else if (elem.classList.contains("select-one") || elem.classList.contains("select-one-with-other")) {
-		if (running_queries > 0 && elem.hasAttribute("data-choice-filter")) return "failure";
 		// For select one, select one with other, get all the radio buttons and if a radio button's value is equal to newdata, select it
 		var children = elem.getElementsByTagName("input");
 		var found = false;
@@ -759,7 +747,14 @@ var update = function update(delta) {
 		var elem = elems[i];
 		var col = elem.getAttribute("data-dbcol");
 		// the "data-calculation" attribute holds a key to a string in `tokens` that we can eval to get the result
-		row_data[col] = eval(tokens[elem.getAttribute("data-calculation")]).toString()
+		try {
+			var new_value = eval(tokens[elem.getAttribute("data-calculation")]).toString();
+			row_data[col] = new_value;
+		} catch (e) {
+			if (e != -1) {
+				//noop = e
+			}
+		}
 		// If it's on the screen, let us update it from row_data later
 		var gsp_result = get_screen_prompt(col);
 		if (gsp_result[0]) {
