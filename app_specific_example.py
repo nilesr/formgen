@@ -341,7 +341,6 @@ helper.make_detail("plot_detail.html", "", """
 	table_id = "plot";
 	global_which_cols_to_select = "plot.*, COUNT(*) AS num_visits"
 	global_join = "visit ON plot._id = visit.plot_id"
-	// UNTESTED
 	colmap = [
 		["plot_name", function(e, c, d) { return c }],
 		["location_latitude", "Latitude: "],
@@ -349,24 +348,32 @@ helper.make_detail("plot_detail.html", "", """
 		["planting", "Crop: "],
 		["num_visits", function(e, c, d) {
 			num = Number(c);
-			return "<span style=\\"color: blue; text-decoration: underline;\\" onClick='openVisits(\\""+d.getData(0, '_id')+"\\")'>" + c + " visit" + (num == 1 ? "" : "s") + "</span>";
+			return "<span style=\\"color: blue; text-decoration: underline;\\" onClick='openVisits(\\""+d.getData(0, 'plot_name')+"\\")'>" + c + " visit" + (num == 1 ? "" : "s") + "</span>";
 		}],
-		[null, function(e, c, d) { return loadingDone(); }],
+		[null, function(e, c, d) { return makeIframe(); }],
+		[null, function(e, c, d) { return makeButtons(); }],
 	]
 	document.getElementById("header").id = "title"
 """, """
 	var openVisits = function(id) {
 		odkTables.openTableToListView(null, "visit", "plot_name = ?", [id], "config/assets/visit_list.html#visit/plot_name = ?/" + id);
 	}
-	var graph = function() {
-		odkTables.launchHTML(null, "config/assets/plot_graph.html#bar/visit/" + JSON.stringify(["date", "plant_height"]) + "/SELECT date, plant_height FROM visit WHERE plot_id = ?/" + JSON.stringify([row_id]) + "/History of plot " + cached_d.getData(0, "plot_name"));
-	}
 	var newVisit = function() {
-		// TODO
-		alert("TODO");
+		odkTables.addRowWithSurvey({}, "visit", "visit", null, {"plot_id": row_id, "date": odkCommon.toOdkTimeStampFromDate(new Date())});
 	}
-	var loadingDone = function() {
-		return "<button onClick='graph()'>View Graph</button><br /><button onClick='newVisit()'>New Visit</button><br /><button onClick='alert(\\"TODO\\")'>Compare Plots</button>"
+	var raw = "SELECT date, plant_height FROM visit WHERE plot_id = ?";
+	var makeIframe = function() {
+		var src = "plot_graph.html#bar/visit/" + JSON.stringify(["date", "plant_height"]) + "/"+raw+"/" + JSON.stringify([row_id]) + "/History of plot " + cached_d.getData(0, "plot_name");
+		return "<iframe scrolling='no' style='width: 70vw; min-height: 100vw; border: none;' id='iframe' src='"+src+"' onLoad='doGraphQuery();' />";
+	}
+	var makeButtons = function() {
+		return "<button onClick='newVisit()'>New Visit</button><br /><button onClick='alert(\\"TODO\\")'>Compare Plots</button>"
+	}
+	var doGraphQuery = function() {
+		document.getElementById("iframe").contentWindow.show_value = function(i) { return i + " cm" };
+		odkData.arbitraryQuery("visit", raw, [row_id], 10000, 0, document.getElementById("iframe").contentWindow.success, function(e) {
+			alert(e);
+		});
 	}
 """)
 helper.make_detail("visit_detail.html", "", "", detail_helper_js + """
@@ -374,7 +381,6 @@ helper.make_detail("visit_detail.html", "", "", detail_helper_js + """
 	table_id = "visit";
 	global_which_cols_to_select = "visit.*, plot.plot_name AS plot_name"
 	global_join = "plot ON plot._id = visit.plot_id"
-	// UNTESTED
 	colmap = [
 		["date", function(e, c, d) { return "Visit on " + c.split("T")[0]; }],
 		["plot_name", true],
@@ -397,7 +403,7 @@ helper.make_detail("visit_detail.html", "", "", detail_helper_js + """
 		["pests", function(e, c, d) {
 			var retVal = "<b>Pests</b>: <br />"
 			retVal += check("Earworm", function(e, c, d) { return selected(c, "earworm"); })(e, c, d) + "<br />";
-			retVal += check("Stink Bug", function(e, c, d) { return selected(c, "stinkbug"); })(e, c, d) + "<br />"; // THIS ONE UNTESTED
+			retVal += check("Stink Bug", function(e, c, d) { return selected(c, "stink_bug"); })(e, c, d) + "<br />";
 			retVal += check("Beetle", function(e, c, d) { return selected(c, "beetle"); })(e, c, d) + "<br />";
 			retVal += check("Cutworm", function(e, c, d) { return selected(c, "cutworm"); })(e, c, d) + "<br />";
 			retVal += "<h3>Observations: </h3>"
@@ -408,8 +414,17 @@ helper.make_detail("visit_detail.html", "", "", detail_helper_js + """
 """, "")
 
 helper.make_graph("plot_graph.html", """
+#bg {
+	background-color: rgba(0, 0, 0, 0); /* transparent */
+}
+#title {
+	display: none;
+}
 body {
-	background: url('img/Agriculture_in_Malawi_by_Joachim_Huber_CClicense.jpg') no-repeat center/cover fixed;
+	color: black;
+}
+canvas {
+	padding-top: 32px;
 }
 """)
 
