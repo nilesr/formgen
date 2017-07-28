@@ -126,7 +126,7 @@ This would display "2017-03-05" instead of "2017-03-05T00:00:00.0000000" in the 
 
 You can change the behavior of clicking on a row by changing the global `clicked` function. The default implementation is this
 
-	var clicked = function clicked(table_id, row_id) {
+	var clicked = function clicked(table_id, row_id, d, i) {
 		odkTables.openDetailView({}, table_id, row_id);
 	}
 
@@ -250,7 +250,7 @@ Most of the above configuration involves setting strings that will be displayed 
 			"spanish": "Frigoríficos: "
 		}}
 	}
-		
+
 would do exactly what you expect. You can pass in the boolean literal true to avoid duplicating the input string if they are the same
 
 Total list of things translated using these translations:
@@ -259,6 +259,9 @@ Total list of things translated using these translations:
 - The first string in a triplet in display_subcol in a list view
 - Strings to be displayed in allowed_group_bys in a list view
 - Human readable "what is being selected" explanations in list views opened with the `STATIC` selector, ?s replaced with bindargs of the query.
+- Tab titles
+- Graph titles
+- Graph keys
 
 You can also call the `_tu` function in your custom javascript to retrieve something from helper.translations in the user's currently selected locale
 
