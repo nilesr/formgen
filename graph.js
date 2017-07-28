@@ -148,7 +148,7 @@ var add_key = function add_key(color, val, d, percent, raw_number) {
 	} else {
 		label_text = _tu(_tc(d, graph_cols[0], val));
 	}
-	label.appendChild(document.createTextNode(" " + label_text + " - " + (show_value ? (show_value === true ? raw_number : show_value(raw_number)) : pretty_percent(percent))));
+	label.appendChild(document.createTextNode(" " + label_text + " - " + (show_value ? (show_value === true ? raw_number : show_value(raw_number, percent)) : pretty_percent(percent))));
 	document.getElementById("key").appendChild(label);
 }
 var doPie = function doPie(d) {

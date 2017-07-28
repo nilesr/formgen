@@ -221,6 +221,15 @@ You can make a page that has tabs like this
 
 An iframe with `src` set to the second element in the pair will take up the rest of the page below the header
 
+Remember that odkData despises iframes with a loathing passion, and your odkData callbacks on these pages will not work. To get data callbacks, you can have your iframe's html set a `window.success` (or a similar name), and add a function to your triplet, like this
+
+	var tabs = [
+		["Some tab name", "first_page.html"],
+		["Tab Two", "second_page.html", function(iframe) {
+			odkData.arbitraryQuery(table, raw_query, args, 10000, 0, iframe.contentWindow.success, function(e) { alert("Error: " + e); });
+		}],
+	]
+
 ### Translations
 
 Most of the above configuration involves setting strings that will be displayed to the user. To have those strings automatically translated to another language, set `helper.translations`. For example
@@ -305,6 +314,10 @@ The strings ('electricity', 'solar', 'unknown', etc...) coming out of the databa
 Bar graphs are the same, just change pie to bar.
 
 <img src="http://i.imgur.com/nSgeJmT.png" height="400px" />
+
+Graphs provide a `window.success` for use in iframes
+
+TODO document `show_value`
 
 ### Detail views
 

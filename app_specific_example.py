@@ -282,7 +282,7 @@ helper.make_table("visit_list.html", "", """
 	height: 140px;
 	margin: 5px;
 	display: inline-block;
-	border-radius: 10px; /* TEST */
+	border-radius: 10px;
 	background-color: #E0FFFF;
 	text-align: center;
 	color: black;
