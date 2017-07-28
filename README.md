@@ -284,11 +284,11 @@ Everything after that last `/` will be looked up in your user specific translati
 
 Open a pie chart view like this
 
-	#pie/table_id/column_to_graph/select statement/json encoded bindargs/translateable title
+	#pie/table_id/[graph_key, graph_val]/select statement/json encoded bindargs/translateable title
 	
 So for example
 
-	#pie/refrigerators/normalized_year/SELECT (CASE WHEN year < 2010 THEN 'More than 10 years ago' ELSE 'Within the last 10 years' END) AS normalized_year FROM refrigerators JOIN health_facility ON health_facility._id = refrigerators.facility_row_id WHERE health_facility.regionLevel2 = ?/["North"]/Refrigerator Age
+	#pie/refrigerators/["normalized_year", "count"]/SELECT (CASE WHEN year < 2007 THEN 'More than 10 years ago' ELSE 'Within the last 10 years' END) AS normalized_year, COUNT(*) AS count FROM refrigerators JOIN health_facility ON health_facility._id = refrigerators.facility_row_id WHERE health_facility.regionLevel2 = ? GROUP BY normalized_year/["North"]/Refrigerator Age
 	
 <img src="http://i.imgur.com/6LkMYNg.png" height="400px" />
 
@@ -296,7 +296,7 @@ The strings 'More than 10 years ago', 'Within the last 10 years' and 'Refrigerat
 
 In this example
 
-	#pie/refrigerators/power_source/SELECT power_source FROM refrigerators JOIN health_facility ON health_facility._id = refrigerators.facility_row_id WHERE health_facility.regionLevel2 = ?/["North"]/Refrigerator Power
+	#pie/refrigerators/["power_source", "count"]/SELECT power_source, COUNT(power_source) AS count FROM refrigerators JOIN health_facility ON health_facility._id = refrigerators.facility_row_id WHERE health_facility.regionLevel2 = ? GROUP BY power_source/["North"]/Refrigerator Power
 	
 <img src="http://i.imgur.com/QWrn4QV.png" height="400px" />
 	
