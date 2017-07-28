@@ -575,7 +575,7 @@ list_views = {
 			}
 		""")
 
-helper.make_graph("cc_graph.html", hallway);
+helper.make_graph("cc_graph.html", hallway, "");
 
 helper.translations = {
 	"PATH Cold Chain Demo": {"text": {

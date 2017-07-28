@@ -82,7 +82,7 @@ class utils():
 		generate_detail.make(self, "detail.html", "", "", "", "")
 
 		self.filenames.append("graph.html")
-		generate_graph.make(self, "graph.html", "");
+		generate_graph.make(self, "graph.html", "", "");
 
 		self.filenames, user_translations, new_static_files = custom._make(appname, self, self.filenames)
 		static_files += new_static_files;

@@ -16,8 +16,8 @@ class helper():
 		self.queue.append(["detail", filename, customHtml, customCss, customJsOl, customJsGeneric])
 	def make_index(self, filename, customJs, customCss):
 		self.queue.append(["index", filename, customJs, customCss])
-	def make_graph(self, filename, customCss):
-		self.queue.append(["graph", filename, customCss])
+	def make_graph(self, filename, customCss, customJs):
+		self.queue.append(["graph", filename, customCss, customJs])
 	def make_tabs(self, filename, customJs, customCss):
 		self.queue.append(["tabs", filename, customJs, customCss])
 	def _make(self, utils, filenames):

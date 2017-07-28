@@ -259,13 +259,23 @@ helper.make_index("plot_index.html", """
 		["View Plots", "plot", ""],
 		["View Plots on a Map", "_js", function() { odkTables.openTableToMapView(null, "plot", null, null, "config/assets/plot_list.html#plot") }],
 		["View Visits", "visit", ""],
-		["View Reports", "_js", todo]
+		["View Reports", null, [
+			["View Overall Data", "_html", "config/assets/view_overall_data.html"],
+			["View Single Plot Data", "_js", todo],
+			["View Comparison Data", null, [
+				["Compare by plant type", "_js", todo],
+				["Compare by soil type", "_js", todo],
+				["Compare all plots", "_html", "config/assets/compare_all_plots.html"],
+			]],
+		]]
 	]]
 """, """
 body {
 	background: url('img/Agriculture_in_Malawi_by_Joachim_Huber_CClicense.jpg') no-repeat center/cover fixed;
 }
 """ + no_button_title)
+helper.static_files.append("view_overall_data.html")
+helper.static_files.append("compare_all_plots.html")
 
 helper.make_table("plot_list.html", "", "", """
 	var planting_cb = function(elem, planting) {
@@ -370,7 +380,7 @@ helper.make_detail("plot_detail.html", "", """
 		return "<button onClick='newVisit()'>New Visit</button><br /><button onClick='alert(\\"TODO\\")'>Compare Plots</button>"
 	}
 	var doGraphQuery = function() {
-		document.getElementById("iframe").contentWindow.show_value = function(i) { return i + " cm" };
+		document.getElementById("iframe").contentWindow.show_value = function(num, percent) { return num + " cm" };
 		odkData.arbitraryQuery("visit", raw, [row_id], 10000, 0, document.getElementById("iframe").contentWindow.success, function(e) {
 			alert(e);
 		});
@@ -426,5 +436,8 @@ body {
 canvas {
 	padding-top: 32px;
 }
+""", """
+window.iframeOnly = true;
+window.all_colors = ["#85ac85", "#993300", "#37393d", "#e58755", "#ff8080", "#4891d9", "#cc2e2d", "#9900ff", "#1f4864"]
 """)
 

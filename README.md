@@ -317,7 +317,7 @@ Bar graphs are the same, just change pie to bar.
 
 Graphs provide a `window.success` for use in iframes
 
-TODO document `show_value`
+TODO document `show_value`, `sort` and `reverse` and `all_colors`
 
 ### Detail views
 
