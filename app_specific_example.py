@@ -261,10 +261,10 @@ helper.make_index("plot_index.html", """
 		["View Visits", "visit", ""],
 		["View Reports", null, [
 			["View Overall Data", "_html", "config/assets/view_overall_data.html"],
-			["View Single Plot Data", "_js", todo],
+			["View Single Plot Data", "_html", "config/assets/single_plot_data_list.html"],
 			["View Comparison Data", null, [
-				["Compare by plant type", "_js", todo],
-				["Compare by soil type", "_js", todo],
+				["Compare by plant type", "_html", "config/assets/compare_list_planting.html#plot/STATIC/SELECT * FROM plot GROUP BY planting/[]/unused"],
+				["Compare by soil type", "_html", "config/assets/compare_list_soil.html#plot/STATIC/SELECT * FROM plot JOIN visit ON visit.plot_id = plot._id GROUP BY soil/[]/unused"],
 				["Compare all plots", "_html", "config/assets/compare_all_plots.html"],
 			]],
 		]]
@@ -436,8 +436,64 @@ body {
 canvas {
 	padding-top: 32px;
 }
+#key {
+	background-color: rgba(255, 255, 255, 0.5);
+}
 """, """
 window.iframeOnly = true;
+// stripped out the beige color, doesn't look good on a light background
 window.all_colors = ["#85ac85", "#993300", "#37393d", "#e58755", "#ff8080", "#4891d9", "#cc2e2d", "#9900ff", "#1f4864"]
+""")
+
+import copy
+def extend(filename, newfilename, newJsOl, newJsGeneric = ""):
+	new = copy.deepcopy([x for x in helper.queue if x[1] == filename][0])
+	new[1] = newfilename
+	new[4] += newJsOl
+	new[6] += newJsGeneric
+	helper.queue.append(new);
+extend("plot_list.html", "single_plot_data_list.html", """
+		clicked = function clicked(table_id, row_id, d, i) {
+			odkTables.launchHTML(null, "config/assets/plot_data.html#" + d.getData(i, "plot_name"));
+		}
+""")
+helper.static_files.append("plot_data.html")
+helper.make_table("compare_list_base.html", "", "", """
+	display_subcol = [];
+	table_id = "plot";
+""", "", "")
+extend("compare_list_base.html", "compare_list_planting.html", """
+		display_col = "planting";
+		clicked = function clicked(table_id, row_id, d, i) {
+			odkTables.launchHTML(null, "config/assets/plot_data.html#" + all_with_this_type[d.getData(i, "planting")].join("/"));
+		}
+		odkData.arbitraryQuery("plot", "SELECT plot_name, planting FROM plot", [], 10000, 0, function(d) {
+			for (var i = 0; i < d.getCount(); i++) {
+				var planting = d.getData(i, "planting");
+				if (all_with_this_type[planting] === undefined) {
+					all_with_this_type[planting] = []
+				}
+				all_with_this_type[planting] = all_with_this_type[planting].concat(d.getData(i, "plot_name"))
+			}
+		}, function(e) { alert(e); });
+""", newJsGeneric = """
+	var all_with_this_type = {};
+""")
+extend("compare_list_base.html", "compare_list_soil.html", """
+		display_col = "soil";
+		clicked = function clicked(table_id, row_id, d, i) {
+			odkTables.launchHTML(null, "config/assets/plot_data.html#" + all_with_this_type[d.getData(i, "soil")].join("/"));
+		}
+		odkData.arbitraryQuery("plot", "SELECT plot_name, soil AS planting FROM plot JOIN visit ON visit.plot_id = plot._id GROUP BY plot._id", [], 10000, 0, function(d) {
+			for (var i = 0; i < d.getCount(); i++) {
+				var planting = d.getData(i, "planting");
+				if (all_with_this_type[planting] === undefined) {
+					all_with_this_type[planting] = []
+				}
+				all_with_this_type[planting] = all_with_this_type[planting].concat(d.getData(i, "plot_name"))
+			}
+		}, function(e) { alert(e); });
+""", newJsGeneric = """
+	var all_with_this_type = {};
 """)
 

@@ -9,8 +9,8 @@
 			var failure = function(e) {
 				alert(e);
 			}
-			var onHeightLoad = function onHeightLoad() {
-				odkData.arbitraryQuery("plot", height_raw, [], 10000, 0, document.getElementById("height_iframe").contentWindow.success, failure);
+			var onVarietyLoad = function onVarietyLoad() {
+				odkData.arbitraryQuery("plot", height_raw, [], 10000, 0, document.getElementById("variety_iframe").contentWindow.success, failure);
 			}
 			var onYieldLoad = function() {
 				odkData.arbitraryQuery("visit", yield_raw, [], 10000, 0, document.getElementById("yield_iframe").contentWindow.success, failure);
@@ -20,8 +20,8 @@
 				odkData.arbitraryQuery("plot", size_raw, [], 10000, 0, document.getElementById("size_iframe").contentWindow.success, failure);
 			}
 			var ol = function ol() {
-				document.getElementById("height_iframe").src = 'plot_graph.html#pie/plot/["planting","sum"]/'+height_raw+'/[]/unused'
-				document.getElementById("height_iframe").addEventListener("load", onHeightLoad);
+				document.getElementById("variety_iframe").src = 'plot_graph.html#pie/plot/["planting","sum"]/'+height_raw+'/[]/unused'
+				document.getElementById("variety_iframe").addEventListener("load", onVarietyLoad);
 				document.getElementById("yield_iframe").src = 'plot_graph.html#pie/visit/["soil","sum"]/'+yield_raw+'/[]/unused'
 				document.getElementById("yield_iframe").addEventListener("load", onYieldLoad);
 				document.getElementById("size_iframe").src = 'plot_graph.html#pie/plot/["plot_name","plot_size"]/'+size_raw+'/[]/unused'
@@ -45,7 +45,7 @@
 	</head>
 	<body onLoad='ol();'>
 		<h1>Maize Variety</h1>
-		<iframe id='height_iframe'></iframe>
+		<iframe id='variety_iframe'></iframe>
 		<h1>Soil Type</h1>
 		<iframe id='yield_iframe'></iframe>
 		<h1>Plot Size</h1>
