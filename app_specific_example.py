@@ -254,7 +254,6 @@ helper.make_index("plot_index.html", """
 		"plot": "config/assets/plot_list.html",
 		"visit": "config/assets/visit_list.html",
 	}
-	var todo = function() {alert("TODO")};
 	menu = ["Plots Demo", null, [
 		["View Plots", "plot", ""],
 		["View Plots on a Map", "_js", function() { odkTables.openTableToMapView(null, "plot", null, null, "config/assets/plot_list.html#plot") }],
@@ -263,8 +262,8 @@ helper.make_index("plot_index.html", """
 			["View Overall Data", "_html", "config/assets/view_overall_data.html"],
 			["View Single Plot Data", "_html", "config/assets/single_plot_data_list.html"],
 			["View Comparison Data", null, [
-				["Compare by plant type", "_html", "config/assets/compare_list_planting.html#plot/STATIC/SELECT * FROM plot GROUP BY planting/[]/unused"],
-				["Compare by soil type", "_html", "config/assets/compare_list_soil.html#plot/STATIC/SELECT * FROM plot JOIN visit ON visit.plot_id = plot._id GROUP BY soil/[]/unused"],
+				["Compare by plant type", "_html", "config/assets/compare_list_planting.html#plot/STATIC/SELECT * FROM plot GROUP BY planting/[]/distinct values of planting"],
+				["Compare by soil type", "_html", "config/assets/compare_list_soil.html#plot/STATIC/SELECT * FROM plot JOIN visit ON visit.plot_id = plot._id GROUP BY soil/[]/distinct values of soil type"],
 				["Compare all plots", "_html", "config/assets/compare_all_plots.html"],
 			]],
 		]]
@@ -332,6 +331,7 @@ body {
 helper.make_detail("plot_detail.html", "", """
 	body {
 		text-align: center;
+		background-color: #E0FFFF;
 	}
 	ul {
 		list-style-type: none;
@@ -386,7 +386,11 @@ helper.make_detail("plot_detail.html", "", """
 		});
 	}
 """)
-helper.make_detail("visit_detail.html", "", "", detail_helper_js + """
+helper.make_detail("visit_detail.html", "", """
+	body {
+		background-color: #E0FFFF;
+	}
+""", detail_helper_js + """
 	main_col = "date";
 	table_id = "visit";
 	global_which_cols_to_select = "visit.*, plot.plot_name AS plot_name"

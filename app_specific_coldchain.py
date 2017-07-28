@@ -462,16 +462,15 @@ menu[2][menu[2].length - 1] = ["Administrative Actions", null, [
 
 if (window.location.hash.substr(1).length == 0) {
 	odkData.getRoles(function(r) {
-		// TEMP DEBUG TEST
-		//r = ["GROUP_ADMIN_REGION_MCHINJI"];
-		//r = ["GROUP_ADMIN_REGION_MZIMBA_SOUTH"];
+		r = r.resultObj.metadata.roles
 		for (var i = 0; i < r.length; i++) {
 			if (r[i].indexOf("GROUP_ADMIN_REGION_") == 0) {
 				var region = r[i].replace("GROUP_ADMIN_REGION_", "");
 				// replace all occurrences
 				region = region.replace(/_/g, " ");
 				var html = "config/assets/admin_region.html#" + region + ":";
-				odkTables.launchHTML(null, html);
+				window.location.href = "/coldchain/" + html
+				//odkTables.launchHTML(null, html);
 				// just to be safe, in case they press the back button and we weren't destroyed
 				menu = [region, null, [region, "_html", html]]
 				doMenu();
@@ -504,9 +503,9 @@ list_views = {
 """ + make_val_accepting_index("""
 var subquery = "(SELECT date_serviced FROM m_logs WHERE m_logs.refrigerator_id = refrigerators.refrigerator_id ORDER BY date_serviced DESC LIMIT 1)"
 menu = [val, null, [
-	["View All Health Facilities", "_js", function() { open_simple_map("health_facility", "admin_region = ?", [val]); }],
-	["View All Refrigerators", "refrigerators", "STATIC/SELECT * FROM refrigerators JOIN health_facility ON refrigerators.facility_row_id = health_facility._id JOIN refrigerator_types ON refrigerators.model_row_id = refrigerator_types._id WHERE health_facility.admin_region = ?/[\\""+val+"\\"]/"+"refrigerators in health facilities in the admin region ?"],
-	["View All Refrigerators Not Serviced In The Last Six Months", "refrigerators", "STATIC/SELECT * FROM refrigerators JOIN health_facility ON refrigerators.facility_row_id = health_facility._id JOIN refrigerator_types ON refrigerators.model_row_id = refrigerator_types._id WHERE health_facility.admin_region = ? AND ("+subquery+" IS NULL OR (julianday(datetime('now')) - julianday("+subquery+")) > (6 * 30))/[\\""+val+"\\"]/refrigerators in health facilities in the admin region ? that haven't been serviced in the last 180 days or have no service records"],
+	["View All Health Facilities", "_js", function() { open_simple_map("health_facility", "UPPER(admin_region) = UPPER(?)", [val]); }],
+	["View All Refrigerators", "refrigerators", "STATIC/SELECT * FROM refrigerators JOIN health_facility ON refrigerators.facility_row_id = health_facility._id JOIN refrigerator_types ON refrigerators.model_row_id = refrigerator_types._id WHERE UPPER(health_facility.admin_region) = UPPER(?)/[\\""+val+"\\"]/"+"refrigerators in health facilities in the admin region ?"],
+	["View All Refrigerators Not Serviced In The Last Six Months", "refrigerators", "STATIC/SELECT * FROM refrigerators JOIN health_facility ON refrigerators.facility_row_id = health_facility._id JOIN refrigerator_types ON refrigerators.model_row_id = refrigerator_types._id WHERE UPPER(health_facility.admin_region) = UPPER(?) AND ("+subquery+" IS NULL OR (julianday(datetime('now')) - julianday("+subquery+")) > (6 * 30))/[\\""+val+"\\"]/refrigerators in health facilities in the admin region ? that haven't been serviced in the last 180 days or have no service records"],
 	["Filter By Type", "_html", "config/assets/admin_region_filter.html#" + val + ":"]
 ]];
 		"""), hallway)
