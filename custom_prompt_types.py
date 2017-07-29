@@ -6,7 +6,7 @@ def make_numeric_select(num, pad = 0):
 		text += "<option value='" + i + "'>" + i.rjust(pad, "0") + "</option>"
 	text += "</select>"
 	return text
-def make_date_html(tokens, raw_attrs):
+def make_time_html(tokens, raw_attrs):
 	attrs = " ".join(raw_attrs)
 	text = "<span class='time prompt user-defined-prompt' "+attrs+">"
 	text += make_numeric_select(24);
@@ -14,7 +14,7 @@ def make_date_html(tokens, raw_attrs):
 	text += make_numeric_select(60, 2);
 	text += "</span>"
 	return tokens, text
-date_js= """
+time_js = """
 screen_data: function(elem) {
 	var hour = elem.getElementsByTagName("select")[0];
 	if (hour.selectedOptions[0] !== undefined) {
@@ -57,4 +57,4 @@ validate: function(elem) {
 }
 """
 def make(utils):
-	utils.register_custom_prompt_type("time", "time", make_date_html, date_js)
+	utils.register_custom_prompt_type("time", "time", make_time_html, time_js)

@@ -873,7 +873,7 @@ var update = function update(delta) {
 					var message = "Unexpected failure to set screen value of " + col + ". Tried to set it to " + saved_value + " ("+typeof(saved_value)+") but it came out as " + sdat + " ("+typeof(sdat)+")";
 					// noop = message;
 					console.log(message);
-					row_data[col] = sdat;
+					//row_data[col] = sdat;
 				} else {
 					if (loading === false) {
 						// Since the choice filters of other prompts might depend on the value of this prompt, update all the prompts with choice filters
