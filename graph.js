@@ -261,13 +261,15 @@ var doLine = function doLine(d) {
 	var max_percent = 0;
 	var percentages = [];
 	var max_key = 0;
+	var min_key = 0;
 	for (var i = 0; i < all_values.length; i++) {
 		var key = all_values[i][0];
 		var val = all_values[i][1];
 		var percent = val / total_total;
 		percentages = percentages.concat(percent);
 		max_percent = Math.max(max_percent, percent);
-		max_key = Math.max(key, max_key);
+		max_key = Math.max(parseReallyDirtyInt(key), max_key);
+		min_key = min_key == 0 ? parseReallyDirtyInt(key) : Math.min(parseReallyDirtyInt(key), min_key);
 	}
 	var points = []
 	for (var i = 0; i < all_values.length; i++) {
@@ -278,7 +280,7 @@ var doLine = function doLine(d) {
 		add_key(color, key, d, percent, val);
 		var bar_height = h * (percent / max_percent);
 		points = points.concat(0);
-		points[points.length - 1] = [20 + ((w - 40) * parseReallyDirtyInt(key) / max_key), (canvas.height + /* line graph point radius */ 10) - bar_height, color];
+		points[points.length - 1] = [20 + ((w - 40) * (parseReallyDirtyInt(key) - min_key) / (max_key - min_key)), (canvas.height + /* line graph point radius */ 10) - bar_height, color];
 	}
 	var current = points[0];
 	var last = null;
