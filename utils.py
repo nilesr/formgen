@@ -1,6 +1,6 @@
 import json, os, subprocess, glob, sys, shutil
 sys.path.append(".")
-import form_generator, generate_table, generate_tables, generate_detail, generate_common, generate_graph, custom
+import form_generator, generate_table, generate_tables, generate_detail, generate_common, generate_graph, custom, custom_prompt_types
 ## CONSTANTS
 appdesigner = "/home/niles/Documents/odk/app-designer"
 
@@ -17,6 +17,7 @@ class utils():
 	def __init__(self):
 		self.appdesigner = appdesigner
 		self.filenames = []
+		self.custom_prompt_types = [];
 	# Tries to pull the main display column from the formDef, almost always doesn't work
 	def yank_instance_col(self, table, form): return self.yank_setting(table, form, "instance_name", "_id");
 	# Tries to pull the requested setting from the formDef, or return the default argument if it can't find it
@@ -51,17 +52,8 @@ class utils():
 	# Returns a list of every table in app designer
 	def get_tables(self):
 		return [os.path.basename(x) for x in glob.glob(appdesigner + "/app/config/tables/*")]
-	def adrun(self, command, null):
-		olddir = os.getcwd();
-		os.chdir(self.appdesigner);
-		if type(command) != type([]): raise Exception("Unsafe command type")
-		args = [command]
-		kwargs = {}
-		if null:
-			kwargs["stdout"] = open(os.devnull, "w")
-		result = subprocess.check_output(*args, **kwargs).decode("utf-8")
-		os.chdir(olddir);
-		return result
+	def register_custom_prompt_type(self, type, css_class, html_factory, js):
+		self.custom_prompt_types.append([type, css_class, html_factory, js]);
 	def make(self, appname, push):
 		if appname == "fail":
 			raise Exception("No branch or appname given")
@@ -70,6 +62,9 @@ class utils():
 		if self.appdesigner[-1] == "/": self.appdesigner = self.appdesigner[:-1]
 		ad_subpath = self.appdesigner + "/app/config/assets"
 		static_files = ["formgen_common.js", "form_generator.js", "form_generator.css", "generate_common.js", "generate_detail.css", "generate_detail.js", "generate_index.css", "generate_index.js", "generate_table.css", "generate_table.js", "graph.js", "graph.css", "tabs.css", "tabs.js"]
+
+		custom_prompt_types.make(self);
+
 		self.filenames, choices, which = form_generator.generate_all(self, self.filenames)
 
 		self.filenames.append("table.html")

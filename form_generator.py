@@ -130,7 +130,8 @@ def generate_all(utils, filenames):
 						choice_filter = " data-choice-filter=\""+token+"\""
 
 					# All the attributes that any element append to the screen should have
-					attrs = " " + " ".join([dbcol, required, calculation, hint, constraint, constraint_message, choice_filter]) + " "
+					raw_attrs = [dbcol, required, calculation, hint, constraint, constraint_message, choice_filter]
+					attrs = " " + " ".join(raw_attrs) + " "
 					# All prompts must have the class prompt. It can either just put "<div " + _class + ">their stuff</div>", or if it needs
 					# its own classes, it can use wrapped_class like "<div class='some-prompt-type " + wrapped_class + "'>stuff</div>"
 					wrapped_class = "prompt"
@@ -232,6 +233,10 @@ def generate_all(utils, filenames):
 						# The only one that's not a prompt
 						screen.append("<span class=\"assign\" "+attrs+"></span>")
 						print_br = False
+					elif item["type"] in [x[0] for x in utils.custom_prompt_types]:
+						definition = utils.custom_prompt_types[utils.custom_prompt_types.index([x for x in utils.custom_prompt_types if x[0] == item["type"]][0])]
+						tokens, newdata = definition[2](tokens, raw_attrs)
+						screen.append(newdata)
 					else:
 						print("bad type " + item["type"]); die()
 					# prevent an empty screen for pages with only assigns on them

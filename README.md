@@ -337,9 +337,8 @@ and nothing else.
 - Test select multiple grid
 - "Cancel and delete row" -> "Save incomplete" on moving past first screen
 - Multiple forms per table (could have implications for translations)
-- Custom prompt types (easy)
-	- time
-	- datetime
+- Document custom prompt types
+	- implement datetime as a custom prompt type
 - sections (easy)
 	- label/goto/user branch
 - jump to the page its on if we can't finalize due to a required field empty - WAIT FOR LABEL/GOTO
@@ -348,3 +347,4 @@ and nothing else.
 - read_only_image
 - `calculates` object
 - Display sync state and savepoint type in detail
+- Canceling a barcode results in a "Location Providers Are Disabled" message
