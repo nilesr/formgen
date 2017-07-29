@@ -343,7 +343,7 @@ and nothing else.
 	- label/goto/user branch
 - jump to the page its on if we can't finalize due to a required field empty - WAIT FOR LABEL/GOTO
 - signature
-- list views have problems (NaN for total in STATIC view, no titles sometimes, etc..)
+- NaN showing for total count in STATIC list views (sometimes)
 - read_only_image
 - `calculates` object
 - Display sync state and savepoint type in detail
