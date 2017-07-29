@@ -1,50 +1,4 @@
 import json, sys, os, glob, traceback, subprocess, random, collections
-# TODO items
-# Must have before release!
-#   - Display sync state in table, sync state and savepoint type in detail
-# Other things not implemented
-#   - take picture is broken - SURVEY BUG
-# 	- datetime, time - IMPORTANT
-#   - Figure out when to calculate assigns (and implement calculates object)
-# 	- linegraph, piechart
-# 	- goto (EASY!)
-# 	- sections (could be hard)
-# 	- send_sms
-# 	- read_only_image
-# 	- user_branch
-# 	- signature
-# 	- barcode
-#   - customPromptTypes.js (could be easy-ish if I only support intent buttons, and I can check the prompt_types sheet to make sure it exists)
-#   - Maybe automatically generate map view files? Much longer term goal
-# Things that ARE supported
-#   - If statements for displaying/not displaying prompts
-#	   - can be arbitrarily nested
-#	   - does some basic optimization so things in an 'if false' or 'if 0' won't even be put in the output file
-#   - Csv queries
-#	   - With callbacks written in the xlsx (even the ones that use underscore)
-#   - Cross table queries
-#	   - Can pull instance name from another form (done at compile time not runtime)
-#   - Begin screen and end screen clauses
-#   - Translation (almost) - done on the browser side
-#   - Validation constraints
-#	   - Numeric data type validation
-#	   - Javascript based (i.e. "selected(data('acknowledged'), 'yes')" or "data('age') > 18", etc...)
-#	   - Required field constraints
-#	   - Won't let you next, back, finalize or save to the database until validation passes for the current screen
-#   - Basic data types, text/string, integer, number/decimal
-#   - Select one, select one dropdown (actually implemented as very different widgets)
-#   - Select multiple, select multiple inline
-#   - Select one grid, select one with other (needs a little more testing)
-#   - acknowledge (alias for select_one with yes/no options)
-#   - date
-#   - assign, with javascript expressions in xlsx, evaluated at end of form
-#   - save on prompt value change but also on next/back/finalize
-#   - Auto generate row id and insert new row if no row id given in hash
-#   - Automatically load prompt values from database abd save new values to database only when changed on the screen
-#   - Uses finalized/incomplete properly
-#   - translation
-#   - barcode, image, video, audio
-
 # Throws an exception but sets skipping to true so we don't actually stop, we just skip the table and move on
 skipped = True
 def die():
@@ -58,7 +12,7 @@ def falsey(r):
 		r = r[:-1].strip()
 	return r == "0" or r == "false";
 # like S4 in formgen_common.js, just makes four random 0-9a-f digits, used in gensym
-def genpart(): return hex(random.randint(0, 2**(8*2)))[2:]
+def genpart(): return hex(random.randint(0, 2**(8*2))).split("x")[1].rjust(4, "0")
 # returns a random guid, used for translation tokens
 def gensym(): return genpart() + genpart() + "-4" + genpart()[1:] + "-" + genpart() + "-" + genpart() + genpart() + genpart()
 def generate_all(utils, filenames):

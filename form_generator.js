@@ -1016,7 +1016,7 @@ var update = function update(delta) {
 			}
 			var columns = ['__formgen_raw', '__formgen_raw']
 			var table = table_id;
-			var src = "../../graph_iframe.html#" + type + "/" + table + "/" + JSON.stringify(columns) + "/" + raw + "/" + JSON.stringify(args) + "/" + label;
+			var src = "../graph_iframe.html#" + type + "/" + table + "/" + JSON.stringify(columns) + "/" + raw + "/" + JSON.stringify(args) + "/" + label;
 			var loaded = !(elem.src == null || elem.src == undefined || elem.src.trim().length == 0)
 			if (loaded) {
 				graph_loaded(elem, raw, args)

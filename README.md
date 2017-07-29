@@ -329,3 +329,22 @@ Expect
 	#table_id/row_id
 
 and nothing else.
+
+
+## Todo list
+
+- Test select one integer
+- Test select multiple grid
+- "Cancel and delete row" -> "Save incomplete" on moving past first screen
+- Multiple forms per table (could have implications for translations)
+- Custom prompt types (easy)
+	- time
+	- datetime
+- sections (easy)
+	- label/goto/user branch
+- jump to the page its on if we can't finalize due to a required field empty - WAIT FOR LABEL/GOTO
+- signature
+- list views have problems (NaN for total in STATIC view, no titles sometimes, etc..)
+- read_only_image
+- `calculates` object
+- Display sync state and savepoint type in detail

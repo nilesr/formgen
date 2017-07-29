@@ -1,6 +1,6 @@
-import json, os, subprocess, glob, sys, custom, shutil
+import json, os, subprocess, glob, sys, shutil
 sys.path.append(".")
-import form_generator, generate_table, generate_tables, generate_detail, generate_common, generate_graph # NOT CUSTOM (yet)
+import form_generator, generate_table, generate_tables, generate_detail, generate_common, generate_graph, custom
 ## CONSTANTS
 appdesigner = "/home/niles/Documents/odk/app-designer"
 
@@ -83,10 +83,10 @@ class utils():
 
 		self.filenames.append("graph.html")
 		generate_graph.make(self, "graph.html", "", "");
-		self.filenames.append("graph_iframe.html")
-		generate_graph.make(self, "graph_iframe.html", "", "window.iframeOnly = true;");
+		self.filenames.append("formgen/graph_iframe.html")
+		generate_graph.make(self, "formgen/graph_iframe.html", "", "window.iframeOnly = true;");
 
-		self.filenames, user_translations, new_static_files = custom._make(appname, self, self.filenames)
+		self.filenames, user_translations, new_static_files = custom.make(appname, self, self.filenames)
 		static_files += new_static_files;
 
 		self.filenames.append("formgen_common.js")
