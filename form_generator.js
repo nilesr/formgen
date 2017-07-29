@@ -291,8 +291,8 @@ var get_choices = function get_choices(which, not_first_time, filter, raw) {
 			}
 			// If it's a csv query, start do_csv_xhr
 			if (queries[j].query_type == "csv") {
-				// I don't know why I have to strip the filename, but I do
-				var filename = queries[j].uri.replace(/"/g, "").replace(/'/g, "");
+				// Can be an expression, expects some function that I don't actually provide like encodeUrlPart or something, look at selects demo xlsx
+				var filename = eval(queries[j].uri);
 				do_csv_xhr(which, filename, queries[j].callback);
 				return [false]
 			}
@@ -1009,7 +1009,7 @@ var update = function update(delta) {
 			var args = [x_value, y_value]
 			for (var j = 0; j < choices.length; j++) {
 				var choice = choices[j][1];
-				raw = raw.concat(" UNION SELECT CAST(? AS TEXT), CAST(? AS TEXT) ")
+				raw = raw.concat(" UNION ALL SELECT CAST(? AS TEXT), CAST(? AS TEXT) ")
 				console.log(choice)
 				args = args.concat(choice["x"])
 				args = args.concat(choice["y"])

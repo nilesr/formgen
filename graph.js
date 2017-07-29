@@ -5,7 +5,6 @@ var args = [];
 var table_id = "";
 var title = "";
 
-var map = {};
 var all_values = [];
 var total_total = 0;
 var canvas = document.createElement("canvas");
@@ -74,19 +73,18 @@ window.success = function success(d) {
 			key = d.resultObj.data[i][0]
 			val = d.resultObj.data[i][1]
 		}
-		map[key] = Number(val);
-		all_values = all_values.concat(key);
+		all_values = all_values.concat(0);
+		all_values[all_values.length - 1] = [key, val]
 		total_total += Number(val);
 	}
-	console.log(map);
 	all_values.sort(function(a, b) {
 		var retVal = 0;
 		if (window.sort === true) {
-			retVal = map[b] - map[a];
+			retVal = a[1] - b[1];
 		} else if (window.sort === false) {
-			retVal = parseReallyDirtyInt(a) - parseReallyDirtyInt(b);
+			retVal = parseReallyDirtyInt(a[0]) - parseReallyDirtyInt(b[0]);
 		} else {
-			retVal = window.sort(a, b);
+			retVal = window.sort(a[0], b[0]);
 		}
 		if (window.reverse) {
 			retVal *= -1
@@ -185,12 +183,13 @@ var doPie = function doPie(d) {
 	ctxt.clip();
 	*/
 	for (var i = 0; i < all_values.length; i++) {
-		var val = all_values[i];
-		var percent = map[val] / total_total;
+		var key = all_values[i][0];
+		var val = all_values[i][1];
+		var percent = val / total_total;
 		var color = newColor();
 		drawSegment(center_x, center_y, current_percent, percent, color);
 		current_percent += percent;
-		add_key(color, val, d, percent, map[val]);
+		add_key(color, val, d, percent, val);
 	}
 }
 var pretty_percent = function pretty_percent(n) {
@@ -228,16 +227,17 @@ var doBar = function doBar(d) {
 	var width_of_one_bar = w / all_values.length;
 	width_of_one_bar = Math.min(width_of_one_bar, w / 3);
 	for (var i = 0; i < all_values.length; i++) {
-		var val = all_values[i];
-		var percent = map[val] / total_total;
+		var val = all_values[i][1];
+		var percent = val / total_total;
 		percentages = percentages.concat(percent);
 		max_percent = Math.max(max_percent, percent);
 	}
 	for (var i = 0; i < all_values.length; i++) {
-		var val = all_values[i];
+		var key = all_values[i][0];
+		var val = all_values[i][1];
 		var percent = percentages[i];
 		var color = newColor();
-		add_key(color, val, d, percent, map[val]);
+		add_key(color, key, d, percent, val);
 		var bar_height = h * (percent / max_percent);
 		drawBar(bar_height, width_of_one_bar * i, width_of_one_bar, color);
 	}
@@ -263,17 +263,19 @@ var doLine = function doLine(d) {
 	var width_of_one_bar = w / all_values.length;
 	width_of_one_bar = Math.min(width_of_one_bar, w / 3);
 	for (var i = 0; i < all_values.length; i++) {
-		var val = all_values[i];
-		var percent = map[val] / total_total;
+		var key = all_values[i][0];
+		var val = all_values[i][1];
+		var percent = val / total_total;
 		percentages = percentages.concat(percent);
 		max_percent = Math.max(max_percent, percent);
 	}
 	var points = []
 	for (var i = 0; i < all_values.length; i++) {
-		var val = all_values[i];
+		var key = all_values[i][0]
+		var val = all_values[i][1]
 		var percent = percentages[i];
 		var color = newColor();
-		add_key(color, val, d, percent, map[val]);
+		add_key(color, key, d, percent, val);
 		var bar_height = h * (percent / max_percent);
 		points = points.concat(0);
 		points[points.length - 1] = [(width_of_one_bar/2) + i * width_of_one_bar, (canvas.height + /* line graph point radius */ 10) - bar_height, color];
