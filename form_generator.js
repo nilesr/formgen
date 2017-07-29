@@ -1016,12 +1016,20 @@ var update = function update(delta) {
 			}
 			var columns = ['__formgen_raw', '__formgen_raw']
 			var table = table_id;
-			var src = "../../graph.html#" + type + "/" + table + "/" + JSON.stringify(columns) + "/" + raw + "/" + JSON.stringify(args) + "/" + label;
-			(function(elem, raw, args) {
-				elem.addEventListener("load", function() {
-					graph_loaded(elem, raw, args);
-				})
-			})(elem, raw, args);
+			var src = "../../graph_iframe.html#" + type + "/" + table + "/" + JSON.stringify(columns) + "/" + raw + "/" + JSON.stringify(args) + "/" + label;
+			var loaded = !(elem.src == null || elem.src == undefined || elem.src.trim().length == 0)
+			if (loaded) {
+				graph_loaded(elem, raw, args)
+			} else {
+				(function(elem, raw, args) {
+					var this_run = false;
+					elem.addEventListener("load", function() {
+						if (this_run) return;
+						this_run = true;
+						graph_loaded(elem, raw, args);
+					});
+				})(elem, raw, args);
+			}
 			elem.src = src;
 			elem.setAttribute("data-src_set", "done");
 		}
@@ -1209,7 +1217,6 @@ var ol = function onLoad() {
 };
 
 var graph_loaded = function graph_loaded(elem, raw, args) {
-	elem.contentWindow.iframeOnly = true;
 	odkData.arbitraryQuery(table_id, raw, args, 10000, 0, elem.contentWindow.success, function failure(e) {
 		alert(_t("Unexpected failure") + " " + e);
 	});

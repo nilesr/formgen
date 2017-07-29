@@ -53,7 +53,8 @@ var ol = function ol() {
 	canvas.style.height = w;
 	canvas.width = w;
 	canvas.height = w;
-	if (!iframeOnly) {
+	console.log(window.iframeOnly);
+	if (!window.iframeOnly) {
 		odkData.arbitraryQuery(table_id, raw, args, 10000, 0, success, function(e) {
 			alert(e);
 		})
@@ -66,6 +67,8 @@ var ol = function ol() {
 window.success = function success(d) {
 	console.log(d.resultObj)
 	console.log(graph_cols)
+	// reset state, as this might be called more than once to update our contents
+	total_total = 0; key = {}; all_values = []; document.getElementById("key").innerHTML = ""; current_color_idx = 0;
 	for (var i = 0; i < d.getCount(); i++) {
 		var key = d.getData(i, graph_cols[0]);
 		var val = d.getData(i, graph_cols[1]);
@@ -107,6 +110,7 @@ window.success = function success(d) {
 }
 
 var current_color_idx = 0;
+/*
 var getCorner = function getCorner(center_x, center_y, x, y) {
 	var ret_x = 0;
 	var ret_y = 0;
@@ -118,6 +122,7 @@ var getCorner = function getCorner(center_x, center_y, x, y) {
 	}
 	return [ret_x, ret_y];
 }
+*/
 var drawSegment = function drawSegment(center_x, center_y, starting_percent, percent, color) {
 	var end_percent = starting_percent + percent;
 	/*

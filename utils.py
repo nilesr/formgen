@@ -83,6 +83,8 @@ class utils():
 
 		self.filenames.append("graph.html")
 		generate_graph.make(self, "graph.html", "", "");
+		self.filenames.append("graph_iframe.html")
+		generate_graph.make(self, "graph_iframe.html", "", "window.iframeOnly = true;");
 
 		self.filenames, user_translations, new_static_files = custom._make(appname, self, self.filenames)
 		static_files += new_static_files;
