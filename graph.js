@@ -189,7 +189,7 @@ var doPie = function doPie(d) {
 		var color = newColor();
 		drawSegment(center_x, center_y, current_percent, percent, color);
 		current_percent += percent;
-		add_key(color, val, d, percent, val);
+		add_key(color, key, d, percent, val);
 	}
 }
 var pretty_percent = function pretty_percent(n) {
