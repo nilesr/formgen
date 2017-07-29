@@ -40,7 +40,7 @@ helper.make_table("Tea_types_list.html", "", "", """
 	display_col = "Name";
 	table_id = "Tea_types";
 	allowed_group_bys = [
-		"Origin", "Caffeinated, "Fermented"
+		"Origin", "Caffeinated", "Fermented"
 	]
 """, "", "")
 detail_helper_js = """
