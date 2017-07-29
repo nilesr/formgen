@@ -80,11 +80,11 @@ window.success = function success(d) {
 	all_values.sort(function(a, b) {
 		var retVal = 0;
 		if (window.sort === true) {
-			retVal = a[1] - b[1];
+			retVal = b[1] - a[1];
 		} else if (window.sort === false) {
 			retVal = parseReallyDirtyInt(a[0]) - parseReallyDirtyInt(b[0]);
 		} else {
-			retVal = window.sort(a[0], b[0]);
+			retVal = window.sort(a[1], b[1]);
 		}
 		if (window.reverse) {
 			retVal *= -1
@@ -260,14 +260,14 @@ var doLine = function doLine(d) {
 	var w = canvas.width
 	var max_percent = 0;
 	var percentages = [];
-	var width_of_one_bar = w / all_values.length;
-	width_of_one_bar = Math.min(width_of_one_bar, w / 3);
+	var max_key = 0;
 	for (var i = 0; i < all_values.length; i++) {
 		var key = all_values[i][0];
 		var val = all_values[i][1];
 		var percent = val / total_total;
 		percentages = percentages.concat(percent);
 		max_percent = Math.max(max_percent, percent);
+		max_key = Math.max(key, max_key);
 	}
 	var points = []
 	for (var i = 0; i < all_values.length; i++) {
@@ -278,7 +278,7 @@ var doLine = function doLine(d) {
 		add_key(color, key, d, percent, val);
 		var bar_height = h * (percent / max_percent);
 		points = points.concat(0);
-		points[points.length - 1] = [(width_of_one_bar/2) + i * width_of_one_bar, (canvas.height + /* line graph point radius */ 10) - bar_height, color];
+		points[points.length - 1] = [20 + ((w - 40) * parseReallyDirtyInt(key) / max_key), (canvas.height + /* line graph point radius */ 10) - bar_height, color];
 	}
 	var current = points[0];
 	var last = null;

@@ -245,12 +245,14 @@ def generate_all(utils, filenames):
 						screen.append("<input type=\"number\" step=\"any\" data-validate=\"double\" " + attrs + _class + " />")
 					# Div element that will have checkbox elements with labels appended to it in update. Store the choices_list value, 
 					# which might be something already in the choices list, or possibly 
-					elif item["type"] in ["select_multiple", "select_multiple_inline"]:
+					elif item["type"] in ["select_multiple", "select_multiple_inline", "select_multiple_grid"]:
 						columns_that_need_choices[table][item["name"]] = item["values_list"]
+						if item["type"] == "select_multiple_grid": wrapped_class += " grid "
 						screen.append("<br /><div style='display: inline-block;' data-values-list=\""+item["values_list"]+"\" class=\"select-multiple "+wrapped_class+"\"" + attrs + "></div>")
 					# Same thing but with radio buttons instead of checkboxes
-					elif item["type"] in ["select_one", "select_one_grid"]:
+					elif item["type"] in ["select_one", "select_one_integer", "select_one_grid"]:
 						columns_that_need_choices[table][item["name"]] = item["values_list"]
+						if item["type"] == "select_one_grid": wrapped_class += " grid "
 						screen.append("<br /><div style='display: inline-block;' data-values-list=\""+item["values_list"]+"\" class=\"select-one "+wrapped_class+"\"" + attrs + "></div>")
 					# Same thing but an extra _other choice will be added, with a text box for the label
 					elif item["type"] == "select_one_with_other":

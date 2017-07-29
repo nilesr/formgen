@@ -594,8 +594,8 @@ var updateAllSelects = function updateAllSelects(with_filter_only) {
 			var id = select.getAttribute("data-dbcol") + "_" + stuffs[j][0];
 			var elem = document.createElement("div")
 			if (with_filter_only && !elem.hasAttribute("data-choice-filter")) continue;
-			elem.style.width = "100%";
-			//elem.classList.add("option")
+			//elem.style.width = "100%";
+			elem.classList.add("option")
 			var inner = document.createElement("input")
 			inner.type = type;
 			inner.setAttribute("value", stuffs[j][0]);
@@ -995,7 +995,7 @@ var update = function update(delta) {
 	var elems = document.getElementsByClassName("graph")
 	for (var i = 0; i < elems.length; i++) {
 		var elem = elems[i];
-		if (elem.getAttribute("data-src_set") == "done") continue
+		if (elem.getAttribute("data-src_set") == "done" && num_updated == 0) continue
 		var x_value = data(elem.getAttribute("data-x_value"))
 		var y_value = data(elem.getAttribute("data-y_value"))
 		var label = tokens[elem.getAttribute("data-legend_text")]
