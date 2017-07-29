@@ -231,7 +231,12 @@ def generate_all(utils, filenames):
 						screen.append("<br />")
 						screen.append("<input type=\"text\" disabled=true id='"+item["name"]+"' " + _class + attrs + " />")
 					elif item["type"] in ["linegraph", "bargraph", "piechart"]:
-						screen.append("TODO")
+						# DOES NOT HAVE THE `prompt` CLASS!!
+						# Also, graphs don't have a `name` attribute in the xlsx
+						# legend_text might have a single quote in it, pass it in via tokens
+						token = gensym()
+						tokens[token] = item["legend_text"]
+						screen.append("<br /><iframe data-type='"+item["type"]+"' data-x_value='"+item["x_value"]+"' data-y_value='"+item["y_value"]+"' data-legend_text='"+token+"' data-query='"+item["values_list"]+"' class='graph'></iframe>")
 					# Numbers are easy, and we can query input.validity to check if the user input a number correctly
 					elif item["type"] == "integer":
 						screen.append("<input type=\"number\" data-validate=\"integer\" " + attrs + _class + " />")
