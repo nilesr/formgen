@@ -214,15 +214,20 @@ body {
 """ + no_button_title)
 helper.make_index("general.html", """
 	list_views = {
-		"exampleForm": "config/assets/example_list.html"
+		"exampleForm": "config/assets/example_list.html",
+		"datesTest": "config/assets/table.html"
 	}
-	var newinstance = function newinstance() {
-		var id = newGuid();
-		odkTables.launchHTML(null, "config/assets/formgen/exampleForm#" + id);
+	var newinstance = function newinstance(table) {
+		return function() {
+			var id = newGuid();
+			odkTables.launchHTML(null, "config/assets/formgen/"+table+"#" + id);
+		}
 	}
 	menu = ["Example Form", null, [
-		["New Instance", "_js", newinstance],
-		["View Responses", "exampleForm", ""]
+		["New Instance", "_js", newinstance("exampleForm")],
+		["View Responses", "exampleForm", ""],
+		["dates test", "_js", newinstance("datesTest")],
+		["dates test", "datesTest", ""]
 	]]
 """, """
 body {

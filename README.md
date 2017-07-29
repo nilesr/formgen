@@ -348,3 +348,4 @@ and nothing else.
 - `calculates` object
 - Display sync state and savepoint type in detail
 - Canceling a barcode results in a "Location Providers Are Disabled" message
+- test else
