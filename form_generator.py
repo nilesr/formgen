@@ -301,6 +301,10 @@ def generate_all(utils, filenames):
 			# Copy queries and choices from the formdef if they exist
 			queries = "[]"
 			choices = "[]"
+			calculates = ""
+			if "calculates" in formDef["xlsx"]:
+				for row in formDef["xlsx"]["calculates"]:
+					calculates += json.dumps(row["calculation_name"]) + ": function() { return eval(" + json.dumps(row["calculation"]) + ")},"
 			if "queries" in formDef["xlsx"]:
 				for query in formDef["xlsx"]["queries"]:
 					# Try and guess which column to use as the displayed text in the populated options, usually doesn't work and defaults to "_id"
@@ -335,6 +339,7 @@ var requireds = """ + json.dumps(requireds) + """;
 var has_dates = """ + ("true" if has_dates else "false") + """;
 var hack_for_acknowledges = """+json.dumps(hack_for_acknowledges)+""";
 var goto_labels = """+json.dumps(goto_labels)+""";
+var calculates = {"""+calculates+"""};
 	</script>
 	<script src="../../form_generator.js"></script>
 </head>

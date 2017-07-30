@@ -1075,7 +1075,7 @@ var update = function update(delta) {
 	if (global_screen_idx < 0) {
 		if (global_section_stack.length > 0) {
 			global_section_stack[0][1] = global_section_stack[0][1] - 2;
-			endSectionImmediate();
+			endSectionImmediate(-1);
 			return;
 		}
 		global_screen_idx = 0;
@@ -1087,7 +1087,7 @@ var update = function update(delta) {
 	}
 	if (global_screen_idx == sections[global_current_section].length) {
 		if (global_section_stack.length > 0) {
-			endSectionImmediate();
+			endSectionImmediate(1);
 		} else {
 			finalizeImmediate();
 		}
@@ -1314,16 +1314,16 @@ var doSection = function doSection(elem, delta) {
 }
 var endSection = function endSection(elem, delta) {
 	if (all_rules_match(elem.getAttribute("data-if"))) {
-		endSectionImmediate();
+		endSectionImmediate(1);
 	} else {
 		update(delta);
 	}
 }
-var endSectionImmediate = function endSectionImmediate() {
+var endSectionImmediate = function endSectionImmediate(delta) {
 	global_current_section = global_section_stack[0][0]
 	global_screen_idx = global_section_stack[0][1]
 	global_section_stack = global_section_stack.slice(1)
-	update(1);
+	update(delta);
 }
 var goto = function goto(label) {
 	var new_section = goto_labels[label][0];

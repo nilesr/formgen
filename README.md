@@ -343,6 +343,12 @@ and nothing else.
 - signature (just need to know the name of the activity to start, can scrape it by setting breakpoint in doAction in survey)
 - NaN showing for total count in STATIC list views (sometimes)
 - read_only_image
-- `calculates` object
+- test `calculates` object
 - Display sync state and savepoint type in detail views
 - Canceling a barcode results in a "Location Providers Are Disabled" message
+- scatterplot
+- linked_table
+- datetime
+- special _finalize label
+- inputAttributes.type	inputAttributes.min	inputAttributes.max
+	- range	1	10
