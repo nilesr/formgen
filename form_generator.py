@@ -18,6 +18,7 @@ def gensym(): return genpart() + genpart() + "-4" + genpart()[1:] + "-" + genpar
 default_initial = [
 	#{"type": "note", "display": "You are at the beginning of an instance"},
 	{"clause": "do section survey"},
+	{"branch_label": "_finalize"},
 	{"type": "note", "display": "You are at the the end of this instance. Press finalize to save as complete, or close this window to save as incomplete"},
 ]
 def generate_all(utils, filenames):
@@ -39,7 +40,6 @@ def generate_all(utils, filenames):
 			hack_for_acknowledges = []
 			# Small optimization, won't add all the choices for dates if there are no date prompts in the form
 			has_dates = False
-			# TODO handle the thing that's above survey if it's in xlsx, forgot what it's called
 			sections = {}
 			#sections_queue = ["survey"]
 			sections_queue = ["initial"]
@@ -95,6 +95,14 @@ def generate_all(utils, filenames):
 							if len(screen) > 0:
 								screens.append("".join(screen))
 							screens.append("<span class='endSection' data-if='"+" ".join(rules)+"'></span>")
+							screen = []
+						elif clause.split(" ")[0] == "goto":
+							label = " ".join(clause.split(" ")[1:])
+							if len(screen) > 0:
+								screens.append("".join(screen))
+							token = gensym();
+							tokens[token] = label;
+							screens.append("<span class='goto' data-label='"+token+"' data-if='"+" ".join(rules)+"'></span>")
 							screen = []
 						else:
 							print("bad clause " + item["clause"]); die()
@@ -227,7 +235,7 @@ def generate_all(utils, filenames):
 							screen.append("<button class='geopoint' onClick='doAction({dbcol: \""+item["name"]+"\", type: \"geopoint\"}, \"com.google.zxing.client.android.SCAN\", {});' data-dbcol='"+item["name"]+"'>Scan barcode</button>")
 							screen.append("<br />")
 							screen.append("<input type=\"text\" disabled=true id='"+item["name"]+"' " + _class + attrs + " />")
-						elif item["type"] in ["linegraph", "bargraph", "piechart"]:
+						elif item["type"] in ["linegraph", "bargraph", "piechart", "scatterplot"]:
 							# DOES NOT HAVE THE `prompt` CLASS!!
 							# Also, graphs don't have a `name` attribute in the xlsx
 							# legend_text might have a single quote in it, pass it in via tokens

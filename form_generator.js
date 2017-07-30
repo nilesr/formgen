@@ -236,6 +236,8 @@ var do_csv_xhr = function do_csv_xhr(choice_id, filename, callback) {
 			}
 			console.log("XHR complete: " + choice_id)
 			update(0);
+			// don't ask
+			update(0);
 		}
 	};
 	url = odkCommon.localizeUrl(odkCommon.getPreferredLocale(), {"text": filename}, "text", "/" + appname + "/config/tables/" + table_id + "/forms/" + table_id + "/")
@@ -757,30 +759,6 @@ var update = function update(delta) {
 		elems[i].setAttribute("data-has_event_listener", "1");
 	}
 
-	// ASSIGNS LOGIC
-	// If an assign hasn't been put in the database yet, eval it and put that in,
-	// then remind ourselves that we need to call updateOrInsert later
-	var elems = document.getElementsByClassName("assign");
-	var data = _data_wrapper;
-	for (var i = 0; i < elems.length; i++) {
-		var elem = elems[i];
-		var col = elem.getAttribute("data-dbcol");
-		// the "data-calculation" attribute holds a key to a string in `tokens` that we can eval to get the result
-		try {
-			var new_value = eval(tokens[elem.getAttribute("data-calculation")]).toString();
-			row_data[col] = new_value;
-		} catch (e) {
-			if (e != -1) {
-				//noop = e
-			}
-		}
-		// If it's on the screen, let us update it from row_data later
-		var gsp_result = get_screen_prompt(col);
-		if (gsp_result[0]) {
-			gsp_result[1].setAttribute("data-data_populated", "");
-		}
-		num_updated++;
-	}
 
 	// TRANSLATION LOGIC
 	// First, iterate through anything with a `data-placeholder` attribute set, pull the real placeholder from
@@ -962,6 +940,33 @@ var update = function update(delta) {
 		document.getElementById("finalize").disabled = true;
 		delta = 0;
 	}
+	// ASSIGNS LOGIC
+	// If an assign hasn't been put in the database yet, eval it and put that in, change the screen data as well,
+	// then remind ourselves that we need to call updateOrInsert later
+	var elems = document.getElementsByClassName("assign");
+	for (var i = 0; i < elems.length; i++) {
+		var elem = elems[i];
+		var col = elem.getAttribute("data-dbcol");
+		// the "data-calculation" attribute holds a key to a string in `tokens` that we can eval to get the result
+		var new_value = null;
+		try {
+			//alert(tokens[elem.getAttribute("data-calculation")])
+			//alert(eval(tokens[elem.getAttribute("data-calculation")]))
+			new_value = eval(tokens[elem.getAttribute("data-calculation")]).toString();
+			row_data[col] = new_value;
+		} catch (e) {
+			if (e != -1) {
+				//noop = e
+			}
+		}
+		// If it's on the screen, let us update it from row_data later
+		var gsp_result = get_screen_prompt(col);
+		if (gsp_result[0]) {
+			//gsp_result[1].setAttribute("data-data_populated", "");
+			changeElement(gsp_result[1], new_value)
+		}
+		num_updated++;
+	}
 
 	// DATABASE UPDATE
 	// If the screen is valid and we changed something in row_data, updateOrInsert()
@@ -1022,7 +1027,7 @@ var update = function update(delta) {
 		// TODO use a default better than the empty string (and translate it)
 		var label = elem.hasAttribute("data-legend_text") ? tokens[elem.getAttribute("data-legend_text")] : ""
 		var type = elem.getAttribute("data-type")
-		var type = type == "linegraph" ? "line" : (type == "bargraph" ? "bar" : "pie")
+		var type = type == "linegraph" ? "line" : (type == "bargraph" ? "bar" : (type == "scatterplot" ? "scatter" : "pie"))
 		var query = elem.getAttribute("data-query")
 		var choices = get_choices(query, false, null, true);
 		if (choices[0] !== false) {
@@ -1120,6 +1125,8 @@ var update = function update(delta) {
 			doSection(document.getElementsByClassName("doSection")[0], delta)
 		} else if (document.getElementsByClassName("endSection").length > 0) {
 			endSection(document.getElementsByClassName("endSection")[0], delta)
+		} else if (document.getElementsByClassName("goto").length > 0) {
+			goto(document.getElementsByClassName("goto")[0], delta)
 		} else {
 			update(0);
 		}
@@ -1147,7 +1154,7 @@ var finalizeImmediate = function finalizeImmediate() {
 		var js = requireds[i][1];
 		if ((data(column) == null || data(column) == undefined || (typeof(data(column)) == "string" && data(column).trim().length == 0)) && eval(tokens[js])) {
 			alert(_t("Column ? is required but no value was provided").replace("?", column))
-			goto("_" + column);
+			gotoImmediate("_" + column);
 			return;
 		}
 	}
@@ -1327,7 +1334,14 @@ var endSectionImmediate = function endSectionImmediate(delta) {
 	global_section_stack = global_section_stack.slice(1)
 	update(delta);
 }
-var goto = function goto(label) {
+var goto = function goto(elem, delta) {
+	if (all_rules_match(elem.getAttribute("data-if"))) {
+		gotoImmediate(tokens[elem.getAttribute("data-label")]);
+	} else {
+		update(delta);
+	}
+}
+var gotoImmediate = function gotoImmediate(label) {
 	var new_section = goto_labels[label][0];
 	if (new_section != global_current_section) {
 		global_section_stack = [0].concat(global_section_stack)

@@ -314,7 +314,7 @@ In this example
 	
 The strings ('electricity', 'solar', 'unknown', etc...) coming out of the database would be translated without the need to add them to user translations. Since we know the table id and column id, they can be pulled from the choices list in the xlsx. However if that fails, user translations will be checked.
 
-Bar graphs and line graphs are the same, just change pie to bar or line.
+Bar graphs, line graphs and scatter plots are the same, just change pie to bar, line or scatter in the url
 
 <img src="http://i.imgur.com/nSgeJmT.png" height="400px" />
 
@@ -333,7 +333,9 @@ and nothing else.
 
 ## Todo list
 
-- If the last thing in your top-level section is a 'do section', it will show "next" instead of "finalize" on the last screen in the subsection but it will finalize anyways
+- test special _finalize label
+- test scatterplots
+- If the last thing in your initial section (if you provide one) is a 'do section', it will show "next" instead of "finalize" on the last screen in the subsection but it will finalize anyways
 	- Temporary workaround is to set default_initial, but I'd like to not do that.
 	- There's no way to know if this is the last prompt the user is going to see without evaling all the do_sections that come after the current screen (e.g. soi and smg), potentially going back up the chain as well. May not be a real solution
 - Change "Cancel and delete row" to "Save incomplete" after moving past first screen
@@ -343,12 +345,11 @@ and nothing else.
 - signature (just need to know the name of the activity to start, can scrape it by setting breakpoint in doAction in survey)
 - NaN showing for total count in STATIC list views (sometimes)
 - read_only_image
-- test `calculates` object
+	- might be a scan specific thing
 - Display sync state and savepoint type in detail views
 - Canceling a barcode results in a "Location Providers Are Disabled" message
-- scatterplot
 - linked_table
 - datetime
-- special _finalize label
 - inputAttributes.type	inputAttributes.min	inputAttributes.max
 	- range	1	10
+- css and handling for twoColumn
