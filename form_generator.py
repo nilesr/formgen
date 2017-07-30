@@ -15,6 +15,11 @@ def falsey(r):
 def genpart(): return hex(random.randint(0, 2**(8*2))).split("x")[1].rjust(4, "0")
 # returns a random guid, used for translation tokens
 def gensym(): return genpart() + genpart() + "-4" + genpart()[1:] + "-" + genpart() + "-" + genpart() + genpart() + genpart()
+default_initial = [
+	#{"type": "note", "display": "You are at the beginning of an instance"},
+	{"clause": "do section survey"},
+	{"type": "note", "display": "You are at the the end of this instance. Press finalize to save as complete, or close this window to save as incomplete"},
+]
 def generate_all(utils, filenames):
 	if not os.path.exists("formgen"): os.mkdir("formgen");
 	tables = utils.get_tables()
@@ -36,14 +41,17 @@ def generate_all(utils, filenames):
 			has_dates = False
 			# TODO handle the thing that's above survey if it's in xlsx, forgot what it's called
 			sections = {}
-			sections_queue = ["survey"]
+			#sections_queue = ["survey"]
+			sections_queue = ["initial"]
 			done_sections = []
+			goto_labels = {}
+			if not "initial" in formDef["xlsx"]: formDef["xlsx"]["initial"] = default_initial
 			while len(sections_queue) > 0:
 				section = sections_queue[0]
+				sections_queue = sections_queue[1:]
 				screen = []
 				rules = []
 				screens = []
-				sections_queue = sections_queue[1:]
 				done_sections.append(section)
 				for item in formDef["xlsx"][section]:
 					#print(item)
@@ -88,14 +96,19 @@ def generate_all(utils, filenames):
 								screens.append("".join(screen))
 							screens.append("<span class='endSection' data-if='"+" ".join(rules)+"'></span>")
 							screen = []
-						# TODO handle label, goto
 						else:
 							print("bad clause " + item["clause"]); die()
 						continue
+					# So that we can execute a goto by database column, like if we're trying to finalize but a required
+					# field is missing, we can jump to that
+					if "name" in item:
+						goto_labels["_" + item["name"]] = [section, len(screens) - 1]
+					if "branch_label" in item:
+						goto_labels[item["branch_label"]] = [section, len(screens) - 1]
 					# All prompts have a type
 					if "type" in item:
 						print_br = True; # print <br /> twice after each prompt
-						# If we have any rules, wrapp the entire prompt in a series of spans, one for each rule
+						# If we have any rules, wrap the entire prompt in a series of spans, one for each rule
 						# update() will set style.visibility to "none" or "block" on those spans depending on whether the rule matches or not
 						if len(rules) > 0:
 							continue_out = False
@@ -321,6 +334,7 @@ var tokens = """ + json.dumps(tokens) + """;
 var requireds = """ + json.dumps(requireds) + """;
 var has_dates = """ + ("true" if has_dates else "false") + """;
 var hack_for_acknowledges = """+json.dumps(hack_for_acknowledges)+""";
+var goto_labels = """+json.dumps(goto_labels)+""";
 	</script>
 	<script src="../../form_generator.js"></script>
 </head>

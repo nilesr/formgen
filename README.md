@@ -334,17 +334,15 @@ and nothing else.
 ## Todo list
 
 - If the last thing in your top-level section is a 'do section', it will show "next" instead of "finalize" on the last screen in the subsection but it will finalize anyways
-- Test select one integer
-- Test select multiple grid
+	- Temporary workaround is to set default_initial, but I'd like to not do that.
+	- There's no way to know if this is the last prompt the user is going to see without evaling all the do_sections that come after the current screen (e.g. soi and smg), potentially going back up the chain as well. May not be a real solution
 - Change "Cancel and delete row" to "Save incomplete" after moving past first screen
 - Multiple forms per table (could have implications for translations)
 - Document custom prompt types
-- label/goto/user branch
-- jump to the page its on if we can't finalize due to a required field empty - WAIT FOR LABEL/GOTO
+- goto/user branch
 - signature (just need to know the name of the activity to start, can scrape it by setting breakpoint in doAction in survey)
 - NaN showing for total count in STATIC list views (sometimes)
 - read_only_image
 - `calculates` object
 - Display sync state and savepoint type in detail views
 - Canceling a barcode results in a "Location Providers Are Disabled" message
-- test else
