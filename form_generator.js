@@ -974,6 +974,8 @@ var update = function update(delta) {
 	if (num_updated > 0 && valid) {
 		// async because sometimes it takes upwards of 30ms
 		setTimeout(updateOrInsert, 0);
+	} else {
+		setCancelButton(!row_exists);
 	}
 
 	// If statements may be run more than once, so let's cache their results in this validates object
@@ -1330,6 +1332,10 @@ var goto = function goto(elem, delta) {
 	}
 }
 var gotoImmediate = function gotoImmediate(label) {
+	if (label == "_finalize") {
+		finalize();
+		return;
+	}
 	var new_section = goto_labels[label][0];
 	if (new_section != global_current_section) {
 		global_section_stack = [0].concat(global_section_stack)

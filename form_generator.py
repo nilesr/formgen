@@ -18,7 +18,6 @@ def gensym(): return genpart() + genpart() + "-4" + genpart()[1:] + "-" + genpar
 default_initial = [
 	#{"type": "note", "display": "You are at the beginning of an instance"},
 	{"clause": "do section survey"},
-	{"branch_label": "_finalize"},
 	{"type": "note", "display": "You are at the the end of this instance. Press finalize to save as complete, or close this window to save as incomplete"},
 ]
 def generate_all(utils, filenames):
@@ -140,6 +139,7 @@ def generate_all(utils, filenames):
 						constraint = ""
 						constraint_message = ""
 						choice_filter = ""
+						input_attributes = ""
 						# calculations, used basically only for assigns. Pulled from tokens and evaled in update
 						if "calculation" in item:
 							token = gensym()
@@ -178,9 +178,17 @@ def generate_all(utils, filenames):
 							token = gensym()
 							tokens[token] = item["choice_filter"]
 							choice_filter = " data-choice-filter=\""+token+"\""
-
+						if "inputAttributes" in item:
+							if item["inputAttributes"]["type"] == "range":
+								if "max" in item["inputAttributes"]:
+									input_attributes = " max='"+str(item["inputAttributes"]["max"])+"' "
+								if "min" in item["inputAttributes"]:
+									input_attributes += " min='"+str(item["inputAttributes"]["min"])+"' "
+							else:
+								print("Bad inputAttributes type " + item["inputAttributes"]["type"])
+								die();
 						# All the attributes that any element append to the screen should have
-						raw_attrs = [dbcol, required, calculation, hint, constraint, constraint_message, choice_filter]
+						raw_attrs = [dbcol, required, calculation, hint, constraint, constraint_message, choice_filter, input_attributes]
 						attrs = " " + " ".join(raw_attrs) + " "
 						# All prompts must have the class prompt. It can either just put "<div " + _class + ">their stuff</div>", or if it needs
 						# its own classes, it can use wrapped_class like "<div class='some-prompt-type " + wrapped_class + "'>stuff</div>"

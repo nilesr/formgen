@@ -349,9 +349,8 @@ and nothing else.
 - Display sync state and savepoint type in detail views
 - Canceling a barcode results in a "Location Providers Are Disabled" message
 - linked_table
+	- household_survey has a linked_table, some other stuff too
 - datetime
-- inputAttributes.type	inputAttributes.min	inputAttributes.max
-	- range	1	10
 - css and handling for twoColumn
 - make fork that attempts to support custom screen types
 	- set showHeader, showFooter false before render
