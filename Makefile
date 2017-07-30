@@ -6,7 +6,7 @@ all:
 deploy: push = True
 deploy: all
 clean:
-	rm -rf __pycache__ ||:
+	rm -rf __pycache__ custom_prompt_types/__pycache__ ||:
 .PHONY: coldchain deploy-coldchain default deploy-default deploy-multiapp deploy all clean
 
 coldchain: appname = coldchain

@@ -350,7 +350,6 @@ and nothing else.
 - Canceling a barcode results in a "Location Providers Are Disabled" message
 - linked_table
 	- household_survey has a linked_table, some other stuff too
-- datetime
 - css and handling for twoColumn
 - make fork that attempts to support custom screen types
 	- set showHeader, showFooter false before render
