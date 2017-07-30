@@ -61,7 +61,7 @@ class utils():
 		self.appname = appname
 		if self.appdesigner[-1] == "/": self.appdesigner = self.appdesigner[:-1]
 		ad_subpath = self.appdesigner + "/app/config/assets"
-		static_files = ["formgen_common.js", "form_generator.js", "form_generator.css", "generate_common.js", "generate_detail.css", "generate_detail.js", "generate_index.css", "generate_index.js", "generate_table.css", "generate_table.js", "graph.js", "graph.css", "tabs.css", "tabs.js"]
+		static_files = ["formgen_common.js", "form_generator.js", "form_generator.css", "generate_common.js", "generate_detail.css", "generate_detail.js", "generate_index.css", "generate_index.js", "generate_table.css", "generate_table.js", "graph.js", "graph.css", "tabs.css", "tabs.js", "map.js"]
 
 		custom_prompt_types.make(self);
 

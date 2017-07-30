@@ -307,6 +307,7 @@ def generate_all(utils, filenames):
 	<!-- we will typically be at /default/config/assets/formgen/:table_id/index.html, paths are relative to that -->
 	<script type="text/javascript" src="../../formgen_common.js"></script>
 	<script type="text/javascript" src="../../generate_common.js"></script>
+	<script type="text/javascript" src="../../map.js"></script>
 	<script type="text/javascript" src="../../../../system/js/odkCommon.js"></script>
 	<script type="text/javascript" src="../../../../system/js/odkData.js"></script>
 	<script type="text/javascript" src="../../../../system/libs/underscore.1.8.3.js"></script>
@@ -327,6 +328,7 @@ var hack_for_acknowledges = """+json.dumps(hack_for_acknowledges)+""";
 	<div class="odk-toolbar" id="odk-toolbar">
 		<button id='cancel' onClick='cancel()' disabled>Loading...</button>
 		<button id='back' onClick='update(-1)'></button>
+		<canvas id='canvas'></canvas>
 		<button id='next' onClick='update(1)'></button>
 		<button id='finalize' style='display: none;' onClick='finalize()'></button>
 	</div>
