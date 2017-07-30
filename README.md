@@ -333,19 +333,18 @@ and nothing else.
 
 ## Todo list
 
+- If the last thing in your top-level section is a 'do section', it will show "next" instead of "finalize" on the last screen in the subsection but it will finalize anyways
 - Test select one integer
 - Test select multiple grid
-- "Cancel and delete row" -> "Save incomplete" on moving past first screen
+- Change "Cancel and delete row" to "Save incomplete" after moving past first screen
 - Multiple forms per table (could have implications for translations)
 - Document custom prompt types
-	- implement datetime as a custom prompt type
-- sections (easy)
-	- label/goto/user branch
+- label/goto/user branch
 - jump to the page its on if we can't finalize due to a required field empty - WAIT FOR LABEL/GOTO
-- signature
+- signature (just need to know the name of the activity to start, can scrape it by setting breakpoint in doAction in survey)
 - NaN showing for total count in STATIC list views (sometimes)
 - read_only_image
 - `calculates` object
-- Display sync state and savepoint type in detail
+- Display sync state and savepoint type in detail views
 - Canceling a barcode results in a "Location Providers Are Disabled" message
 - test else

@@ -226,8 +226,8 @@ helper.make_index("general.html", """
 	menu = ["Example Form", null, [
 		["New Instance", "_js", newinstance("exampleForm")],
 		["View Responses", "exampleForm", ""],
-		["dates test", "_js", newinstance("datesTest")],
-		["dates test", "datesTest", ""]
+		["sections/custom prompt types test", "_js", newinstance("datesTest")],
+		["sections/custom prompt types test", "datesTest", ""]
 	]]
 """, """
 body {
