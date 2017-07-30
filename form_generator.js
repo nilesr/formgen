@@ -881,8 +881,9 @@ var update = function update(delta) {
 	var valid = true
 	// Remove all constraint warning messages, we're about to re-add them
 	var elems = document.getElementsByClassName("constraint-message");
-	for (var i = 0; i < elems.length; i++) {
-		elems[i].outerHTML = ""; // remove the element
+	var len = elems.length
+	for (var i = 0; i < len; i++) {
+		elems[0].outerHTML = ""; // remove the element
 	}
 	// Check validation for each prompt
 	var elems = document.getElementsByClassName("prompt");
