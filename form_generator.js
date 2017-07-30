@@ -548,6 +548,9 @@ var makeIntent = function makeIntent(package, activity, optional_dbcol) {
 // Helper function used by update() whenever something on the screen has changed and we should put row_data in the database
 // Also sets savepoint type to incomplete
 var updateOrInsert = function updateOrInsert() {
+	// acknowledges MUST go into the database as integer 1 or 0, don't ask me why
+	// But we can't do that in screen_data/changeElement/row_data because survey stores it in the javascript as
+	// true/false and that's what a bunch of constraints/validations/if statements expect
 	var temp_row_data = row_data;
 	for (var i = 0; i < hack_for_acknowledges.length; i++) {
 		var col = hack_for_acknowledges[i];
@@ -572,14 +575,12 @@ var updateOrInsert = function updateOrInsert() {
 			if (!noop) noop = true;
 		});
 	} else {
-		// acknowledges MUST go into the database as integer 1 or 0, don't ask me why
-		// But we can't do that in screen_data/changeElement/row_data because survey stores it in the javascript as
-		// true/false and that's what a bunch of constraints/validations/if statements expect
 		odkData.updateRow(table_id, temp_row_data, row_id, function(){}, function() {
 			alert(_t("Unexpected failure to save row"));
 			console.log(arguments);
 		});
 	}
+	setCancelButton(!row_exists)
 	// null -> will prompt to finish making changes on opening a tool
 	// INCOMPLETE -> saved incomplete, can resume editing later but won't be sync'd (?)
 	var setTo = "INCOMPLETE"
@@ -1175,22 +1176,17 @@ var finalizeImmediate = function finalizeImmediate() {
 };
 // Cancels the add and deletes the intermediate row, asks for confirmation if we've already inserted data but if they didn't type anything yet, it doesn't
 var cancel = function cancel() {
-	if (!opened_for_edit) {
-		if (row_exists) {
-			if (confirm(_t("Are you sure? All entered data will be deleted."))) {
-				odkData.deleteRow(table_id, null, row_id, function() {
-					page_back();
-				}, function(err) {
-					alert(_t("Unexpected error deleting row: ") + JSON.stringify(err));
-					page_back();
-				})
-			}
-		} else {
+	/*
+	if (confirm(_t("Are you sure? All entered data will be deleted."))) {
+		odkData.deleteRow(table_id, null, row_id, function() {
 			page_back();
-		}
-	} else {
-		page_back();
+		}, function(err) {
+			alert(_t("Unexpected error deleting row: ") + JSON.stringify(err));
+			page_back();
+		})
 	}
+	*/
+	page_back();
 }
 // Simple wrapper for odkCommon.doAction that shows a warning if the doAction fails.
 var doAction = function doAction(dStruct, act, intent) {
@@ -1264,14 +1260,6 @@ var ol = function onLoad() {
 				}
 			}
 			// Change the text in the cancel button based on whether we're adding or editing a row
-			var cancel = document.getElementById('cancel');
-			if (opened_for_edit) {
-				cancel.innerText = _t("Save incomplete");
-			} else {
-				cancel.innerText = _t("Cancel and delete row")
-			}
-			cancel.disabled = false;
-			//console.log(row_data);
 			noop = false;
 		} catch (e) {
 			noop = e.toString();
@@ -1351,4 +1339,13 @@ var gotoImmediate = function gotoImmediate(label) {
 	}
 	global_screen_idx = goto_labels[label][1];
 	update(1);
+}
+var setCancelButton = function setCancelButton(cancel_or_save_incomplete) {
+	var cancel = document.getElementById('cancel');
+	if (cancel_or_save_incomplete) {
+		cancel.innerText = _t("Cancel")
+	} else {
+		cancel.innerText = _t("Save incomplete");
+	}
+	cancel.disabled = false;
 }
