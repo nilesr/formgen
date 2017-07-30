@@ -126,10 +126,18 @@ def generate_all(utils, filenames):
 								screen.append("<span style='display: none;' class='validate' data-validate-rule=\"" + str(rule) + "\">")
 							if continue_out:
 								continue
+						to_display = "";
 						if "display" in item:
 							token = str(gensym())
 							tokens[token] = item["display"]
-							screen.append("<span class='translate'>" + token + "</span> ")
+							to_display = "<span class='translate'>" + token + "</span> "
+						if item["type"] == "user_branch":
+							if len(screen) > 0:
+								screens.append("".join(screen))
+							screens.append(to_display +  "<span class='userBranch select-one' data-values-list='"+item["values_list"]+"' data-if='"+" ".join(rules)+"'></span>")
+							screen = []
+							continue
+						screen.append(to_display)
 						dbcol = ""
 						if "name" in item:
 							dbcol = "data-dbcol=\""+item["name"]+"\"";

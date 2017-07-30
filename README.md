@@ -336,12 +336,13 @@ and nothing else.
 - test special _finalize label
 - test scatterplots
 - test goto
+- more testing of user_branch
+- more testing of goto to another section
 - If the last thing in your initial section (if you provide one) is a 'do section', it will show "next" instead of "finalize" on the last screen in the subsection but it will finalize anyways
 	- Temporary workaround is to set default_initial, but I'd like to not do that.
 	- There's no way to know if this is the last prompt the user is going to see without evaling all the do_sections that come after the current screen (e.g. soi and smg), potentially going back up the chain as well. May not be a real solution
 - Multiple forms per table (could have implications for translations)
 - Document custom prompt types
-- user_branch
 - signature (just need to know the name of the activity to start, can scrape it by setting breakpoint in doAction in survey)
 - NaN showing for total count in STATIC list views (sometimes)
 - read_only_image

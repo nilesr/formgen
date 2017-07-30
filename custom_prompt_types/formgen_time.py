@@ -37,7 +37,7 @@ screen_data: function(elem) {
 			}
 			return thing;
 		}
-		return elem.getAttribute("data-time_format").replace("YY", date.getYear() % 100).replace("YYYY", date.getFullYear()).replace("DD", pad(d.getDate())).replace("hh", pad(d.getHours())).replace("MM", pad(d.getMinutes()));
+		return elem.getAttribute("data-time_format").replace("YYYY", date.getFullYear()).replace("YY", pad(date.getYear() % 100)).replace("DD", pad(d.getDate())).replace("hh", pad(d.getHours())).replace("MM", pad(d.getMinutes()));
 	} else {
 		return odkCommon.toOdkTimeFromDate(date);
 	}
