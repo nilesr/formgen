@@ -103,6 +103,9 @@ def generate_all(utils, filenames):
 							tokens[token] = label;
 							screens.append("<span class='goto' data-label='"+token+"' data-if='"+" ".join(rules)+"'></span>")
 							screen = []
+						elif clause.split(" ")[0] == "validate":
+							# TODO what does this do?
+							pass
 						else:
 							print("bad clause " + item["clause"]); die()
 						continue

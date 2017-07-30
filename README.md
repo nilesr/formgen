@@ -358,3 +358,4 @@ and nothing else.
 	- the corresponding element in sections\[section\] for a custom screen will need to be a list of prompts instead of one string
 		- may just do that for the entire thing? Will have to make serious changes on the python side, not-so-serious changes on the javascript side
 - inputAttributes.timeFormat works for times but not dates
+- in complex_validate_test section 1 you can get constraint messages to appear twice
