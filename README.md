@@ -356,3 +356,4 @@ and nothing else.
 	- fill in all divs with `field-name=":dbcol"`
 	- the corresponding element in sections\[section\] for a custom screen will need to be a list of prompts instead of one string
 		- may just do that for the entire thing? Will have to make serious changes on the python side, not-so-serious changes on the javascript side
+- inputAttributes.timeFormat works for times but not dates

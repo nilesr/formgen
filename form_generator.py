@@ -179,11 +179,13 @@ def generate_all(utils, filenames):
 							tokens[token] = item["choice_filter"]
 							choice_filter = " data-choice-filter=\""+token+"\""
 						if "inputAttributes" in item:
-							if item["inputAttributes"]["type"] == "range":
+							if "type" in item["inputAttributes"] and item["inputAttributes"]["type"] == "range":
 								if "max" in item["inputAttributes"]:
 									input_attributes = " max='"+str(item["inputAttributes"]["max"])+"' "
 								if "min" in item["inputAttributes"]:
 									input_attributes += " min='"+str(item["inputAttributes"]["min"])+"' "
+							elif "timeFormat" in item["inputAttributes"]:
+								input_attributes += " data-time_format='"+item["inputAttributes"]["timeFormat"]+"' "
 							else:
 								print("Bad inputAttributes type " + item["inputAttributes"]["type"])
 								die();

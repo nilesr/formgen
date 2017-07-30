@@ -30,7 +30,17 @@ screen_data: function(elem) {
 	date.setMinutes(minute);
 	date.setSeconds(Number(elem.getAttribute("data-sec")));
 	date.setMilliseconds(Number(elem.getAttribute("data-millis")));
-	return odkCommon.toOdkTimeFromDate(date);
+	if (elem.hasAttribute("data-time_format")) {
+		var pad = function pad(thing) {
+			while (thing.length < 2) {
+				thing = "0" + thing;
+			}
+			return thing;
+		}
+		return elem.getAttribute("data-time_format").replace("YY", date.getYear() % 100).replace("YYYY", date.getFullYear()).replace("DD", pad(d.getDate())).replace("hh", pad(d.getHours())).replace("MM", pad(d.getMinutes()));
+	} else {
+		return odkCommon.toOdkTimeFromDate(date);
+	}
 },
 changeElement: function(elem, newdata) {
 	var date = odkCommon.toDateFromOdkTime(new Date(), newdata);
