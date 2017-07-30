@@ -333,7 +333,7 @@ and nothing else.
 
 ## Todo list
 
-- test special _finalize label
+- test special \_finalize label
 - test scatterplots
 - test goto
 - more testing of user_branch
@@ -358,3 +358,27 @@ and nothing else.
 	- the corresponding element in sections\[section\] for a custom screen will need to be a list of prompts instead of one string
 		- may just do that for the entire thing? Will have to make serious changes on the python side, not-so-serious changes on the javascript side
 - inputAttributes.timeFormat works for times but not dates
+	- Might be easier to just reimplement date as a custom prompt type, that's already how I do time and datetime
+
+Forms I don't support yet and why I don't support them
+
+11 forms total
+
+- linked_table
+	- farm_field
+	- household
+	- Ethopia_household
+- send_sms
+	- send_sms
+	- sms_example
+- breathcounter
+	- breathcounter
+	- imgci
+- pulseox
+	- imnci
+- signature
+	- sign
+- async assign garbage
+	- agriculture
+	- visit
+
