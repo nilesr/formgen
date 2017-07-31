@@ -132,7 +132,12 @@ window.page_go = function page_go(location) {
 	//document.location.href = location;
 	odkTables.launchHTML({}, location);
 };
+// if this is called twice in the same webkit, tables hangs on all webkits and you have to force restart it.
+// Some forms that override the `initial` section call it twice
+var page_back_called = false;
 window.page_back = function page_back() {
+	if (page_back_called) return;
+	page_back_called = true;
 	//window.history.back();
 	odkCommon.closeWindow(-1, null);
 };
