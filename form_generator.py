@@ -300,6 +300,24 @@ def generate_all(utils, filenames):
 							# The only one that's not a prompt
 							screen.append("<span class=\"assign\" "+attrs+"></span>")
 							print_br = False
+						elif item["type"] == "linked_table":
+							attrs += " data-values-list=\""+item["values_list"]+"\" "
+							if "display" in item:
+								if "new_instance_label" in item["display"]:
+									token = gensym();
+									tokens[token] = item["display"]["new_instance_label"]
+									attrs += " data-new_instance_label='"+token+"' "
+								if "hide_add_instance" in item["display"]:
+									token = gensym();
+									tokens[token] = item["display"]["hide_add_instance"]
+									attrs += " data-hide_add_instance='"+token+"' "
+								if "hide_delete_button" in item["display"]:
+									token = gensym();
+									tokens[token] = item["display"]["hide_delete_button"]
+									attrs += " data-hide_delete_button='"+token+"' "
+							# no `prompt` class
+							screen.append("<span " + attrs + " class='linked-table'>")
+							screen.append("</span>")
 						elif item["type"] in [x[0] for x in utils.custom_prompt_types]:
 							definition = utils.custom_prompt_types[utils.custom_prompt_types.index([x for x in utils.custom_prompt_types if x[0] == item["type"]][0])]
 							tokens, newdata = definition[2](tokens, raw_attrs)
@@ -326,7 +344,7 @@ def generate_all(utils, filenames):
 			if "queries" in formDef["xlsx"]:
 				for query in formDef["xlsx"]["queries"]:
 					# Try and guess which column to use as the displayed text in the populated options, usually doesn't work and defaults to "_id"
-					if query["query_type"] == "linked_table":
+					if "query_type" in query and query["query_type"] == "linked_table":
 						query["yanked_col"] = utils.yank_instance_col(query["linked_table_id"], query["linked_form_id"])
 				queries = json.dumps(formDef["xlsx"]["queries"]);
 			if "choices" in formDef["xlsx"]:
@@ -345,6 +363,7 @@ def generate_all(utils, filenames):
 	<script type="text/javascript" src="../../map.js"></script>
 	<script type="text/javascript" src="../../../../system/js/odkCommon.js"></script>
 	<script type="text/javascript" src="../../../../system/js/odkData.js"></script>
+	<script type="text/javascript" src="../../../../system/tables/js/odkTables.js"></script>
 	<script type="text/javascript" src="../../../../system/libs/underscore.1.8.3.js"></script>
 	<script>
 // Copy out screens, choices, queries, table id and tokens from the python side

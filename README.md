@@ -333,6 +333,13 @@ and nothing else.
 
 ## Todo list
 
+### Big stuff
+
+- multiple forms per table
+- custom handlebars templates (relatively easy)
+
+### Small stuff
+
 - test special \_finalize label
 - test scatterplots
 - test goto
@@ -349,8 +356,7 @@ and nothing else.
 	- might be a scan specific thing
 - Display sync state and savepoint type in detail views
 - Canceling a barcode results in a "Location Providers Are Disabled" message
-- linked_table
-	- household_survey has a linked_table, some other stuff too
+- for the household survey, deleting the household owner then changing it to someone else will ignore your changes and store the old value in the database because it can't update the screen_data to a now-deleted row id
 - css and handling for twoColumn
 - make fork that attempts to support custom screen types
 	- set showHeader, showFooter false before render
