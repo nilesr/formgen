@@ -157,7 +157,7 @@ window.jsonParse = function jsonParse(text) {
 };
 // Tries to translate the given column name, and if there's no translation, at least it will make it look pretty
 // Even in the default app, no columns have translations, so whatever
-window.displayCol = function constructSimpleDisplayName(name, metadata, table) {
+window.displayCol = function constructSimpleDisplayName(name, metadata, table, optional_form) {
 	// Otherwise remove anything after the dot, if it's a group by column in a list view it may be in the form of table_id.column_id
 	if (name.indexOf(".") > 0) {
 		name = name.split(".", 2)[1]
@@ -169,7 +169,7 @@ window.displayCol = function constructSimpleDisplayName(name, metadata, table) {
 		for (var i = 0; i < kvslen; i++) {
 			var entry = kvs[i];
 			if (entry.partition == "Column" && entry.aspect == name && (entry.key == "displayName" || entry.key == "display_name")) {
-				return display(jsonParse(entry.value), table);
+				return display(jsonParse(entry.value), table, window.possible_wrapped, optional_form);
 			}
 		}
 	}

@@ -24,6 +24,9 @@ var global_section_stack = [];
 // Set to true initially and set to false in onLoad (`ol`) before it calls update()
 var noop = true;
 
+// Used to ensure that we don't call closeWindow until we've saved everything
+var updateOrInsert_running = false;
+
 // some user defined javascript (like assigns, query filters) takes place before row_data has been updated with the data
 // that's actually on the screen, so we should poll screen data first
 var _data_wrapper = function _data_wrapper(i) {
@@ -529,6 +532,7 @@ var updateOrInsert = function updateOrInsert() {
 	// acknowledges MUST go into the database as integer 1 or 0, don't ask me why
 	// But we can't do that in screen_data/changeElement/row_data because survey stores it in the javascript as
 	// true/false and that's what a bunch of constraints/validations/if statements expect
+	updateOrInsert_running = true;
 	var temp_row_data = row_data;
 	for (var i = 0; i < hack_for_acknowledges.length; i++) {
 		var col = hack_for_acknowledges[i];
@@ -539,6 +543,7 @@ var updateOrInsert = function updateOrInsert() {
 	if (!row_exists) {
 		odkData.addRow(table_id, temp_row_data, row_id, function(d) {
 			row_exists = true;
+			updateOrInsert_running = false;
 		}, function(d) {
 			if (d.indexOf("ActionNotAuthorizedException") >= 0) {
 				alert("ActionNotAuthorizedException")
@@ -553,7 +558,9 @@ var updateOrInsert = function updateOrInsert() {
 			if (!noop) noop = true;
 		});
 	} else {
-		odkData.updateRow(table_id, temp_row_data, row_id, function(){}, function() {
+		odkData.updateRow(table_id, temp_row_data, row_id, function(){
+			updateOrInsert_running = false;
+		}, function() {
 			alert(_t("Unexpected failure to save row"));
 			console.log(arguments);
 		});
@@ -1222,12 +1229,17 @@ var finalize = function finalize() {
 	finalizeImmediate();
 }
 var finalizeImmediate = function finalizeImmediate() {
+	console.log("finalizeImmediate called, updateOrInsert_running: " + updateOrInsert_running);
+	if (updateOrInsert_running) {
+		setTimeout(finalizeImmediate, 50);
+		return;
+	}
 	// Make sure all required fields were provided
 	for (var i = 0; i < requireds.length; i++) {
 		var column = requireds[i][0];
 		var js = requireds[i][1];
 		if ((data(column) == null || data(column) == undefined || (typeof(data(column)) == "string" && data(column).trim().length == 0)) && eval(tokens[js])) {
-			alert(_t("Column ? is required but no value was provided").replace("?", column))
+			alert(_t("Column ? is required but no value was provided", column)) // can't use displayCol because no metadata -- TODO cache metadata
 			gotoImmediate("_" + column);
 			return;
 		}
