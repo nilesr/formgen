@@ -1,4 +1,4 @@
-import json, sys, os, glob, traceback, subprocess, random, collections
+import json, sys, os, glob, traceback, subprocess, random, collections, hashlib
 # Throws an exception but sets skipping to true so we don't actually stop, we just skip the table and move on
 skipped = True
 def die():
@@ -14,7 +14,10 @@ def falsey(r):
 # like S4 in formgen_common.js, just makes four random 0-9a-f digits, used in gensym
 def genpart(): return hex(random.randint(0, 2**(8*2))).split("x")[1].rjust(4, "0")
 # returns a random guid, used for translation tokens
-def gensym(): return genpart() + genpart() + "-4" + genpart()[1:] + "-" + genpart() + "-" + genpart() + genpart() + genpart()
+def gensym(thing = False):
+	if thing:
+		return hashlib.md5(str(thing).encode("utf-8")).hexdigest()
+	return genpart() + genpart() + "-4" + genpart()[1:] + "-" + genpart() + "-" + genpart() + genpart() + genpart()
 default_initial = [
 	#{"type": "note", "display": "You are at the beginning of an instance"},
 	{"clause": "do section survey"},
@@ -73,7 +76,7 @@ def generate_all(utils, filenames):
 							screen = []
 						# Add the rule to tokens and add the token to the rules list on an if clause
 						elif clause == "if":
-							token = gensym()
+							token = gensym(item["condition"])
 							# inserted as a string, json.dumps() and JSON.parse() will make sure it gets passed through unmolested
 							tokens[token] = item["condition"]
 							rules.insert(0, token)
@@ -83,7 +86,7 @@ def generate_all(utils, filenames):
 						elif clause == "else":
 							rule = rules[0]
 							rule = "!(" + tokens[rule] + ")"
-							token = gensym()
+							token = gensym(rule)
 							tokens[token] = rule;
 							rules[0] = token
 						elif len(clause.split()) >= 3 and clause.split()[:2] == ["do", "section"]:
@@ -91,7 +94,7 @@ def generate_all(utils, filenames):
 							sections_queue.append(new_section)
 							if len(screen) > 0:
 								screens.append("".join(screen))
-							token = gensym();
+							token = gensym(new_section);
 							tokens[token] = new_section
 							screens.append("<span class='doSection' data-section='"+token+"' data-if='"+" ".join(rules)+"'></span>")
 							screen = []
@@ -106,7 +109,7 @@ def generate_all(utils, filenames):
 								screens.append("".join(screen))
 							if "type" in item and item["type"] == "finalize":
 								label = "_finalize"
-							token = gensym();
+							token = gensym(label);
 							tokens[token] = label;
 							screens.append("<span class='goto' data-label='"+token+"' data-if='"+" ".join(rules)+"'></span>")
 							screen = []
@@ -140,7 +143,7 @@ def generate_all(utils, filenames):
 								continue
 						to_display = "";
 						if "display" in item:
-							token = str(gensym())
+							token = gensym(item["display"])
 							tokens[token] = item["display"]
 							to_display = "<span class='translate'>" + token + "</span> "
 						if item["type"] == "user_branch":
@@ -162,32 +165,32 @@ def generate_all(utils, filenames):
 						input_attributes = ""
 						# calculations, used basically only for assigns. Pulled from tokens and evaled in update
 						if "calculation" in item:
-							token = gensym()
+							token = gensym(item["calculation"])
 							tokens[token] = str(item["calculation"])
 							calculation = "data-calculation=\"" + token + "\"";
 						# If there's a hint, put the hint object in tokens and set the data-placeholder attribute.
 						# Update will go through, remove the data-placeholder attribute and set the placeholder (no data- prefix) attribute
 						# to the result of translating the token
 						if "display" in item and type(item["display"]) == type({}) and "hint" in item["display"]:
-							token = gensym()
+							token = gensym(item["display"]["hint"])
 							tokens[token] = item["display"]["hint"]
 							hint = "data-placeholder=\""+token+"\""
 						# set if it's a required field
 						# if we already have a placeholder (that might be translated), don't change it, otherwise set
 						# placeholder to Required field
 						if "required" in item:
-							token = gensym()
+							token = gensym(item["required"])
 							tokens[token] = item["required"]
 							requireds.append([item["name"], token])
 							required = "data-required=\""+token+"\" "
 						# constraint, like "data('weight') < 20", stuff like that
 						if "constraint" in item:
-							token = gensym()
+							token = gensym(item["constraint"])
 							tokens[token] = item["constraint"]
 							constraint = "data-constraint=\"" + token + "\""
 						# if we have a message to display to the user if the constraint isn't met, pass it via tokens
 						if "display" in item and "constraint_message" in item["display"]:
-							token = gensym()
+							token = gensym(item["display"]["constraint_message"])
 							tokens[token] = item["display"]["constraint_message"]
 							constraint_message = "data-constraint_message=\"" + token + "\""
 						# Some eval'd javascript to filter which choices will be added as possible choices to a select one, select multiple, etc...
@@ -195,7 +198,7 @@ def generate_all(utils, filenames):
 						# continent, and the filter is something like "context.continent == data('coninent')", then the only things you can
 						# select from the dropdown are countries on that continent
 						if "choice_filter" in item:
-							token = gensym()
+							token = gensym(item["choice_filter"])
 							tokens[token] = item["choice_filter"]
 							choice_filter = " data-choice-filter=\""+token+"\""
 						if "inputAttributes" in item:
@@ -273,7 +276,7 @@ def generate_all(utils, filenames):
 							x_attr = ""
 							y_attr = ""
 							if "legend_text" in item:
-								token = gensym()
+								token = gensym(item["legend_text"])
 								tokens[token] = item["legend_text"]
 								label_attr = " data-legend_text='" + token + "' "
 							if "x_value" in item: x_attr = " data-x_value='"+item["x_value"]+"' "
@@ -315,15 +318,15 @@ def generate_all(utils, filenames):
 							attrs += " data-values-list=\""+item["values_list"]+"\" "
 							if "display" in item:
 								if "new_instance_label" in item["display"]:
-									token = gensym();
+									token = gensym(item["display"]["new_instance_label"]);
 									tokens[token] = item["display"]["new_instance_label"]
 									attrs += " data-new_instance_label='"+token+"' "
 								if "hide_add_instance" in item["display"]:
-									token = gensym();
+									token = gensym(item["display"]["hide_add_instance"]);
 									tokens[token] = item["display"]["hide_add_instance"]
 									attrs += " data-hide_add_instance='"+token+"' "
 								if "hide_delete_button" in item["display"]:
-									token = gensym();
+									token = gensym(item["display"]["hide_delete_button"]);
 									tokens[token] = item["display"]["hide_delete_button"]
 									attrs += " data-hide_delete_button='"+token+"' "
 							# no `prompt` class
