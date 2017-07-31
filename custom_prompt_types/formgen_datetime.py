@@ -12,6 +12,12 @@ fill: function(elem, min, max, pad) {
 		elem.appendChild(child);
 	}
 },
+pad:  function pad(thing) {
+	while (thing.length < 2) {
+		thing = "0" + thing;
+	}
+	return thing;
+},
 """
 def make_datetime(tokens, raw_attrs):
 	attrs = " ".join(raw_attrs)
