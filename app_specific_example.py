@@ -159,10 +159,11 @@ helper.make_table("selects_list.html", "", "", """
 
 helper.make_tabs("index.html", """
 	var tabs = [
-		["General Demo", "general.html"],
-		["Tea Houses", "th_index.html"],
-		["Selects Demo", "selects_index.html"],
-		["Plot Demo", "plot_index.html"]
+		["General", "general.html"],
+		["Tea", "th_index.html"],
+		["Selects", "selects_index.html"],
+		["Plot", "plot_index.html"],
+		["Hope", "hope_index.html"]
 	]
 """, "")
 no_button_title = """
@@ -506,3 +507,125 @@ extend("compare_list_base.html", "compare_list_soil.html", """
 	var all_with_this_type = {};
 """)
 
+
+helper.make_index("hope_index.html", """
+	var send = function() {
+		odkCommon.doAction(null, "org.opendatakit.services.sync.actions.activities.SyncActivity", {"componentPackage": "org.opendatakit.services", "componentActivity": "org.opendatakit.services.sync.actions.activities.SyncActivity"});
+	}
+	var newinstance = function newinstance(table, form) {
+		return function() {
+			var id = newGuid();
+			if (form == table) form = "index";
+			odkTables.launchHTML(null, "config/assets/formgen/"+table+"/" + form + ".html#" + id);
+		}
+	}
+	list_views = {
+		"femaleClients": "config/assets/femaleClients_list.html"
+	}
+	menu = ["Hope Study" + "<br />xlsx not copied over yet, nothing will work", null, [
+		["Screen Female Client", "_js", newinstance("femaleClients", "screenClient")],
+		["Follow Up with Existing Client", "femaleClients", ""],
+		["Send Data", "_js", send]
+	]]
+""", """
+	body {
+		background-color: white;
+		font-family: arial;
+	}
+	.button {
+		color: #5c5c5c;
+		width: 90%;
+		margin-left: 5%;
+		box-shadow: none;
+		-webkit-box-shadow: none;
+		background-color: #f1f1f1;
+	}
+	.button:first-child {
+		border-left: 15px solid #003d5c;
+		border-bottom: 1px solid #003d5c;
+	}
+	.button:nth-child(2) {
+		border-left: 15px solid #006699;
+		border-bottom: 1px solid #006699;
+	}
+	.button:nth-child(3) {
+		border-left: 15px solid #66a3c2;
+		border-bottom: 1px solid #66a3c2;
+	}
+	#title {
+		font-weight: bold;
+		margin-top: 20px;
+		margin-bottom: 20px;
+		font-size: 40pt;
+		font-family: arial;
+		border: none;
+		background-color: white;
+		color: #5c5c5c;
+	}
+""")
+helper.make_table("femaleClients_list.html", "", "", """
+	display_col = "client_id";
+	display_subcol = [["Age: ", "age", true], ["Randomization: ", "randomization", true]];
+	table_id = "femaleClients";
+
+	var add = document.createElement("button");
+	add.style.display = "block";
+	add.style.width = "70%";
+	add.innerText = "Add Client";
+	add.addEventListener("click", function() {
+		odkTables.launchHTML(null, "config/assets/formgen/femaleClients/screenClient.html#" + newGuid());
+	});
+	document.insertBefore(add, document.getElementById("list"));
+	var graph = document.createElement("button");
+	graph.style.display = "block";
+	graph.style.width = "70%";
+	graph.innerText = "Graph View";
+	graph.addEventListener("click", function() {
+		odkTables.launchHTML(null, "config/assets/hope_graph_view.html" + newGuid());
+	});
+	document.insertBefore(graph, document.getElementById("list"));
+""", "", "")
+helper.static_files.append("hope_graph_view.html")
+helper.make_detail("femaleClients_detail", """
+	<button disabled class='title-button'>Client Forms</button>
+		<button onClick='homeLocator();' class='smaller-button'>Home Locator</button>
+		<button onClick='newInstance("femaleClients", "client6Week");' class='smaller-button'>Six Week Follow-Up</button>
+		<button onClick='newInstance("femaleClients", "client6Month");' class='smaller-button'>Six Month Follow-Up</button>
+	<button disabled class='title-button'>Partner Forms</button>
+		<button onClick='newInstance("maleClients", "screenPartner");' class='smaller-button'>Partner Screening</button>
+		<button onClick='newInstance("maleClients", "partner6Month");' class='smaller-button'>Six Month Follow-Up</button>
+""", """
+	ul {
+		list-style-type: none;
+	}
+	.title-button, .smaller-button {
+		display: block;
+	}
+	.title-button {
+		width: 80%;
+		padding-left: 10%;
+		background-color: #003d5c;
+		color: white;
+	}
+	.smaller-button {
+		width: 60%;
+		padding-left: 20%;
+		background-color: lightgrey;
+	}
+""", """
+	main_col = "client_id";
+	table_id = "femaleClients";
+	// TODO NEEDS A GLOBAL JOIN FOR THE PARTNER ID
+	colmap = [
+		["client_id", function(e, c, d) { return c }],
+		["age", "AGE"],
+		["randomization", "RANDOMIZATION"]
+	];
+	var newInstance = function(table, form) {
+		if (form == table) form = "index";
+		odkTables.launchHTML(null, "config/assets/formgen/" + table + "/" + form + ".html#" + newGuid();
+	};
+	var homeLocator = function homeLocator() {
+		alert("TODO");
+	}
+""","");
