@@ -52,6 +52,8 @@ class utils():
 	# Returns a list of every table in app designer
 	def get_tables(self):
 		return [os.path.basename(x) for x in glob.glob(appdesigner + "/app/config/tables/*")]
+	def get_forms(self, table):
+		return [os.path.basename(x) for x in glob.glob(appdesigner + "/app/config/tables/" + table + "/forms/*")]
 	def register_custom_prompt_type(self, type, css_class, html_factory, js):
 		self.custom_prompt_types.append([type, css_class, html_factory, js]);
 	def make(self, appname, push):

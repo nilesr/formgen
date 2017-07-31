@@ -224,7 +224,7 @@ var do_csv_xhr = function do_csv_xhr(choice_id, filename, callback) {
 			update(0);
 		}
 	};
-	url = odkCommon.localizeUrl(odkCommon.getPreferredLocale(), {"text": filename}, "text", "/" + appname + "/config/tables/" + table_id + "/forms/" + table_id + "/")
+	url = odkCommon.localizeUrl(odkCommon.getPreferredLocale(), {"text": filename}, "text", "/" + appname + "/config/tables/" + table_id + "/forms/" + form_id + "/")
 	xhr.open("GET", url, true);
 	xhr.send();
 }
@@ -258,9 +258,9 @@ var get_choices = function get_choices(which, not_first_time, filter, raw) {
 					var displayed = choices[j].display;
 					// If there's no "notranslate" key, translate it using display, otherwise fake translate it
 					if (choices[j].notranslate == undefined) {
-						displayed = display(choices[j].display, table_id, window.possible_wrapped.concat("title"))
+						displayed = display(choices[j].display, table_id, window.possible_wrapped.concat("title"), form_id)
 					} else {
-						displayed = fake_translate(choices[j].display);
+						displayed = fake_translate(choices[j].display, table_id, form_id);
 					}
 				}
 				// concat on a list will merge them
@@ -747,7 +747,7 @@ var update = function update(delta) {
 	var elems = document.getElementsByTagName("input");
 	for (var i = 0; i < elems.length; i++) {
 		if (elems[i].getAttribute("data-placeholder") != undefined && elems[i].getAttribute("data-placeholder").length > 0) {
-			elems[i].setAttribute("placeholder", display(tokens[elems[i].getAttribute("data-placeholder")], table_id));
+			elems[i].setAttribute("placeholder", display(tokens[elems[i].getAttribute("data-placeholder")], table_id, window.possible_wrapped, form_id));
 			elems[i].setAttribute("data-placeholder", "");
 		}
 	}
@@ -761,7 +761,7 @@ var update = function update(delta) {
 		var text = tokens[elems[0].innerText];
 		try {
 			// YES elems[0] NOT elems[i]
-			elems[0].outerHTML = display(text, table_id);
+			elems[0].outerHTML = display(text, table_id, window.possible_wrapped, form_id);
 		} catch (e) {
 			console.log(e)
 			elems[0].outerHTML = _t("Error translating ") + JSON.stringify(text);
@@ -828,7 +828,7 @@ var update = function update(delta) {
 		}
 		// add the add button if we should do so
 		if (show_add) {
-			if (elem.hasAttribute("data-new_instance_label")) new_instance_label = display(tokens[elem.getAttribute("data-new_instance_label")]);
+			if (elem.hasAttribute("data-new_instance_label")) new_instance_label = display(tokens[elem.getAttribute("data-new_instance_label")], table_id, window.possible_wrapped, form_id);
 			var child = document.createElement("button")
 			child.innerText = _tu(new_instance_label);
 			child.addEventListener("click", function() {
@@ -1024,7 +1024,7 @@ var update = function update(delta) {
 				var message = document.createElement("div");
 				message.classList.add("constraint-message");
 				// constraint messages can contain html
-				message.innerHTML = display(tokens[elems[i].getAttribute("data-constraint_message")], table_id);
+				message.innerHTML = display(tokens[elems[i].getAttribute("data-constraint_message")], table_id, window.possible_wrapped, form_id);
 				elems[i].parentNode.insertBefore(message, elems[i].nextSibling);
 			}
 		} else {

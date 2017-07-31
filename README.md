@@ -370,16 +370,13 @@ Forms I don't support yet and why I don't support them
 
 11 forms total
 
-- linked_table
-	- farm_field
-	- household
-	- Ethopia_household
 - send_sms
 	- send_sms
 	- sms_example
 - breathcounter
 	- breathcounter
 	- imgci
+	- imgci/imgci_test
 - pulseox
 	- imnci
 - signature
@@ -387,4 +384,3 @@ Forms I don't support yet and why I don't support them
 - async assign garbage
 	- agriculture
 	- visit
-

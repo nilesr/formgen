@@ -23,13 +23,20 @@ default_initial = [
 def generate_all(utils, filenames):
 	if not os.path.exists("formgen"): os.mkdir("formgen");
 	tables = utils.get_tables()
+	all_pairs = []
+	for table in tables:
+		forms = utils.get_forms(table)
+		for form in forms:
+			all_pairs.append([table, form])
 	all_choices = collections.defaultdict(lambda: [])
 	columns_that_need_choices = collections.defaultdict(lambda: {})
-	for table in tables:
+	for pair in all_pairs:
+		table = pair[0]
+		form = pair[1]
 		global skipped
 		skipped = False
 		try:
-			formDef = json.loads(open(utils.appdesigner + "/app/config/tables/" + table + "/forms/" + table + "/formDef.json", "r").read())
+			formDef = json.loads(open(utils.appdesigner + "/app/config/tables/" + table + "/forms/" + form + "/formDef.json", "r").read())
 			# Used for translations, we json dump the translations because they're json objects.
 			# In the past they were stringified and put in a span with the class translate, but html tags inside
 			# translations were broken because the DOM molests them and I can't accurately retrieve the text I put in.
@@ -52,8 +59,10 @@ def generate_all(utils, filenames):
 				done_sections.append(section)
 				for item in formDef["xlsx"][section]:
 					#print(item)
-					if "clause" in item:
-						clause = item["clause"].split("//")[0].strip();
+					if "clause" in item or ("type" in item and item["type"] == "finalize"):
+						clause = ""
+						if "clause" in item:
+							clause = item["clause"].split("//")[0].strip();
 						# Sometimes people write begin screen without putting end screen, sometimes they do
 						# the opposite, so just don't trust the user and insert a screen break no matter what if
 						# there's a begin or end screen clause. If there's two in a row it won't generate an empty
@@ -77,8 +86,6 @@ def generate_all(utils, filenames):
 							token = gensym()
 							tokens[token] = rule;
 							rules[0] = token
-						# ignore empty clauses, will continue to check "type"
-						elif clause == "": pass
 						elif len(clause.split()) >= 3 and clause.split()[:2] == ["do", "section"]:
 							new_section = " ".join(clause.split()[2:])
 							sections_queue.append(new_section)
@@ -93,10 +100,12 @@ def generate_all(utils, filenames):
 								screens.append("".join(screen))
 							screens.append("<span class='endSection' data-if='"+" ".join(rules)+"'></span>")
 							screen = []
-						elif clause.split(" ")[0] == "goto":
+						elif clause.split(" ")[0] == "goto" or ("type" in item and item["type"] == "finalize"):
 							label = " ".join(clause.split(" ")[1:])
 							if len(screen) > 0:
 								screens.append("".join(screen))
+							if "type" in item and item["type"] == "finalize":
+								label = "_finalize"
 							token = gensym();
 							tokens[token] = label;
 							screens.append("<span class='goto' data-label='"+token+"' data-if='"+" ".join(rules)+"'></span>")
@@ -104,6 +113,8 @@ def generate_all(utils, filenames):
 						elif clause.split(" ")[0] == "validate":
 							# TODO what does this do?
 							pass
+						# ignore empty clauses, will continue to check "type"
+						elif clause == "": pass
 						else:
 							print("bad clause " + item["clause"]); die()
 						continue
@@ -371,6 +382,7 @@ var sections = """ + json.dumps(sections, indent = 4) + """;
 var choices = """ + choices + """;
 var queries = """ + queries + """;
 var table_id = '""" + table + """';
+var form_id = '""" + form + """';
 var tokens = """ + json.dumps(tokens) + """;
 var requireds = """ + json.dumps(requireds) + """;
 var hack_for_acknowledges = """+json.dumps(hack_for_acknowledges)+""";
@@ -390,14 +402,14 @@ var calculates = {"""+calculates+"""};
 	<div class="odk-container" id="odk-container">Please wait...</div>
 </body>
 </html>"""
-			if os.path.exists("formgen/" + table):
-				subprocess.check_call(["rm", "-rf", "formgen/" + table])
-			os.mkdir("formgen/" + table);
-			open("formgen/" + table + "/index.html", "w").write(basehtml)
-			filenames.append("formgen/" + table + "/index.html")
+			if form == table: form = "index"
+			if not os.path.exists("formgen/" + table):
+				os.mkdir("formgen/" + table)
+			open("formgen/" + table + "/"+form+".html", "w").write(basehtml)
+			filenames.append("formgen/" + table + "/"+form+".html")
 		except:
 			if skipped:
-				print("Skipping " + table)
+				print("Skipping " + str(pair))
 			else:
 				print("Unexpected exception in " + table)
 				print(traceback.format_exc())
