@@ -335,20 +335,19 @@ and nothing else.
 
 ### Big stuff
 
-- multiple forms per table
 - custom handlebars templates (relatively easy)
 
 ### Small stuff
 
 - test special \_finalize label
 - test scatterplots
-- test goto
+- test inputAttributes.timeFormat
 - more testing of user_branch
 - more testing of goto to another section
 - If the last thing in your initial section (if you provide one) is a 'do section', it will show "next" instead of "finalize" on the last screen in the subsection but it will finalize anyways
 	- Temporary workaround is to set default_initial, but I'd like to not do that.
 	- There's no way to know if this is the last prompt the user is going to see without evaling all the do_sections that come after the current screen (e.g. soi and smg), potentially going back up the chain as well. May not be a real solution
-- Multiple forms per table (could have implications for translations)
+	- \^ that basically means `WONTFIX`
 - Document custom prompt types
 - signature (just need to know the name of the activity to start, can scrape it by setting breakpoint in doAction in survey)
 - NaN showing for total count in STATIC list views (sometimes)
@@ -364,11 +363,10 @@ and nothing else.
 	- the corresponding element in sections\[section\] for a custom screen will need to be a list of prompts instead of one string
 		- may just do that for the entire thing? Will have to make serious changes on the python side, not-so-serious changes on the javascript side
 - inputAttributes.timeFormat works for times but not dates
-	- Might be easier to just reimplement date as a custom prompt type, that's already how I do time and datetime
 
 Forms I don't support yet and why I don't support them
 
-11 forms total
+8 (and a half) forms total
 
 - send_sms
 	- send_sms
@@ -376,7 +374,7 @@ Forms I don't support yet and why I don't support them
 - breathcounter
 	- breathcounter
 	- imgci
-	- imgci/imgci_test
+	- imgci/imgci\_test
 - pulseox
 	- imnci
 - signature
