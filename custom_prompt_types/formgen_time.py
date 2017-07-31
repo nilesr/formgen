@@ -4,12 +4,12 @@ import formgen_datetime as datetime
 def make_time_html(tokens, raw_attrs):
 	attrs = " ".join(raw_attrs)
 	text = "<span class='time prompt user-defined-prompt' "+attrs+">"
-	text += datetime.make_numeric_select(24);
+	text += "<select></select>"
 	text += ":"
-	text += datetime.make_numeric_select(60, pad = 2);
+	text += "<select></select>"
 	text += "</span>"
 	return tokens, text
-time_js = """
+time_js = datetime.fill + """
 screen_data: function(elem) {
 	var hour = elem.getElementsByTagName("select")[0];
 	if (hour.selectedOptions[0] !== undefined) {
@@ -43,6 +43,11 @@ screen_data: function(elem) {
 	}
 },
 changeElement: function(elem, newdata) {
+	var hour = elem.getElementsByTagName("select")[0];
+	if (hour.children.length == 0) this.fill(hour, 0, 23, 0);
+	var minute = elem.getElementsByTagName("select")[1];
+	if (minute.children.length == 0) this.fill(minute, 0, 59, 2);
+
 	var date = odkCommon.toDateFromOdkTime(new Date(), newdata);
 	if (date == null) date = new Date();
 	var hours = date.getHours();

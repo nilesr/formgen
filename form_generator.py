@@ -37,8 +37,6 @@ def generate_all(utils, filenames):
 			tokens = {}
 			requireds = []
 			hack_for_acknowledges = []
-			# Small optimization, won't add all the choices for dates if there are no date prompts in the form
-			has_dates = False
 			sections = {}
 			#sections_queue = ["survey"]
 			sections_queue = ["initial"]
@@ -298,15 +296,6 @@ def generate_all(utils, filenames):
 						elif item["type"] == "acknowledge":
 							hack_for_acknowledges.append(item["name"])
 							screen.append("<select data-values-list=\"_yesno\" " + attrs + _class + "></select>")
-						elif item["type"] == "date":
-							has_dates = True;
-							screen.append("<span " + attrs + "class=\"date "+wrapped_class+"\">" )
-							screen.append("<select data-values-list=\"_year\"></select>")
-							screen.append(" / ")
-							screen.append("<select data-values-list=\"_month\"></select>")
-							screen.append(" / ")
-							screen.append("<select data-values-list=\"_day\"></select>")
-							screen.append("</span>")
 						elif item["type"] == "assign":
 							# The only one that's not a prompt
 							screen.append("<span class=\"assign\" "+attrs+"></span>")
@@ -358,14 +347,13 @@ def generate_all(utils, filenames):
 	<script type="text/javascript" src="../../../../system/js/odkData.js"></script>
 	<script type="text/javascript" src="../../../../system/libs/underscore.1.8.3.js"></script>
 	<script>
-// Copy out screens, choices, queries, table id, tokens and has_dates from the python side
+// Copy out screens, choices, queries, table id and tokens from the python side
 var sections = """ + json.dumps(sections, indent = 4) + """;
 var choices = """ + choices + """;
 var queries = """ + queries + """;
 var table_id = '""" + table + """';
 var tokens = """ + json.dumps(tokens) + """;
 var requireds = """ + json.dumps(requireds) + """;
-var has_dates = """ + ("true" if has_dates else "false") + """;
 var hack_for_acknowledges = """+json.dumps(hack_for_acknowledges)+""";
 var goto_labels = """+json.dumps(goto_labels)+""";
 var calculates = {"""+calculates+"""};
