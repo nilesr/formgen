@@ -940,6 +940,35 @@ var update = function update(delta) {
 	}
 
 
+	// ASSIGNS LOGIC
+	// If an assign hasn't been put in the database yet, eval it and put that in, change the screen data as well,
+	// then remind ourselves that we need to call updateOrInsert later
+	var elems = document.getElementsByClassName("assign");
+	for (var i = 0; i < elems.length; i++) {
+		var elem = elems[i];
+		var col = elem.getAttribute("data-dbcol");
+		// the "data-calculation" attribute holds a key to a string in `tokens` that we can eval to get the result
+		var new_value = null;
+		try {
+			//alert(tokens[elem.getAttribute("data-calculation")])
+			//alert(eval(tokens[elem.getAttribute("data-calculation")]))
+			new_value = eval(tokens[elem.getAttribute("data-calculation")]).toString();
+			row_data[col] = new_value;
+		} catch (e) {
+			if (e != -1) {
+				//noop = e
+			}
+		}
+		// If it's on the screen, let us update it from row_data later
+		var gsp_result = get_screen_prompt(col);
+		if (gsp_result[0]) {
+			//gsp_result[1].setAttribute("data-data_populated", "");
+			changeElement(gsp_result[1], new_value)
+		}
+		num_updated++;
+	}
+
+
 	// VALIDATION LOGIC
 	// A field can be invalid if it's required and empty, if it's supposed to be a number but it's not a valid number, or if
 	// a user defined rule from the xlsx returns false. The user defined rules are often like "data('age') > 18", and they get evaled
@@ -1009,33 +1038,6 @@ var update = function update(delta) {
 		document.getElementById("finalize").disabled = true;
 		delta = 0;
 	}
-	// ASSIGNS LOGIC
-	// If an assign hasn't been put in the database yet, eval it and put that in, change the screen data as well,
-	// then remind ourselves that we need to call updateOrInsert later
-	var elems = document.getElementsByClassName("assign");
-	for (var i = 0; i < elems.length; i++) {
-		var elem = elems[i];
-		var col = elem.getAttribute("data-dbcol");
-		// the "data-calculation" attribute holds a key to a string in `tokens` that we can eval to get the result
-		var new_value = null;
-		try {
-			//alert(tokens[elem.getAttribute("data-calculation")])
-			//alert(eval(tokens[elem.getAttribute("data-calculation")]))
-			new_value = eval(tokens[elem.getAttribute("data-calculation")]).toString();
-			row_data[col] = new_value;
-		} catch (e) {
-			if (e != -1) {
-				//noop = e
-			}
-		}
-		// If it's on the screen, let us update it from row_data later
-		var gsp_result = get_screen_prompt(col);
-		if (gsp_result[0]) {
-			//gsp_result[1].setAttribute("data-data_populated", "");
-			changeElement(gsp_result[1], new_value)
-		}
-		num_updated++;
-	}
 
 	// DATABASE UPDATE
 	// If the screen is valid and we changed something in row_data, updateOrInsert()
@@ -1046,6 +1048,7 @@ var update = function update(delta) {
 		setCancelButton(!row_exists);
 	}
 
+	// IF STATEMENTS LOGIC
 	// If statements may be run more than once, so let's cache their results in this validates object
 	var validates = {}
 	// For each of the if statements, eval it then set the display style on it if applicable
