@@ -136,7 +136,10 @@ window.page_go = function page_go(location) {
 // Some forms that override the `initial` section call it twice
 var page_back_called = false;
 window.page_back = function page_back() {
-	if (page_back_called) return;
+	if (page_back_called) {
+		console.log("Already called close window, ignoring")
+		return;
+	}
 	page_back_called = true;
 	//window.history.back();
 	odkCommon.closeWindow(-1, null);
@@ -594,5 +597,13 @@ var formgen_specific_translations = {
 	"Delete row ??": {"text": {
 		"default": true,
 		"es": "¿Eliminar fila ??"
+	}},
+	"Saving...": {"text": {
+		"default": true,
+		"es": "Guardando..."
+	}},
+	"Finalizing...": {"text": {
+		"default": true,
+		"es": "Finalizando..."
 	}},
 }

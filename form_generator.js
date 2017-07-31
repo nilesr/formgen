@@ -1050,6 +1050,7 @@ var update = function update(delta) {
 	// If the screen is valid and we changed something in row_data, updateOrInsert()
 	if (num_updated > 0 && valid) {
 		// async because sometimes it takes upwards of 30ms
+		updateOrInsert_running = true;
 		setTimeout(updateOrInsert, 0);
 	} else {
 		setCancelButton(!row_exists);
@@ -1228,12 +1229,25 @@ var finalize = function finalize() {
 	update(0);
 	finalizeImmediate();
 }
-var finalizeImmediate = function finalizeImmediate() {
-	console.log("finalizeImmediate called, updateOrInsert_running: " + updateOrInsert_running);
-	if (updateOrInsert_running) {
-		setTimeout(finalizeImmediate, 50);
+var blockForDatabase = function(fn) {
+	return function() {
+		console.log( fn.name + " called, updateOrInsert_running: " + updateOrInsert_running);
+		var args = Array.prototype.slice.call(arguments, 0);
+		if (updateOrInsert_running) {
+			setTimeout(function() { blockForDatabase(fn).apply(null, args) }, 50);
+			return;
+		}
+		fn.apply(null, args);
+	}
+}
+var already_finalized = false;
+var finalizeImmediate = blockForDatabase(function finalizeImmediate() {
+	if (already_finalized) {
+		console.log("already finalized, ignoring")
 		return;
 	}
+	already_finalized = true;
+	document.getElementById("odk-container").innerHTML = _t("Saving...")
 	// Make sure all required fields were provided
 	for (var i = 0; i < requireds.length; i++) {
 		var column = requireds[i][0];
@@ -1246,6 +1260,7 @@ var finalizeImmediate = function finalizeImmediate() {
 	}
 	odkCommon.setSessionVariable(table_id + ":" + row_id + ":global_screen_idx", 0);
 	// Escape the LIMIT 1
+	document.getElementById("odk-container").innerHTML = _t("Finalizing...")
 	odkData.arbitraryQuery(table_id, "UPDATE " + table_id + " SET _savepoint_type = ? WHERE _id = ?;--", ["COMPLETE", row_id], 1000, 0, function success_callback(d) {
 		console.log("Set _savepoint_type to COMPLETE successfully");
 		page_back();
@@ -1257,8 +1272,9 @@ var finalizeImmediate = function finalizeImmediate() {
 		} else {
 			noop = true
 		}
+		update(0);
 	});
-};
+});
 // Cancels the add and deletes the intermediate row, asks for confirmation if we've already inserted data but if they didn't type anything yet, it doesn't
 var cancel = function cancel() {
 	/*
@@ -1438,7 +1454,7 @@ var checkIfCurrentScreenIsUserBranch = function checkIfCurrentScreenIsUserBranch
 		}
 	}
 }
-var addOrEdit = function addOrEdit(operation, subtable, subform, defaults, id) {
+var addOrEdit = blockForDatabase(function addOrEdit(operation, subtable, subform, defaults, id) {
 	if (operation == "add") {
 		var id = newGuid();
 		odkData.addRow(subtable, defaults, id, function(d) {
@@ -1450,4 +1466,4 @@ var addOrEdit = function addOrEdit(operation, subtable, subform, defaults, id) {
 		if (subform == subtable) subform = "index";
 		odkTables.launchHTML(null, "config/assets/formgen/" + subtable + "/" + subform + ".html#" + id)
 	}
-}
+});
