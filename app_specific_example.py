@@ -156,6 +156,23 @@ helper.make_table("selects_list.html", "", "", """
 	table_id = "selects";
 """, "", "")
 
+# client list view - untested
+# 	add client - untested
+# 	graph view - untested
+# 	client detail view - untested
+# 		styling - untested
+# 		client forms - untested
+# 			home locator - untested
+# 				geopoints list view with where clause - untested
+# 					map view - untested
+# 					add waypoint - untested
+# 					geopoint list view - untested
+# 						styling - untested
+# 			six week - untested
+# 			six month - untested
+# 		partner forms - untested
+# 			partner screening - untested
+# 			six month - untested
 
 helper.make_tabs("index.html", """
 	var tabs = [
@@ -163,7 +180,7 @@ helper.make_tabs("index.html", """
 		["Tea", "th_index.html"],
 		["Selects", "selects_index.html"],
 		["Plot", "plot_index.html"],
-		["Hope", "hope_index.html"]
+		//["Hope", "hope_index.html"]
 	]
 """, "")
 no_button_title = """
@@ -585,8 +602,44 @@ helper.make_table("femaleClients_list.html", "", "", """
 	});
 	document.insertBefore(graph, document.getElementById("list"));
 """, "", "")
+helper.make_table("geopoints_list.html", "", """
+	.header, .search {
+		display: none;
+	}
+""", """
+	display_col = "client_id";
+	global_join = "femaleClients ON femaleClients.client_id = geopoints.client_id"
+	global_which_cols_to_select = "geopoints.*"
+	var transpo = function(e, c, d, i) {
+		if (c == null) c = d.getData(i, "transportation_mode_other");
+		return "Transportation: " + c;
+	}
+	display_subcol = [["Step: ", "step", true], [transpo, "transportation_mode", true]];
+	table_id = "geopoints";
+
+	var add = document.createElement("button");
+	add.style.display = "block";
+	add.style.width = "70%";
+	add.innerText = "Add Waypoint";
+	add.addEventListener("click", function() {
+		alert("TODO"); // CACHED_D DOESN'T EXIST THIS IS A LIST VIEW
+		var id = newGuid();
+		odkData.addRow("geopoints", {"client_id": cached_d.getData(0, "client_id", "_id": id)}
+		odkTables.launchHTML(null, "config/assets/formgen/geopoints/index.html#" + id);
+	});
+	var map = document.createElement("button");
+	map.style.display = "block";
+	map.style.width = "70%";
+	map.innerText = "Map View";
+	map.addEventListener("click", function() {
+		alert("TODO");
+		odkTables.openTableToMapView(null, global_where_clause, [global_where_arg], clean_href() + "#" + table_id + "/" + global_where_clause + "/" + global_where_arg);
+	});
+	document.insertBefore(map, document.getElementById("list"));
+	document.insertBefore(add, document.getElementById("list"));
+""", "", "")
 helper.static_files.append("hope_graph_view.html")
-helper.make_detail("femaleClients_detail", """
+helper.make_detail("femaleClients_detail.html", """
 	<button disabled class='title-button'>Client Forms</button>
 		<button onClick='homeLocator();' class='smaller-button'>Home Locator</button>
 		<button onClick='newInstance("femaleClients", "client6Week");' class='smaller-button'>Six Week Follow-Up</button>
@@ -595,8 +648,13 @@ helper.make_detail("femaleClients_detail", """
 		<button onClick='newInstance("maleClients", "screenPartner");' class='smaller-button'>Partner Screening</button>
 		<button onClick='newInstance("maleClients", "partner6Month");' class='smaller-button'>Six Month Follow-Up</button>
 """, """
+	body {
+		text-align: center;
+	}
 	ul {
 		list-style-type: none;
+		border: 1px solid black;
+		opacity: 0.6;
 	}
 	.title-button, .smaller-button {
 		display: block;
@@ -626,6 +684,42 @@ helper.make_detail("femaleClients_detail", """
 		odkTables.launchHTML(null, "config/assets/formgen/" + table + "/" + form + ".html#" + newGuid();
 	};
 	var homeLocator = function homeLocator() {
-		alert("TODO");
+		var where = "client_id = ?"
+		var args = [cached_d.getData(0, "client_id")]
+		odkTables.openTableToListView(null, "geopoints", where, args, "config/assets/geopoints_list.html#geopoints/" + where + "/" + args[0]);
 	}
 ""","");
+helper.make_detail("geopoints_detail.html", "", """
+	body {
+		text-align: center;
+	}
+	ul {
+		list-style-type: none;
+		border: 1px solid black;
+		opacity: 0.6;
+	}
+""", """
+	main_col = "client_id";
+	table_id = "geopoints";
+	colmap = [
+		["client_id", function(e, c, d) { return c }],
+		["transportation_mode", function(e, c, d) {
+			if (c == null) c = d.getData(0, "transportation_mode_other")
+			return "MODE OF TRANSPORTATION: " + c;
+		}],
+		["description", "DESCRIPTION"],
+		["coordinates_latitude", function(e, c, d) {
+		 	return "COORDINATES: " + c + " " + d.getData(0, "coordinates_longitude");
+		 }],
+	];
+	var newInstance = function(table, form) {
+		if (form == table) form = "index";
+		odkTables.launchHTML(null, "config/assets/formgen/" + table + "/" + form + ".html#" + newGuid();
+	};
+	var homeLocator = function homeLocator() {
+		var where = "client_id = ?"
+		var args = [cached_d.getData(0, "client_id")]
+		odkTables.openTableToListView(null, "geopoints", where, args, "config/assets/geopoints_list.html#geopoints/" + where + "/" + args[0]);
+	}
+""","");
+
