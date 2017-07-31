@@ -42,18 +42,17 @@ changeElement: function(elem, newdata) {
 
 	var date = odkCommon.toDateFromOdkTimeStamp(newdata);
 	//date = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate(), date.getHours(), date.getMinutes(), date.getSeconds(), date.getMilliseconds()));
-	if (date == null) date = new Date();
-	var year = Number(newdata.split("-")[0])
-	var month = Number(newdata.split("-")[1])
-	var day = Number(newdata.split("-")[2].split("T")[0])
-	elem.setAttribute("data-hour", date.getHours());
-	elem.setAttribute("data-minute", date.getMinutes());
-	elem.setAttribute("data-sec", date.getSeconds());
-	elem.setAttribute("data-millis", date.getMilliseconds());
-	if (newdata == null) {
-		year = -1;
-		month = -1;
-		day = -1;
+	var year = -1;
+	var month = -1;
+	var day = -1;
+	if (newdata != null) {
+		year = Number(newdata.split("-")[0])
+		month = Number(newdata.split("-")[1])
+		day = Number(newdata.split("-")[2].split("T")[0])
+		elem.setAttribute("data-hour", date.getHours());
+		elem.setAttribute("data-minute", date.getMinutes());
+		elem.setAttribute("data-sec", date.getSeconds());
+		elem.setAttribute("data-millis", date.getMilliseconds());
 	}
 	elem.getElementsByTagName("select")[0].selectedIndex = year - 1970 + 1;
 	elem.getElementsByTagName("select")[1].selectedIndex = month;
