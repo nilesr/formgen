@@ -359,7 +359,7 @@ def generate_all(utils, filenames):
 				for query in formDef["xlsx"]["queries"]:
 					# Try and guess which column to use as the displayed text in the populated options, usually doesn't work and defaults to "_id"
 					if "query_type" in query and query["query_type"] == "linked_table":
-						query["yanked_col"] = utils.yank_instance_col(*(2*[query["linked_table_id"]]))
+						query["yanked_col"] = utils.yank_instance_col(query["linked_table_id"])
 				queries = json.dumps(formDef["xlsx"]["queries"]);
 			if "choices" in formDef["xlsx"]:
 				choices = json.dumps(formDef["xlsx"]["choices"]);

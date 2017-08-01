@@ -19,7 +19,7 @@ class utils():
 		self.filenames = []
 		self.custom_prompt_types = [];
 	# Tries to pull the main display column from the formDef, almost always doesn't work
-	def yank_instance_col(self, table, form): return self.yank_setting(table, form, "instance_name", "_id");
+	def yank_instance_col(self, table): return self.yank_setting(table, table, "instance_name", "_id");
 	# Tries to pull the requested setting from the formDef, or return the default argument if it can't find it
 	def yank_setting(self, table, form, setting, default):
 		formDef = json.loads(open(appdesigner + "/app/config/tables/" + table + "/forms/" + form + "/formDef.json", "r").read())
