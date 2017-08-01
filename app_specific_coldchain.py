@@ -460,11 +460,28 @@ menu[2][menu[2].length - 1] = ["Administrative Actions", null, [
 		//["Add Refrigerator", "_js", addrf]
 	]]
 
+var make_path_from_string = function make_path_from_string(str, incomplete) {
+	var submenu = make_submenu(incomplete);
+	if (submenu[0].toUpperCase() == str.toUpperCase()) {
+		return incomplete;
+	}
+	if (typeof(submenu[2]) != typeof([])) {
+		return null;
+	}
+	for (var i = 0; i < submenu[2].length; i++) {
+		var found = make_path_from_string(str, incomplete.concat(i));
+		if (found != null) {
+			return found;
+		}
+	}
+	return null;
+}
 if (window.location.hash.substr(1).length == 0) {
 	var region_as_role = "";
 	var all_regions = [];
 	var rolesDone = regionsDone = false;
 	var redirect = function redirect() {
+		/*
 		if (!(rolesDone && regionsDone)) return;
 		var region = "";
 		for (var i = 0; i < all_regions.length; i++) {
@@ -478,7 +495,11 @@ if (window.location.hash.substr(1).length == 0) {
 		var html = "config/assets/admin_region.html#" + region + ":";
 		window.location.href = "/coldchain/" + html
 		//odkTables.launchHTML(null, html);
+		*/
+		menu_path = make_path_from_string(region_as_role, []);
+		doMenu();
 	}
+	/*
 	odkData.arbitraryQuery("health_facility", "SELECT DISTINCT admin_region FROM health_facility", [], 10000, 0, function(d) {
 		for (var i = 0; i < d.getCount(); i++) {
 			all_regions = all_regions.concat(d.getData(i, "admin_region"));
@@ -488,15 +509,21 @@ if (window.location.hash.substr(1).length == 0) {
 	}, function(e) {
 		alert(e);
 	});
+	*/
 	odkData.getRoles(function(r) {
 		r = r.resultObj.metadata.roles
+		// TEMP DEBUG TEST
+		//r = ["GROUP_REGION_NORTH"]
+		if (r == null) return;
 		for (var i = 0; i < r.length; i++) {
-			if (r[i].indexOf("GROUP_ADMIN_REGION_") == 0) {
-				var region = r[i].replace("GROUP_ADMIN_REGION_", "");
+			//if (r[i].indexOf("GROUP_ADMIN_REGION_") == 0) {
+			if (r[i].indexOf("GROUP_REGION_") == 0) {
+				//var region = r[i].replace("GROUP_ADMIN_REGION_", "");
+				var region = r[i].replace("GROUP_REGION_", "");
 				// replace all occurrences
 				region = region.replace(/_/g, " ");
 				region_as_role = region;
-				menu = [_tu("Loading..."), null, []]
+				//menu = [_tu("Loading..."), null, []]
 				doMenu();
 				rolesDone = true;
 				redirect();
