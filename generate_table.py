@@ -27,7 +27,6 @@ var display_cols = """ + json.dumps(cols) + """
 // List of tables we can add/edit with formgen, if the table isn't found in this list, we'll use survey
 var allowed_tables = """ + json.dumps(utils.get_allowed_tables()) + """
 // A map of table ids to tokens that can be used to localize their display name
-var localized_tables = """ + json.dumps(utils.get_localized_tables()) + """;
 var display_col_wrapper = null;
 var clicked = function(table_id, row_id) {
 	odkTables.openDetailView({}, table_id, row_id);
@@ -39,6 +38,8 @@ var customJsSearch = function customJsSearch() {
 	"""+customJsSearch+"""
 }
 """ + customJsGeneric + """
+
+var embedded = false;
 		</script>
 		<script type="text/javascript" src="generate_table.js"></script>
 	</head>

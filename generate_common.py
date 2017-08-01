@@ -15,5 +15,7 @@ var cols_that_need_choices = """+json.dumps(which)+""";
 var appname = """ + json.dumps(utils.appname) + """;
 var custom_prompt_types = {""" + js_defs + """};
 var all_custom_prompt_types = """ + json.dumps(all_custom_prompt_types) + """;
+var all_tables = """ + json.dumps(utils.get_tables()) + """;
+var localized_tables = """ + json.dumps(utils.get_localized_tables()) + """;
 var user_translations = """+json.dumps(user_translations) + ";"
 	open(filename, "w").write(basejs)

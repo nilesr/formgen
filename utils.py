@@ -71,6 +71,11 @@ class utils():
 
 		self.filenames.append("table.html")
 		generate_table.make(self, "table.html", "", "", "", "", "")
+		self.filenames.append("table_slave.html")
+		appname_save = self.appname
+		self.appname = "app"
+		generate_table.make(self, "table_slave.html", "", "", "embedded = true;", "", "")
+		self.appname = appname_save
 
 		self.filenames.append("tables.html")
 		generate_tables.make(self, "tables.html");
@@ -98,6 +103,7 @@ class utils():
 			command = ["adb", "push", f, "/sdcard/opendatakit/" + appname + "/config/assets/" + f]
 			do_command(push, command)
 			dest = ad_subpath + "/" + "/".join(f.split("/")[:-1])
+			if dest in ["table_slave.html"]: continue
 			print("mkdir -p " + dest);
 			try:
 				os.makedirs(dest)
