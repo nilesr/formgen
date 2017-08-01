@@ -279,7 +279,7 @@ helper.make_index("plot_index.html", """
 	}
 	menu = ["Plots Demo", null, [
 		["View Plots", "plot", ""],
-		["View Plots on a Map", "_js", function() { odkTables.openTableToMapView(null, "plot", null, null, "config/assets/plot_list.html#plot") }],
+		["View Plots on a Map", "_js", function() { odkTables.openTableToMapView(null, "plot", null, null, "config/assets/plot_map.html#plot") }],
 		["View Visits", "visit", ""],
 		["View Reports", null, [
 			["View Overall Data", "_html", "config/assets/view_overall_data.html"],
@@ -472,14 +472,11 @@ window.iframeOnly = true;
 window.all_colors = ["#85ac85", "#993300", "#37393d", "#e58755", "#ff8080", "#4891d9", "#cc2e2d", "#9900ff", "#1f4864"]
 """)
 
-import copy
-def extend(filename, newfilename, newJsOl, newJsGeneric = ""):
-	new = copy.deepcopy([x for x in helper.queue if x[1] == filename][0])
-	new[1] = newfilename
-	new[4] += newJsOl
-	new[6] += newJsGeneric
-	helper.queue.append(new);
-extend("plot_list.html", "single_plot_data_list.html", """
+helper.extend("plot_list.html", "plot_map.html", """
+	forMapView = true;
+""")
+
+helper.extend("plot_list.html", "single_plot_data_list.html", """
 		clicked = function clicked(table_id, row_id, d, i) {
 			odkTables.launchHTML(null, "config/assets/plot_data.html#" + d.getData(i, "plot_name"));
 		}
@@ -489,7 +486,7 @@ helper.make_table("compare_list_base.html", "", "", """
 	display_subcol = [];
 	table_id = "plot";
 """, "", "")
-extend("compare_list_base.html", "compare_list_planting.html", """
+helper.extend("compare_list_base.html", "compare_list_planting.html", """
 		display_col = "planting";
 		clicked = function clicked(table_id, row_id, d, i) {
 			odkTables.launchHTML(null, "config/assets/plot_data.html#" + all_with_this_type[d.getData(i, "planting")].join("/"));
@@ -506,7 +503,7 @@ extend("compare_list_base.html", "compare_list_planting.html", """
 """, newJsGeneric = """
 	var all_with_this_type = {};
 """)
-extend("compare_list_base.html", "compare_list_soil.html", """
+helper.extend("compare_list_base.html", "compare_list_soil.html", """
 		display_col = "soil";
 		clicked = function clicked(table_id, row_id, d, i) {
 			odkTables.launchHTML(null, "config/assets/plot_data.html#" + all_with_this_type[d.getData(i, "soil")].join("/"));

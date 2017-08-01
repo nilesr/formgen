@@ -40,6 +40,7 @@ var customJsSearch = function customJsSearch() {
 """ + customJsGeneric + """
 
 var embedded = false;
+var forMapView = false;
 		</script>
 		<script type="text/javascript" src="generate_table.js"></script>
 	</head>

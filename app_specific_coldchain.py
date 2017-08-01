@@ -64,6 +64,10 @@ helper.make_table("aa_health_facility_list.html", "", "", global_allowed_tables 
 	document.getElementById("add").style.display = "none";
 """, "", "")
 
+helper.extend("aa_health_facility_list.html", "aa_health_facility_map.html", """
+	forMapView = true;
+""")
+
 helper.make_table("aa_m_logs_list.html", "", "", global_allowed_tables + global_block_add + """
 	var notes_cb = function notes_cb(e, notes) {
 		if (notes == undefined || notes == null) {
@@ -477,7 +481,7 @@ var make_path_from_string = function make_path_from_string(str, incomplete) {
 	return null;
 }
 if (window.location.hash.substr(1).length == 0) {
-	var region_as_role = "";
+	var region_as_role = [];
 	var all_regions = [];
 	var rolesDone = regionsDone = false;
 	var redirect = function redirect() {
@@ -496,7 +500,15 @@ if (window.location.hash.substr(1).length == 0) {
 		window.location.href = "/coldchain/" + html
 		//odkTables.launchHTML(null, html);
 		*/
-		menu_path = make_path_from_string(region_as_role, []);
+		if (region_as_role.length == 0) return;
+		var best = make_path_from_string(region_as_role[0], [])
+		for (var i = 1; i < region_as_role.length; i++) {
+			var path = make_path_from_string(region_as_role[i], []);
+			if (path.length < best.length) {
+				best = path;
+			}
+		}
+		menu_path = best;
 		doMenu();
 	}
 	/*
@@ -513,7 +525,7 @@ if (window.location.hash.substr(1).length == 0) {
 	odkData.getRoles(function(r) {
 		r = r.resultObj.metadata.roles
 		// TEMP DEBUG TEST
-		//r = ["GROUP_REGION_NORTH"]
+		//r = ["GROUP_REGION_SOUTH_WEST", "GROUP_REGION_SOUTH_EAST", "GROUP_REGION_SOUTH"]
 		if (r == null) return;
 		for (var i = 0; i < r.length; i++) {
 			//if (r[i].indexOf("GROUP_ADMIN_REGION_") == 0) {
@@ -522,14 +534,11 @@ if (window.location.hash.substr(1).length == 0) {
 				var region = r[i].replace("GROUP_REGION_", "");
 				// replace all occurrences
 				region = region.replace(/_/g, " ");
-				region_as_role = region;
-				//menu = [_tu("Loading..."), null, []]
-				doMenu();
-				rolesDone = true;
-				redirect();
-				break;
+				region_as_role = region_as_role.concat(region);
 			}
 		}
+		rolesDone = true;
+		redirect();
 	});
 }
 		""", hallway)
@@ -556,7 +565,10 @@ list_views = {
 """ + make_val_accepting_index("""
 var subquery = "(SELECT date_serviced FROM m_logs WHERE m_logs.refrigerator_id = refrigerators.refrigerator_id ORDER BY date_serviced DESC LIMIT 1)"
 menu = [val, null, [
-	["View All Health Facilities", "_js", function() { open_simple_map("health_facility", "admin_region = ?", [val]); }],
+	["View All Health Facilities", "_js", function() {
+		var where = "admin_region = ?"
+		odkTables.openTableToMapView(null, "health_facility", where, [val], "config/assets/aa_health_facility_map.html" + "#health_facility/" + where + "/" + val);
+	}],
 	["View All Refrigerators", "refrigerators", "STATIC/SELECT * FROM refrigerators JOIN health_facility ON refrigerators.facility_row_id = health_facility._id JOIN refrigerator_types ON refrigerators.model_row_id = refrigerator_types._id WHERE health_facility.admin_region = ?/[\\""+val+"\\"]/"+"refrigerators in health facilities in the admin region ?"],
 	["View All Refrigerators Not Serviced In The Last Six Months", "refrigerators", "STATIC/SELECT * FROM refrigerators JOIN health_facility ON refrigerators.facility_row_id = health_facility._id JOIN refrigerator_types ON refrigerators.model_row_id = refrigerator_types._id WHERE health_facility.admin_region = ? AND ("+subquery+" IS NULL OR (julianday(datetime('now')) - julianday("+subquery+")) > (6 * 30))/[\\""+val+"\\"]/refrigerators in health facilities in the admin region ? that haven't been serviced in the last 180 days or have no service records"],
 	["Filter By Type", "_html", "config/assets/admin_region_filter.html#" + val + ":"]

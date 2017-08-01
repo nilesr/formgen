@@ -1,4 +1,4 @@
-import sys, os, subprocess
+import sys, os, subprocess, copy
 import generate_table
 import generate_detail
 import generate_index
@@ -37,4 +37,10 @@ class helper():
 				sys.exit(0);
 			filenames.append(q[1])
 		return filenames, self.translations, self.static_files
+	def extend(helper, filename, newfilename, newJsOl, newJsGeneric = ""):
+		new = copy.deepcopy([x for x in helper.queue if x[1] == filename][0])
+		new[1] = newfilename
+		new[4] += newJsOl
+		new[6] += newJsGeneric
+		helper.queue.append(new);
 
