@@ -582,23 +582,16 @@ helper.make_table("femaleClients_list.html", "", "", """
 	display_subcol = [["Age: ", "age", true], ["Randomization: ", "randomization", true]];
 	table_id = "femaleClients";
 
-	var add = document.createElement("button");
-	add.style.display = "block";
-	add.style.width = "70%";
-	add.innerText = "Add Client";
-	add.addEventListener("click", function() {
+	document.getElementById("search").insertAdjacentHTML("beforeend", "<button onClick='addClient()' style='margin-left: 15%; min-height: 1.5em; width: 70%; display: block;'>Add Client</button>")
+	document.getElementById("search").insertAdjacentHTML("beforeend", "<button onClick='graphView()' style='margin-left: 15%; min-height: 1.5em; width: 70%; display: block;'>Graph View</button>")
+""", "", """
+	var addClient = function() {
 		odkTables.launchHTML(null, "config/assets/formgen/femaleClients/screenClient.html#" + newGuid());
-	});
-	document.insertBefore(add, document.getElementById("list"));
-	var graph = document.createElement("button");
-	graph.style.display = "block";
-	graph.style.width = "70%";
-	graph.innerText = "Graph View";
-	graph.addEventListener("click", function() {
-		odkTables.launchHTML(null, "config/assets/hope_graph_view.html" + newGuid());
-	});
-	document.insertBefore(graph, document.getElementById("list"));
-""", "", "")
+	}
+	var graphView = function() {
+		odkTables.launchHTML(null, "config/assets/hope_graph_view.html");
+	}
+""")
 helper.make_table("geopoints_list.html", "", """
 	.header, .search {
 		display: none;

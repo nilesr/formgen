@@ -3,7 +3,7 @@ cols = {}
 def make(utils, filename, customHtml, customCss, customJsOl, customJsSearch, customJsGeneric):
 	tables = utils.get_tables();
 	for table in tables:
-		cols[table] = utils.yank_instance_col(table, table)
+		cols[table] = utils.yank_instance_col(table)
 	basehtml = """
 <!doctype html>
 """ + utils.warning + """

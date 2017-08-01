@@ -132,6 +132,8 @@ You can change the behavior of clicking on a row by changing the global `clicked
 
 If you wanted to open a detail with sub list view or something, just set clicked to something different in your customJsOl (without the leading `var`)
 
+TODO document `forMapView`
+
 ### Detail views
 
 For `make_detail`, you almost certainly need to set `main_col` to something, so for tea houses
