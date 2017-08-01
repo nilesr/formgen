@@ -336,6 +336,11 @@ and nothing else.
 ### Big stuff
 
 - custom handlebars templates (relatively easy)
+- port hope study
+- list view generator in app designer
+	- global which cols to select
+	- callback functions
+- detail view generator
 
 ### Small stuff
 
