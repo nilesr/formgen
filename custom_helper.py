@@ -34,7 +34,7 @@ class helper():
 				generate_tabs.make(utils, *(q[1:]))
 			else:
 				print("Bad type in queue " + q[0]);
-				sys.exit(0);
+				sys.exit(1);
 			filenames.append(q[1])
 		return filenames, self.translations, self.static_files
 	def extend(helper, filename, newfilename, newJsOl, newJsGeneric = ""):
