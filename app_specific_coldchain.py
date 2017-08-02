@@ -498,7 +498,7 @@ if (window.location.hash.substr(1).length == 0) {
 			var region = r[i].replace("GROUP_REGION_", "");
 			// replace all occurrences
 			region = region.replace(/_/g, " ");
-			region_as_role region;
+			region_as_role = region;
 		}
 		redirect();
 	});
