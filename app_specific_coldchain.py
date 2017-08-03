@@ -52,7 +52,8 @@ helper.make_table("aa_refrigerators_list.html", "", "", global_allowed_tables + 
 	allowed_group_bys = [["facility_row_id", "Facility"], ["model_row_id", "Model"], "reason_not_working", ["utilization", "Use"], "working_status", "year"]
 """, "", "")
 
-hf_cols_to_select = "*, (SELECT COUNT(*) FROM refrigerators WHERE facility_row_id = health_facility._id) AS refrigerator_count"
+#hf_cols_to_select = "*, (SELECT COUNT(*) FROM refrigerators WHERE facility_row_id = health_facility._id) AS refrigerator_count"
+hf_cols_to_select = "*"
 
 helper.make_table("aa_health_facility_list.html", "", "", global_allowed_tables + global_block_add + """
 	display_col = "facility_name"
@@ -60,7 +61,10 @@ helper.make_table("aa_health_facility_list.html", "", "", global_allowed_tables 
 	allowed_group_bys = ["admin_region", "climate_zone", "delivery_type", "electricity_source", ["facility_ownership", "Ownership"], "facility_type", "storage_type", "solar_suitable_climate", "solar_suitable_site", "vaccine_supply_mode", "vaccine_reserve_stock_requirement"];
 
 	global_which_cols_to_select = \""""+hf_cols_to_select+"""\"
-	display_subcol = [["Facility ID: ", "facility_id", true], ["Refrigerators: ", "refrigerator_count", true]]
+	display_subcol = [
+		["Facility ID: ", "facility_id", true],
+		//["Refrigerators: ", "refrigerator_count", true]
+	]
 	document.getElementById("add").style.display = "none";
 """, "", "")
 
