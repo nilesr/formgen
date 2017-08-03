@@ -229,12 +229,12 @@ helper.make_detail("aa_refrigerator_types_detail.html", """
 	colmap = [
 		["manufacturer", build_generic_callback("manufacturer", true)],
 		["power_source", build_generic_callback("power_source", function(i) { return pretty(jsonParse(i).join(", ")); })],
-		["refrigerator_gross_volume", build_generic_callback("refrigerator_gross_volume", " m<sup>3</sup>")],
-		["freezer_gross_volume", build_generic_callback("freezer_gross_volume", " m<sup>3</sup>")],
+		["refrigerator_gross_volume", build_generic_callback("refrigerator_gross_volume", " litres")],
+		["freezer_gross_volume", build_generic_callback("freezer_gross_volume", " litres")],
 		["equipment_type", build_generic_callback("equipment_type", true)],
 		["climate_zone", build_generic_callback("climate_zone", true)],
-		["refrigerator_net_volume", build_generic_callback("refrigerator_net_volume", " m<sup>3</sup>")],
-		["freezer_net_volume", build_generic_callback("freezer_net_volume", " m<sup>3</sup>")],
+		["refrigerator_net_volume", build_generic_callback("refrigerator_net_volume", " litres")],
+		["freezer_net_volume", build_generic_callback("freezer_net_volume", " litres")],
 		["model_id", mid_callback],
 		["catalog_id", build_generic_callback("catalog_id", true)],
 		["refrigerator_picture", function(e,c,d){document.getElementById("inject-refrigerator_picture").appendChild(c)}]
@@ -494,13 +494,20 @@ if (window.location.hash.substr(1).length == 0) {
 	}
 	odkData.getDefaultGroup(function(r) {
 		r = r.getDefaultGroup();
-		if (r.indexOf("GROUP_REGION_") == 0) {
+		if (r == null) {
+			menu = ["Not logged in!", null, [
+				["Log in", "_js", function() {
+					odkCommon.doAction(null, "org.opendatakit.services.sync.actions.activities.SyncActivity", {"extras": {"showLogin": "true"}, "componentPackage": "org.opendatakit.services", "componentActivity": "org.opendatakit.services.sync.actions.activities.SyncActivity"});
+				}]
+			]];
+			doMenu();
+		} else if (r.indexOf("GROUP_REGION_") == 0) {
 			var region = r.replace("GROUP_REGION_", "");
 			// replace all occurrences
 			region = region.replace(/_/g, " ");
 			region_as_role = region;
+			redirect();
 		}
-		redirect();
 	});
 }
 		""", hallway)
@@ -999,5 +1006,17 @@ helper.translations = {
 	" (locked)": {"text": {
 		"default": True,
 		"es": " (fijado)"
+	}},
+	" litres": {"text": {
+		"default": True,
+		"es": ""
+	}},
+	"Not logged in!": {"text": {
+		"default": True,
+		"es": ""
+	}},
+	"Log in": {"text": {
+		"default": True,
+		"es": ""
 	}}
 }
