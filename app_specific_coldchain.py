@@ -494,8 +494,8 @@ if (window.location.hash.substr(1).length == 0) {
 	}
 	odkData.getDefaultGroup(function(r) {
 		r = r.getDefaultGroup();
-		if (r[i].indexOf("GROUP_REGION_") == 0) {
-			var region = r[i].replace("GROUP_REGION_", "");
+		if (r.indexOf("GROUP_REGION_") == 0) {
+			var region = r.replace("GROUP_REGION_", "");
 			// replace all occurrences
 			region = region.replace(/_/g, " ");
 			region_as_role = region;
@@ -945,8 +945,8 @@ helper.translations = {
 		"es": "2 años"
 	}},
 	"1 years": {"text": {
-		"default": True,
-		"es": "1 años"
+		"default": "1 year",
+		"es": "1 año"
 	}},
 	"Within 6 months": {"text": {
 		"default": True,
@@ -996,4 +996,8 @@ helper.translations = {
 		"default": True,
 		"es": ""
 	}},
+	" (locked)": {"text": {
+		"default": True,
+		"es": " (fijado)"
+	}}
 }
