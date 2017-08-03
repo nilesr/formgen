@@ -37,9 +37,10 @@ class helper():
 				sys.exit(1);
 			filenames.append(q[1])
 		return filenames, self.translations, self.static_files
-	def extend(helper, filename, newfilename, newJsOl, newJsGeneric = ""):
+	def extend(helper, filename, newfilename, newJsOl, newJsGeneric = "", newCss = ""):
 		new = copy.deepcopy([x for x in helper.queue if x[1] == filename][0])
 		new[1] = newfilename
+		new[3] += newCss
 		new[4] += newJsOl
 		new[6] += newJsGeneric
 		helper.queue.append(new);

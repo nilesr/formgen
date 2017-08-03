@@ -70,6 +70,10 @@ helper.make_table("aa_health_facility_list.html", "", "", global_allowed_tables 
 
 helper.extend("aa_health_facility_list.html", "aa_health_facility_map.html", """
 	forMapView = true;
+""", newCss = """
+#header, #search {
+	display: none;
+}
 """)
 
 helper.make_table("aa_m_logs_list.html", "", "", global_allowed_tables + global_block_add + """
