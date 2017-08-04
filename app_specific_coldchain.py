@@ -68,7 +68,7 @@ helper.make_table("aa_health_facility_list.html", "", "", global_allowed_tables 
 	document.getElementById("add").style.display = "none";
 """, "", "")
 
-helper.extend("aa_health_facility_list.html", "aa_health_facility_map.html", """
+helper.extend("aa_health_facility_list.html", "hack_for_hf_map.html", """
 	forMapView = true;
 """, newCss = """
 #header, #search {
@@ -544,7 +544,7 @@ var subquery = "(SELECT date_serviced FROM m_logs WHERE m_logs.refrigerator_id =
 menu = [val, null, [
 	["View All Health Facilities", "_js", function() {
 		var where = "admin_region = ?"
-		odkTables.openTableToMapView(null, "health_facility", where, [val], "config/assets/aa_health_facility_map.html" + "#health_facility/" + where + "/" + val);
+		odkTables.openTableToMapView(null, "health_facility", where, [val], "config/assets/hack_for_hf_map.html" + "#health_facility/" + where + "/" + val);
 	}],
 	["View All Refrigerators", "refrigerators", "STATIC/SELECT * FROM refrigerators JOIN health_facility ON refrigerators.facility_row_id = health_facility._id JOIN refrigerator_types ON refrigerators.model_row_id = refrigerator_types._id WHERE health_facility.admin_region = ?/[\\""+val+"\\"]/"+"refrigerators in health facilities in the admin region ?"],
 	["View All Refrigerators Not Serviced In The Last Six Months", "refrigerators", "STATIC/SELECT * FROM refrigerators JOIN health_facility ON refrigerators.facility_row_id = health_facility._id JOIN refrigerator_types ON refrigerators.model_row_id = refrigerator_types._id WHERE health_facility.admin_region = ? AND ("+subquery+" IS NULL OR (julianday(datetime('now')) - julianday("+subquery+")) > (6 * 30))/[\\""+val+"\\"]/refrigerators in health facilities in the admin region ? that haven't been serviced in the last 180 days or have no service records"],
@@ -617,6 +617,9 @@ list_views = {
 		""")
 
 helper.make_graph("cc_graph.html", hallway, "");
+
+helper.static_files.append("hack_for_hf_map.js")
+helper.static_files.append("hack_for_hf_map.html")
 
 helper.translations = {
 	"PATH Cold Chain Demo": {"text": {
