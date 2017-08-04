@@ -1008,19 +1008,19 @@ helper.translations = {
 	}},
 	"maintenance records for the selected refrigerator": {"text": {
 		"default": True,
-		"es": ""
+		"es": "recordias de mantener/servicio para el frigorífico seleccionado"
 	}},
 	" litres": {"text": {
 		"default": True,
-		"es": ""
+		"es": " litros"
 	}},
 	"Not logged in!": {"text": {
 		"default": True,
-		"es": ""
+		"es": "¡Sin iniciar sesión!"
 	}},
 	"Log in": {"text": {
 		"default": True,
-		"es": ""
+		"es": "Iniciar Sesion"
 	}},
 	"Health Facilities (Advanced)": {"text": {
 		"default": True,
