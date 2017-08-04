@@ -497,6 +497,7 @@ if (window.location.hash.substr(1).length == 0) {
 			return;
 		}
 		var path = make_path_from_string(region_as_role, [])
+		// TODO CHECK IF path IS NULL, IF IT IS WE COULDN'T FIND THE REGION
 		menu_path = path;
 		doMenu();
 	}
@@ -595,15 +596,15 @@ list_views = {
 				menu[2] = menu[2].concat(0);
 				(function(val, where, args, count, id) {
 					var cb = null;
-					if (count == 1) {
+					//if (count == 1) {
+						//cb = function() {
+							//odkTables.launchHTML(null, "config/assets/aa_health_facility_detail.html#health_facility/" + id);
+						//};
+					//} else {
 						cb = function() {
-							odkTables.launchHTML(null, "config/assets/aa_health_facility_detail.html#health_facility/" + id);
-						};
-					} else {
-						cb = function() {
-							odkTables.openTableToMapView(null, "health_facility", where, args, list_views["health_facility"] + "#health_facility/STATIC/SELECT """+hf_cols_to_select+""" FROM health_facility WHERE " + where + "/" + JSON.stringify(args) + "/" + hr_text);
+							odkTables.openTableToMapView(null, "health_facility", where, args, "hack_for_hf_map.html#health_facility/STATIC/SELECT """+hf_cols_to_select+""" FROM health_facility WHERE " + where + "/" + JSON.stringify(args) + "/" + hr_text);
 						}
-					}
+					//}
 					menu[2][menu[2].length - 1] = [_tu("View ") + _tc(d, "facility_type", ftype) + (count == 1 ? "" : "s") + " (" + count + ")", "_js", cb]
 				})(val, where, args, count, id);
 			}
