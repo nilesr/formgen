@@ -409,7 +409,7 @@ as_list[2].append(
 		]],
 		["View Refrigerator Models", "refrigerator_types", "equipment_type"],
 		["More Options", None, [
-			["View Health Facilities", "health_facility", [
+			["Health Facilities (Advanced)", "health_facility", [
 				["View All", "health_facility", ""],
 				[True, "health_facility", "admin_region"],
 				[True, "health_facility", "facility_type"],
@@ -423,7 +423,7 @@ as_list[2].append(
 					[True, "health_facility", "vaccine_supply_mode"],
 					["By Reserve Stock Requirement", "health_facility", "vaccine_reserve_stock_requirement"]
 				]]
-			]], ["View Refrigerators", "refrigerators", [
+			]], ["Refrigerators (Advanced)", "refrigerators", [
 				["View All", "refrigerators", ""],
 				["By Facility", "refrigerators", "facility_name"],
 				["By Model", "refrigerators", "catalog_id"],
@@ -433,7 +433,7 @@ as_list[2].append(
 					[True, "refrigerators", "working_status"],
 					[True, "refrigerators", "reason_not_working"]
 				]]
-			]], ["View Refrigerator Models", "refrigerator_types", [
+			]], ["Models (Advanced)", "refrigerator_types", [
 				["View All", "refrigerator_types", ""],
 				[True, "refrigerator_types", "manufacturer"],
 				[True, "refrigerator_types", "equipment_type"],
@@ -1022,5 +1022,17 @@ helper.translations = {
 	"Log in": {"text": {
 		"default": True,
 		"es": ""
-	}}
+	}},
+	"Health Facilities (Advanced)": {"text": {
+		"default": True,
+		"es": "Facilidades (Avanzado)"
+	}},
+	"Refrigerators (Advanced)": {"text": {
+		"default": True,
+		"es": "Frigoríficos (Avanzado)"
+	}},
+	"Models (Advanced)": {"text": {
+		"default": True,
+		"es": "Modelos (Avanzado)"
+	}},
 }
