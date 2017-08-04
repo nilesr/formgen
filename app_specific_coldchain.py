@@ -346,9 +346,12 @@ helper.make_detail("aa_health_facility_detail.html", """
 helper.make_detail("aa_m_logs_detail.html", "", "", """
 	main_col = "refs_tracking_number";
 	colmap = [
-		['refs_tracking_number', "Tracking Number"],
+		['refs_tracking_number', "Tracking Number: "],
 		['date_serviced', function(e, c, d) { return "<b>" + _tu("Date Serviced") + ":</b> " + c.split("T")[0]; }],
-		['notes', false]
+		['notes', function(e, c, d) {
+			if (c == null || c == "null") return "";
+			return "<b>" + _tu("Notes: ") + "</b>" + c;
+		}]
 	]
 	global_join = "refrigerators ON refrigerators.refrigerator_id = m_logs.refrigerator_id"
 	global_which_cols_to_select = "*, refrigerators.tracking_id AS refs_tracking_number"
@@ -1034,5 +1037,9 @@ helper.translations = {
 	"Models (Advanced)": {"text": {
 		"default": True,
 		"es": "Modelos (Avanzado)"
+	}},
+	"Notes: ": {"text": {
+		"default": True,
+		"es": "Notas: "
 	}},
 }
