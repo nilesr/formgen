@@ -68,14 +68,6 @@ helper.make_table("aa_health_facility_list.html", "", "", global_allowed_tables 
 	document.getElementById("add").style.display = "none";
 """, "", "")
 
-helper.extend("aa_health_facility_list.html", "hack_for_hf_map.html", """
-	forMapView = true;
-""", newCss = """
-#header, #search {
-	display: none;
-}
-""")
-
 helper.make_table("aa_m_logs_list.html", "", "", global_allowed_tables + global_block_add + """
 	var notes_cb = function notes_cb(e, notes) {
 		if (notes == undefined || notes == null) {
@@ -602,7 +594,7 @@ list_views = {
 						//};
 					//} else {
 						cb = function() {
-							odkTables.openTableToMapView(null, "health_facility", where, args, "hack_for_hf_map.html#health_facility/STATIC/SELECT """+hf_cols_to_select+""" FROM health_facility WHERE " + where + "/" + JSON.stringify(args) + "/" + hr_text);
+							odkTables.openTableToMapView(null, "health_facility", where, args, "config/assets/hack_for_hf_map.html#health_facility/STATIC/SELECT """+hf_cols_to_select+""" FROM health_facility WHERE " + where + "/" + JSON.stringify(args) + "/" + hr_text);
 						}
 					//}
 					menu[2][menu[2].length - 1] = [_tu("View ") + _tc(d, "facility_type", ftype) + (count == 1 ? "" : "s") + " (" + count + ")", "_js", cb]
