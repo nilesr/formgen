@@ -1010,10 +1010,6 @@ helper.translations = {
 		"default": True,
 		"es": ""
 	}},
-	" (locked)": {"text": {
-		"default": True,
-		"es": " (fijado)"
-	}},
 	" litres": {"text": {
 		"default": True,
 		"es": ""
@@ -1041,5 +1037,13 @@ helper.translations = {
 	"Notes: ": {"text": {
 		"default": True,
 		"es": "Notas: "
+	}},
+	"Filter By Type": {"text": {
+		"default": True,
+		"es": "Filtrar"
+	}},
+	"Administrative Actions": {"text": {
+		"default": True,
+		"es": "Acciones Administrativos"
 	}},
 }
