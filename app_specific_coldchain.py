@@ -298,9 +298,9 @@ helper.make_detail("aa_health_facility_detail.html", """
 		document.getElementById("refrig_with_this_hfid_count").innerText = d.getData(0, "refrig_with_this_hfid_count");
 		document.getElementById("addref").addEventListener("click", function() {
 			var defaults = {"facility_row_id": d.getData(0, "_id")}; // TODO - Get admin region information in there too
-			defaults["regionLevel1"] = d.getData(0, "regionLevel1");
-			defaults["regionLevel2"] = d.getData(0, "regionLevel2");
-			defaults["adminRegion"] = d.getData(0, "admin_region");
+			//defaults["regionLevel1"] = d.getData(0, "regionLevel1");
+			//defaults["regionLevel2"] = d.getData(0, "regionLevel2");
+			//defaults["adminRegion"] = d.getData(0, "admin_region");
 			defaults["refrigerator_id"] = newGuid();
 			if (allowed_tables.indexOf("refrigerators") >= 0) {
 				var id = newGuid();
