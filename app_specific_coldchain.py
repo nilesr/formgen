@@ -144,6 +144,10 @@ helper.make_detail("aa_refrigerators_detail.html", """
 		document.getElementById("add_m_log").disabled = false;
 		document.getElementById("add_m_log").innerText = _tu("Add Maintenance Record");
 		var defaults = {"refrigerator_id": d.getData(0, "refrigerator_id"), "date_serviced": odkCommon.toOdkTimeStampFromDate(new Date())};
+		defaults["_default_access"] = d.getData(0, "_default_access");
+		defaults["_group_read_only"] = d.getData(0, "_group_read_only");
+		defaults["_group_modify"] = d.getData(0, "_group_modify");
+		defaults["_group_privileged"] = d.getData(0, "_group_privileged");
 		document.getElementById("add_m_log").addEventListener("click", function add_m_log() {
 			if (allowed_tables.indexOf("m_logs") >= 0) {
 				var id = newGuid();
@@ -302,6 +306,10 @@ helper.make_detail("aa_health_facility_detail.html", """
 			//defaults["regionLevel2"] = d.getData(0, "regionLevel2");
 			//defaults["adminRegion"] = d.getData(0, "admin_region");
 			defaults["refrigerator_id"] = newGuid();
+			defaults["_default_access"] = d.getData(0, "_default_access");
+			defaults["_group_read_only"] = d.getData(0, "_group_read_only");
+			defaults["_group_modify"] = d.getData(0, "_group_modify");
+			defaults["_group_privileged"] = d.getData(0, "_group_privileged");
 			if (allowed_tables.indexOf("refrigerators") >= 0) {
 				var id = newGuid();
 				odkData.addRow("refrigerators", defaults, id, function() {
@@ -463,7 +471,8 @@ var addrf = function addrf() {
 }
 menu[2] = menu[2].concat(0);
 menu[2][menu[2].length - 1] = ["Administrative Actions", null, [
-		["Add Health Facility", "_js", addhf],
+		//["Add Health Facility", "_js", addhf],
+		["Add Health Facility", "_html", "config/assets/add_hf.html"],
 		//["Add Refrigerator", "_js", addrf]
 	]]
 
@@ -616,6 +625,8 @@ helper.make_graph("cc_graph.html", hallway, "");
 
 helper.static_files.append("hack_for_hf_map.js")
 helper.static_files.append("hack_for_hf_map.html")
+
+helper.static_files.append("add_hf.html")
 
 helper.translations = {
 	"PATH Cold Chain Demo": {"text": {
