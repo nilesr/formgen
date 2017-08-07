@@ -609,7 +609,7 @@ list_views = {
 							odkTables.openTableToMapView(null, "health_facility", where, args, "config/assets/hack_for_hf_map.html#health_facility/STATIC/SELECT """+hf_cols_to_select+""" FROM health_facility WHERE " + where + "/" + JSON.stringify(args) + "/" + hr_text);
 						}
 					//}
-					menu[2][menu[2].length - 1] = [_tu("View ") + _tc(d, "facility_type", ftype) + (count == 1 ? "" : "s") + " (" + count + ")", "_js", cb]
+					menu[2][menu[2].length - 1] = [_tc(d, "facility_type", ftype) + " (" + count + ")", "_js", cb]
 				})(val, where, args, count, id);
 			}
 			doMenu();
@@ -861,7 +861,8 @@ helper.translations = {
 		"default": True,
 		"es": "Oeste Central"
 	}},
-	"Refrigerators: ": {"text": {
+	"Refrigerators:"
+	" ": {"text": {
 		"default": True,
 		"es": "Frigoríficos: "
 	}},
@@ -1050,7 +1051,7 @@ helper.translations = {
 		"es": "Notas: "
 	}},
 	"Filter By Type": {"text": {
-		"default": True,
+		"default": "Filter Health Facilities by Type",
 		"es": "Filtrar"
 	}},
 	"Administrative Actions": {"text": {
