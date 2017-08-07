@@ -855,11 +855,11 @@ helper.translations = {
 	}},
 	"Central East": {"text": {
 		"default": True,
-		"es": "Este"
+		"es": "Este Central"
 	}},
 	"Central West": {"text": {
 		"default": True,
-		"es": "Oeste"
+		"es": "Oeste Central"
 	}},
 	"Refrigerators: ": {"text": {
 		"default": True,
