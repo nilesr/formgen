@@ -301,10 +301,7 @@ helper.make_detail("aa_health_facility_detail.html", """
 		});
 		document.getElementById("refrig_with_this_hfid_count").innerText = d.getData(0, "refrig_with_this_hfid_count");
 		document.getElementById("addref").addEventListener("click", function() {
-			var defaults = {"facility_row_id": d.getData(0, "_id")}; // TODO - Get admin region information in there too
-			//defaults["regionLevel1"] = d.getData(0, "regionLevel1");
-			//defaults["regionLevel2"] = d.getData(0, "regionLevel2");
-			//defaults["adminRegion"] = d.getData(0, "admin_region");
+			var defaults = {"facility_row_id": d.getData(0, "_id")};
 			defaults["refrigerator_id"] = newGuid();
 			defaults["_default_access"] = d.getData(0, "_default_access");
 			defaults["_group_read_only"] = d.getData(0, "_group_read_only");
@@ -1057,5 +1054,37 @@ helper.translations = {
 	"Administrative Actions": {"text": {
 		"default": True,
 		"es": "Acciones Administrativos"
+	}},
+	"Select Region": {"text": {
+		"default": True,
+		"es": "Selecciona Región"
+	}},
+	"Loading...": {"text": {
+		"default": True,
+		"es": "Cargando..."
+	}},
+	"This year": {"text": {
+		"default": True,
+		"es": "Este año"
+	}},
+	"In the future!": {"text": {
+		"default": True,
+		"es": "¡En el futuro!"
+	}},
+	"Select Facility Type": {"text": {
+		"default": True,
+		"es": "Selecciona Tipo"
+	}},
+	"Select Power Source": {"text": {
+		"default": True,
+		"es": "Selecciona Fuente de Poder"
+	}},
+	"Facility Inventory By Grid Power": {"text": {
+		"default": True,
+		"es": "Inventario de Facilidades usando Poder de Red Electríca"
+	}},
+	"Only facilities that use grid power": {"text": {
+		"default": True,
+		"es": "Solo facilidades que usan poder del red electríca"
 	}},
 }
