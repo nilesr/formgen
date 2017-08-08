@@ -858,8 +858,7 @@ helper.translations = {
 		"default": True,
 		"es": "Oeste Central"
 	}},
-	"Refrigerators:"
-	" ": {"text": {
+	"Refrigerators:": {"text": { # not in use right now
 		"default": True,
 		"es": "Frigoríficos: "
 	}},
@@ -1086,5 +1085,9 @@ helper.translations = {
 	"Only facilities that use grid power": {"text": {
 		"default": True,
 		"es": "Solo facilidades que usan poder del red electríca"
+	}},
+	"Any": {"text": {
+		"default": True,
+		"es": "Cualquier"
 	}},
 }
