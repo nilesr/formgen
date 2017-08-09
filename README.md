@@ -170,6 +170,8 @@ And the result might look like this:
 **Facility Type**: Dispensary<br />
 Located in **Atlanta**, **Georgia**
 
+If you have an image, audio or video column, with \_contentType and \_uriFragment columns, you can specify the name without the extra \_uriFragment and you'll get a dom element that can be appended to e, or for an image you can get c.src to put it in your own html.
+
 ### Menus
 
 In customJs you need to set `menu`. A `menu` is either a triplet of strings `["Value to display on the screen", "table_id", "something appended to the list view path]`. So for example, to make a buttom that opens a list of `health_facilities` where admin_region is Dowa, you would set
@@ -337,12 +339,12 @@ and nothing else.
 
 ### Big stuff
 
-- custom handlebars templates (relatively easy)
 - port hope study
 - list view generator in app designer
 	- global which cols to select
 	- callback functions
 - detail view generator
+- Detail views used to automatically display pictures, now they don't because we loop over the colmap instead of d.getColumns().
 
 ### Small stuff
 

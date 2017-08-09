@@ -76,3 +76,7 @@ ul {
 #main-col {
 	display: none;
 }
+
+img {
+	max-width: 80%;
+}
