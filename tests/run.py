@@ -145,7 +145,6 @@ try:
 	for script in s:
 		try:
 			customJsGeneric = script["body"][6]
-			open("tmp", "w").write(json.dumps(customJsGeneric))
 		except:
 			continue
 		assert(customJsGeneric["type"] == "ExpressionStatement")
@@ -159,7 +158,44 @@ try:
 
 	print("Testing that selects_list.html contains the given config")
 	get("selects_list.html").index("Didn't see anything")
+
+	print("Testing that aa_Tea_houses_detail.html contains the given Html")
+	contents = get("aa_Tea_houses_detail.html")
+	contents.index("<h2>Custom HTML")
+
+	print("Testing that aa_Tea_houses_detail.html contains the given CSS")
+	assert(contents.index("<style>") < contents.index("font-weight: bold"))
+	assert(contents.index("font-weight: bold") < contents.index("</style>"))
+
+	print("Testing that aa_Tea_houses_detail.html contains the given configuration")
+	s = scripts("aa_Tea_houses_detail.html")
+	worked = False
+	for script in s:
+		try:
+			customJsOl = script["body"][2]
+			customJsGeneric = script["body"][3]
+		except:
+			continue
+		print("Testing customJsOl")
+		customJsOl = customJsOl["declarations"][0]
+		assert(customJsOl["id"]["name"] == "customJsOl")
+		customJsOl = customJsOl["init"]["body"]["body"]
+		main_col = customJsOl[0]["expression"]["right"]["value"]
+		assert(main_col == "Name")
+		table_id = customJsOl[1]["expression"]["right"]["value"]
+		assert(table_id == "Tea_houses")
+
+		assert(customJsGeneric["type"] == "ExpressionStatement")
+		print("Testing generic alert")
+		alert = customJsGeneric["expression"]
+		assert(alert["type"] == "CallExpression")
+		assert(alert["callee"]["name"] == "alert")
+		assert(alert["arguments"][0]["value"] == "generic js in detail view")
+		worked = True
+	assert(worked)
+
 	cleanup()
+
 
 	print("Building with syntax errors")
 	worked = False;

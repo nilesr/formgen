@@ -20,10 +20,10 @@ helper.make_table("Tea_houses_list.html", "", "", """
 	display_subcol = [["Specialty: ", "ttName", true], ["", "District", false], [", ", "Neighborhood", true]];
 	table_id = "Tea_houses";
 """, "", "")
-helper.make_detail("aa_Tea_houses_detail.html", "", "", """
+helper.make_detail("aa_Tea_houses_detail.html", "<h2>Custom HTML</h2>", "body: font-weight: bold; /* testing */", """
 	main_col = "Name";
 	table_id = "Tea_houses";
-""", "")
+""", "alert('generic js in detail view');")
 
 # For testing that sure it opens survey for forms I can't generate yet. This one has sections or something and formgen hates it
 helper.make_detail("exampleForm_detail.html", "", "", "", "")
