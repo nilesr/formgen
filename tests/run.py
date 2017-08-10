@@ -56,7 +56,8 @@ try:
 	get("Tea_houses_list.html").index("*, Tea_types.Name as ttName")
 
 	print("Testing that plot.html contains the given configuration")
-	get("plot.html").index("Not planting")
+	contents = get("plot.html")
+	contents.index("Not planting")
 	s = scripts("plot.html")
 	worked = False
 	print("Testing that display_col_wrapper is null")
@@ -110,17 +111,51 @@ try:
 	assert(worked)
 
 	print("Testing that plot.html contains the given CSS")
-	get("plot.html").index("color: blue")
-	get("plot.html").index("Custom CSS")
+	contents.index("color: blue")
+	contents.index("Custom CSS")
+	assert(contents.index("<style>") < contents.index("color: blue"))
+	assert(contents.index("color: blue") < contents.index("</style>"))
 
 	print("Testing that plot.html contains the given Html")
-	get("plot.html").index("<h1>Custom HTML")
+	contents.index("<h1>Custom HTML")
 
 	print("Testing that plot.html contains the given search config")
-	get("plot.html").index("Custom JS run when you search")
+	contents.index("Custom JS run when you search")
+	worked = False
+	for script in s:
+		try:
+			customJsSearch = script["body"][5]["declarations"][0]
+		except:
+			continue
+		assert(customJsSearch["id"]["name"] == "customJsSearch")
+		print("Testing the alert in the search")
+		alert = customJsSearch["init"]["body"]["body"][0]
+		assert(alert["type"] == "ExpressionStatement")
+		alert = alert["expression"]
+		assert(alert["type"] == "CallExpression")
+		assert(alert["callee"]["name"] == "alert")
+		assert(alert["arguments"][0]["value"] == "Custom JS run when you search for something!")
+		worked = True
+	assert(worked)
+
 
 	print("Testing that plot.html contains the given generic config")
-	get("plot.html").index("Custom JS put in a random script tag")
+	contents.index("Custom JS put in a random script tag")
+	worked = False
+	for script in s:
+		try:
+			customJsGeneric = script["body"][6]
+			open("tmp", "w").write(json.dumps(customJsGeneric))
+		except:
+			continue
+		assert(customJsGeneric["type"] == "ExpressionStatement")
+		print("Testing generic alert")
+		alert = customJsGeneric["expression"]
+		assert(alert["type"] == "CallExpression")
+		assert(alert["callee"]["name"] == "alert")
+		assert(alert["arguments"][0]["value"] == "Custom JS put in a random script tag!")
+		worked = True
+	assert(worked)
 
 	print("Testing that selects_list.html contains the given config")
 	get("selects_list.html").index("Didn't see anything")
