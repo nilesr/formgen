@@ -16,13 +16,13 @@ def message(msg):
 	print("#" * len(err))
 	print(err)
 	print("#" * len(err))
-def check_syntax(file):
+def check_syntax(file, quiet):
 	if file.split(".")[-1].upper() == "JS":
-		print("Checking file " + file + " for syntax errors")
+		if not quiet: print("Checking file " + file + " for syntax errors")
 		try:
 			subprocess.check_call(["acorn", "--silent", file]);
 		except:
-			message("Syntax error")
+			if not quiet: message("Syntax error")
 			raise Exception("Syntax error")
 	elif file.split(".")[-1].upper() == "HTML":
 		try:
@@ -32,9 +32,10 @@ def check_syntax(file):
 			i = 0;
 			for script in scripts:
 				i += 1;
-				print("Checking script tag " + str(i) + " of " + str(total) + " in file " + file)
 				text = script.text;
-				if len(text.strip()) == 0: continue
+				length = len(text.strip())
+				if not quiet: print("Checking script tag " + str(i) + " of " + str(total) + " in file " + file + " - " + str(length) + " bytes")
+				if length == 0: continue
 				#r, w = os.pipe();
 				#os.write(w, text.encode("utf-8"));
 				#os.close(w)
@@ -43,7 +44,7 @@ def check_syntax(file):
 				open(tempfile, "wb").write(text.encode("utf-8"))
 				subprocess.check_call(["acorn", "--silent", tempfile])
 		except:
-			message("Syntax error")
+			if not quiet: message("Syntax error")
 			raise Exception("Syntax error")
 
 class utils():
@@ -91,11 +92,11 @@ class utils():
 		return [os.path.basename(x) for x in glob.glob(appdesigner + "/app/config/tables/" + table + "/forms/*")]
 	def register_custom_prompt_type(self, type, css_class, html_factory, js):
 		self.custom_prompt_types.append([type, css_class, html_factory, js]);
-	def make(self, appname, push, do_syntax_check = True):
+	def make(self, appname, push, do_syntax_check = True, quiet = False):
 		if appname == "fail":
 			raise Exception("No branch or appname given")
 		try:
-			subprocess.check_call(["command", "-v", "acorn"])
+			subprocess.check_call(["command", "-v", "acorn"], stdout=open(os.devnull, "w"))
 		except:
 			message("Acorn is not installed -- Not running syntax checks")
 			message("TESTS WILL FAIL")
@@ -108,7 +109,7 @@ class utils():
 
 		custom_prompt_types.make(self);
 
-		self.filenames, choices, which = form_generator.generate_all(self, self.filenames)
+		self.filenames, choices, which = form_generator.generate_all(self, self.filenames, quiet)
 
 		self.filenames.append("table.html")
 		generate_table.make(self, "table.html", "", "", "", "", "")
@@ -135,34 +136,54 @@ class utils():
 		self.filenames.append("formgen_common.js")
 		generate_common.make(self, "formgen_common.js", user_translations, choices, which)
 
-		for q in self.queue:
-			command = q
-			do_command(push, command)
-		for f in self.filenames + static_files:
-			if do_syntax_check: check_syntax(f)
-			command = ["adb", "shell", "mkdir", "-p", "/sdcard/opendatakit/" + appname + "/config/assets/" + "/".join(f.split("/")[:-1])]
-			do_command(push, command)
-			command = ["adb", "push", f, "/sdcard/opendatakit/" + appname + "/config/assets/" + f]
-			do_command(push, command)
-			dest = ad_subpath + "/" + "/".join(f.split("/")[:-1])
-			if dest in ["table_slave.html"]: continue
-			print("mkdir -p " + dest);
-			try:
-				os.makedirs(dest)
-			except FileExistsError:
-				pass
-			dest = ad_subpath + "/" + f
-			print("cp " + f + " " + dest)
-			shutil.copyfile(f, dest);
-		dirs = set()
-		for f in self.filenames:
-			if f[0] == "/" or f[:2] == "..": continue # RELATIVE PATHS ONLY, DON'T WANT TO END UP REMOVING /home OR /Users OR SOMETHING BAD
-			if len(f.split("/")) > 1:
-				dirs.add(f.split("/")[0])
-			print("rm " + f)
-			os.remove(f)
-		for f in dirs:
-			print("rm -rf " + f)
-			shutil.rmtree(f);
+		try:
+			if quiet:
+				try:
+					import pip._vendor.progress.bar as libbar
+				except:
+					import fakebar as libbar
+				bar = libbar.IncrementalBar(max = len(self.queue + self.filenames + static_files))
+				bar.start()
+			bar_idx = 0;
+			for q in self.queue:
+				command = q
+				do_command(push, command)
+				if quiet:
+					bar_idx += 1;
+					bar.index = bar_idx
+					bar.update();
+			for f in self.filenames + static_files:
+				if do_syntax_check: check_syntax(f, quiet)
+				command = ["adb", "shell", "mkdir", "-p", "/sdcard/opendatakit/" + appname + "/config/assets/" + "/".join(f.split("/")[:-1])]
+				do_command(push, command)
+				command = ["adb", "push", f, "/sdcard/opendatakit/" + appname + "/config/assets/" + f]
+				do_command(push, command)
+				dest = ad_subpath + "/" + "/".join(f.split("/")[:-1])
+				if dest in ["table_slave.html"]: continue
+				if not quiet: print("mkdir -p " + dest);
+				try:
+					os.makedirs(dest)
+				except FileExistsError:
+					pass
+				dest = ad_subpath + "/" + f
+				if not quiet: print("cp " + f + " " + dest)
+				shutil.copyfile(f, dest);
+				if quiet:
+					bar_idx += 1;
+					bar.index = bar_idx
+					bar.update();
+			if quiet:
+				bar.finish();
+		finally:
+			dirs = set()
+			for f in self.filenames:
+				if f[0] == "/" or f[:2] == "..": continue # RELATIVE PATHS ONLY, DON'T WANT TO END UP REMOVING /home OR /Users OR SOMETHING BAD
+				if len(f.split("/")) > 1:
+					dirs.add(f.split("/")[0])
+				if not quiet: print("rm " + f)
+				os.remove(f)
+			for f in dirs:
+				if not quiet: print("rm -rf " + f)
+				shutil.rmtree(f);
 
-def make(appname, push, do_syntax_check = True): utils().make(appname, push, do_syntax_check)
+def make(appname, push, do_syntax_check = True, quiet = False): utils().make(appname, push, do_syntax_check, quiet)

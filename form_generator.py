@@ -23,7 +23,7 @@ default_initial = [
 	{"clause": "do section survey"},
 	{"type": "note", "display": "You are at the the end of this instance. Press finalize to save as complete, or close this window to save as incomplete"},
 ]
-def generate_all(utils, filenames):
+def generate_all(utils, filenames, quiet):
 	if not os.path.exists("formgen"): os.mkdir("formgen");
 	tables = utils.get_tables()
 	all_pairs = []
@@ -61,7 +61,6 @@ def generate_all(utils, filenames):
 				screens = []
 				done_sections.append(section)
 				for item in formDef["xlsx"][section]:
-					#print(item)
 					if "clause" in item or ("type" in item and item["type"] == "finalize"):
 						clause = ""
 						if "clause" in item:
@@ -119,7 +118,8 @@ def generate_all(utils, filenames):
 						# ignore empty clauses, will continue to check "type"
 						elif clause == "": pass
 						else:
-							print("bad clause " + item["clause"]); die()
+							if not quiet: print("bad clause " + item["clause"]);
+							die();
 						continue
 					# So that we can execute a goto by database column, like if we're trying to finalize but a required
 					# field is missing, we can jump to that
@@ -210,7 +210,7 @@ def generate_all(utils, filenames):
 							elif "timeFormat" in item["inputAttributes"]:
 								input_attributes += " data-time_format='"+item["inputAttributes"]["timeFormat"]+"' "
 							else:
-								print("Bad inputAttributes type " + item["inputAttributes"]["type"])
+								if not quiet: print("Bad inputAttributes type " + item["inputAttributes"]["type"])
 								die();
 						# All the attributes that any element append to the screen should have
 						raw_attrs = [dbcol, required, calculation, hint, constraint, constraint_message, choice_filter, input_attributes]
@@ -337,7 +337,8 @@ def generate_all(utils, filenames):
 							tokens, newdata = definition[2](tokens, raw_attrs)
 							screen.append(newdata)
 						else:
-							print("bad type " + item["type"]); die()
+							if not quiet: print("bad type " + item["type"]);
+							die()
 						# prevent an empty screen for pages with only assigns on them
 						if len(screen) > 0 and print_br:
 							screen.append("<br /><br />")
@@ -412,7 +413,7 @@ var calculates = {"""+calculates+"""};
 			filenames.append("formgen/" + table + "/"+form+".html")
 		except:
 			if skipped:
-				print("Skipping " + str(pair))
+				if not quiet: print("Skipping " + str(pair))
 			else:
 				print("Unexpected exception in " + table)
 				print(traceback.format_exc())
