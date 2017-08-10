@@ -46,3 +46,5 @@ helper.make_table("selects_list.html", "", "", """
 	display_col = "user_name"
 	table_id = "selects";
 """, "", "")
+
+helper.static_files.append("tests/good.html")
