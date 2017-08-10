@@ -3,6 +3,7 @@ sys.path.append(".")
 import form_generator, generate_table, generate_tables, generate_detail, generate_common, generate_graph, custom, custom_prompt_types
 ## CONSTANTS
 appdesigner = "/home/niles/Documents/odk/app-designer"
+tmp = "/tmp"
 
 def do_command(push, command):
 	if type(command) != type([]):
@@ -22,7 +23,7 @@ def check_syntax(file):
 			subprocess.check_call(["acorn", "--silent", file]);
 		except:
 			message("Syntax error")
-			sys.exit(1)
+			raise Exception("Syntax error")
 	elif file.split(".")[-1].upper() == "HTML":
 		try:
 			soup = bs4.BeautifulSoup(open(file, "r").read(), "html.parser")
@@ -34,13 +35,16 @@ def check_syntax(file):
 				print("Checking script tag " + str(i) + " of " + str(total) + " in file " + file)
 				text = script.text;
 				if len(text.strip()) == 0: continue
-				r, w = os.pipe();
-				os.write(w, text.encode("utf-8"));
-				os.close(w)
-				subprocess.check_call(["acorn", "--silent"], stdin = r);
+				#r, w = os.pipe();
+				#os.write(w, text.encode("utf-8"));
+				#os.close(w)
+				#subprocess.check_call(["acorn", "--silent"], stdin = r);
+				tempfile = tmp + "/script_" + form_generator.gensym();
+				open(tempfile, "wb").write(text.encode("utf-8"))
+				subprocess.check_call(["acorn", "--silent", tempfile])
 		except:
 			message("Syntax error")
-			sys.exit(1)
+			raise Exception("Syntax error")
 
 class utils():
 	# Added to the top of every html file, a simple warning followed by some blank lines so the reader notices it

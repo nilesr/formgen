@@ -31,3 +31,6 @@ example: appname = example
 example: all
 deploy-example: appname = example
 deploy-example: deploy
+
+test:
+	python3 tests/run.py
