@@ -48,3 +48,23 @@ helper.make_table("selects_list.html", "", "", """
 """, "", "")
 
 helper.static_files.append("tests/good.html")
+
+
+helper.make_index("some_menu.html", """
+	// js
+	menu = ["Menu Title", null, [
+		["open a table", "Tea_houses", ""],
+		["open a link", "_html", "config/assets/index.html"],
+		["make an alert", "_js", function() {
+			alert("this is the alert");
+		}]
+	]];
+	list_views = {
+		"Tea_houses": "config/assets/Tea_houses_list.html"
+	};
+""", """
+	/* css */
+	body {
+		color: #123456;
+	}
+""")

@@ -253,8 +253,72 @@ try:
 	pprint("Testing that aa_Tea_houses_detail.html contains the given configuration")
 	passert(worked)
 
-	cleanup()
 
+	s = scripts("some_menu.html")
+	worked = False
+	for script in s:
+		try:
+			metadata = script["body"][0]
+			default_list_views = script["body"][1]
+			default_menu = script["body"][2]
+			menu = script["body"][3]
+			list_views = script["body"][4]
+		except:
+			continue
+		pprint("Testing that metadata defaults to an empty object")
+		passert(metadata["declarations"][0]["init"]["properties"] == [])
+		default_menu = default_menu["declarations"][0]["init"]["elements"]
+		pprint("Testing that menu defaults to the `Empty Menu!` message")
+		passert(default_menu[0]["value"] == "Empty menu!")
+		pprint("Testing that the default menu has no table")
+		passert(default_menu[1]["value"] is None)
+		pprint("Testing that the default menu has no buttons")
+		passert(len(default_menu[2]["elements"]) == 0)
+		pprint("Testing that the default list view object is empty")
+		passert(default_list_views["declarations"][0]["init"]["properties"] == [])
+		worked = True
+		menu = menu["expression"]["right"]["elements"]
+		pprint("Testing that the menu has the correct title")
+		passert(menu[0]["value"] == "Menu Title")
+		pprint("Testing that the menu has no table")
+		passert(menu[1]["value"] is None)
+		pprint("Testing that the menu has three buttons")
+		passert(len(menu[2]["elements"]) == 3)
+		menu = menu[2]["elements"]
+		pprint("Testing that the first button has the right text")
+		passert(menu[0]["elements"][0]["value"] == "open a table")
+		pprint("Testing that the first button has the right table")
+		passert(menu[0]["elements"][1]["value"] == "Tea_houses")
+		pprint("Testing that the first button has the right hash extension")
+		passert(menu[0]["elements"][2]["value"] == "")
+
+		pprint("Testing that the second button has the right text")
+		passert(menu[1]["elements"][0]["value"] == "open a link")
+		pprint("Testing that the second button has the right table")
+		passert(menu[1]["elements"][1]["value"] == "_html")
+		pprint("Testing that the second button has the right url")
+		passert(menu[1]["elements"][2]["value"] == "config/assets/index.html")
+
+		pprint("Testing that the third button has the right text")
+		passert(menu[2]["elements"][0]["value"] == "make an alert")
+		pprint("Testing that the third button has the type")
+		passert(menu[2]["elements"][1]["value"] == "_js")
+		pprint("Testing that the third button is a function")
+		passert(menu[2]["elements"][2]["type"] == "FunctionExpression")
+		pprint("Testing the alert argument for the third function")
+		arg = menu[2]["elements"][2]["body"]["body"][0]["expression"]["arguments"][0]["value"]
+		passert(arg == "this is the alert")
+	pprint("Testing that some_menu.html contains the given configuration")
+	passert(worked)
+
+	### TODO css
+	contents = get("some_menu.html")
+	pprint("Testing that the css comes after <style>")
+	passert(contents.index("<style>") < contents.index("color: #123456"))
+	pprint("Testing that the css comes before </style>")
+	passert(contents.index("color: #123456") < contents.index("</style>"))
+
+	cleanup()
 
 	print("Building with syntax errors")
 	worked = False;
