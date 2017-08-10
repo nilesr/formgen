@@ -1,4 +1,4 @@
-import json, os, subprocess, glob, sys, shutil
+import json, os, subprocess, glob, sys, shutil, bs4
 sys.path.append(".")
 import form_generator, generate_table, generate_tables, generate_detail, generate_common, generate_graph, custom, custom_prompt_types
 ## CONSTANTS
@@ -10,6 +10,37 @@ def do_command(push, command):
 	if push:
 		print(" ".join(command))
 		subprocess.check_call(command)
+def message(msg):
+	err = "## " + msg + " ##"
+	print("#" * len(err))
+	print(err)
+	print("#" * len(err))
+def check_syntax(file):
+	if file.split(".")[-1].upper() == "JS":
+		print("Checking file " + file + " for syntax errors")
+		try:
+			subprocess.check_call(["acorn", "--silent", file]);
+		except:
+			message("Syntax error")
+			sys.exit(1)
+	elif file.split(".")[-1].upper() == "HTML":
+		try:
+			soup = bs4.BeautifulSoup(open(file, "r").read(), "html.parser")
+			scripts = soup.find_all("script")
+			total = len(scripts);
+			i = 0;
+			for script in scripts:
+				i += 1;
+				print("Checking script tag " + str(i) + " of " + str(total) + " in file " + file)
+				text = script.text;
+				if len(text.strip()) == 0: continue
+				r, w = os.pipe();
+				os.write(w, text.encode("utf-8"));
+				os.close(w)
+				subprocess.check_call(["acorn", "--silent"], stdin = r);
+		except:
+			message("Syntax error")
+			sys.exit(1)
 
 class utils():
 	# Added to the top of every html file, a simple warning followed by some blank lines so the reader notices it
@@ -56,9 +87,15 @@ class utils():
 		return [os.path.basename(x) for x in glob.glob(appdesigner + "/app/config/tables/" + table + "/forms/*")]
 	def register_custom_prompt_type(self, type, css_class, html_factory, js):
 		self.custom_prompt_types.append([type, css_class, html_factory, js]);
-	def make(self, appname, push):
+	def make(self, appname, push, do_syntax_check = True):
 		if appname == "fail":
 			raise Exception("No branch or appname given")
+		try:
+			subprocess.check_call(["command", "-v", "acorn"])
+		except:
+			message("Acorn is not installed -- Not running syntax checks")
+			message("TESTS WILL FAIL")
+			do_syntax_check = False
 		self.queue = []
 		self.appname = appname
 		if self.appdesigner[-1] == "/": self.appdesigner = self.appdesigner[:-1]
@@ -98,6 +135,7 @@ class utils():
 			command = q
 			do_command(push, command)
 		for f in self.filenames + static_files:
+			if do_syntax_check: check_syntax(f)
 			command = ["adb", "shell", "mkdir", "-p", "/sdcard/opendatakit/" + appname + "/config/assets/" + "/".join(f.split("/")[:-1])]
 			do_command(push, command)
 			command = ["adb", "push", f, "/sdcard/opendatakit/" + appname + "/config/assets/" + f]
@@ -123,4 +161,4 @@ class utils():
 			print("rm -rf " + f)
 			shutil.rmtree(f);
 
-def make(appname, push): utils().make(appname, push)
+def make(appname, push, do_syntax_check = True): utils().make(appname, push, do_syntax_check)
