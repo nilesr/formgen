@@ -4,14 +4,14 @@ import custom_helper
 helper = custom_helper.helper();
 
 
-helper.make_table("plot.html", "", "", """
+helper.make_table("plot.html", "<h1>Custom HTML!</h1>", "h1 { color: blue; /* Custom CSS */ }", """
 	var planting_cb = function(elem, planting) {
 		if (planting == null || planting == "null") return "Not planting"
 		return "Planting " + planting.toLowerCase() + " corn"
 	}
 	display_subcol = [[planting_cb, "planting", false], [", ","plot_size", false], [" hectares", null, true]];
 	table_id = "plot";
-""", "", "")
+""", "alert('Custom JS run when you search for something!');", "alert('Custom JS put in a random script tag!');")
 
 
 helper.make_table("Tea_houses_list.html", "", "", """

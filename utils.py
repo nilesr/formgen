@@ -43,6 +43,7 @@ def check_syntax(file, quiet):
 				tempfile = tmp + "/script_" + form_generator.gensym();
 				open(tempfile, "wb").write(text.encode("utf-8"))
 				subprocess.check_call(["acorn", "--silent", tempfile])
+				os.remove(tempfile)
 		except:
 			if not quiet: message("Syntax error")
 			raise Exception("Syntax error")
