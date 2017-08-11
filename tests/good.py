@@ -68,3 +68,29 @@ helper.make_index("some_menu.html", """
 		color: #123456;
 	}
 """)
+
+helper.make_tabs("some_tabs.html", """
+	// js
+	var tabs = [
+		["Some page 1", "index.html"],
+		["Some page 2", "index.html", function() {
+			alert("iframe loaded");
+		}],
+	]
+
+""", """
+	/* css */
+	body {
+		float: right;
+	}
+""")
+
+helper.make_graph("some_graph.html", """
+	/* css */
+	body {
+		top: 100vh;
+	}
+""", """
+	// js
+	alert("graphs alert");
+""")

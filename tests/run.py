@@ -2,14 +2,15 @@
 import sys
 sys.path.append(".")
 import utils, os, subprocess, shutil, traceback, form_generator, bs4, json
+global_test_counter = 0;
 try:
 	import colorama
 	colorama.init()
 	green = colorama.Fore.GREEN
+	red = colorama.Fore.RED
 	reset = colorama.Style.RESET_ALL
 except:
-	green = ""
-	reset = ""
+	green = reset = red = ""
 try:
 	shutil.rmtree(utils.appdesigner + "/app/config/tables/temperatureSensor");
 except:
@@ -25,8 +26,12 @@ def pprint(x):
 	sys.stdout.write(x)
 
 def passert(x):
+	global global_test_counter
 	if x:
 		print(green + " - PASSED" + reset)
+		global_test_counter += 1;
+	else:
+		print(red + " - FAILED" + reset)
 	assert(x)
 
 def setup(file):
@@ -64,6 +69,8 @@ try:
 	print("Building with an empty config")
 	setup("empty.py")
 	make();
+	pprint("Making sure the build completed succesfully")
+	passert(True)
 	cleanup();
 
 	print("Building with a default config")
@@ -171,7 +178,6 @@ try:
 			continue
 		pprint("Testing that customJsSearch is called customJsSearch")
 		passert(customJsSearch["id"]["name"] == "customJsSearch")
-		pprint("Testing the alert in the search")
 		alert = customJsSearch["init"]["body"]["body"][0]
 		pprint("Testing that customJsSearch contains an ExpressionStatement")
 		passert(alert["type"] == "ExpressionStatement")
@@ -311,14 +317,83 @@ try:
 	pprint("Testing that some_menu.html contains the given configuration")
 	passert(worked)
 
-	### TODO css
 	contents = get("some_menu.html")
 	pprint("Testing that the css comes after <style>")
 	passert(contents.index("<style>") < contents.index("color: #123456"))
 	pprint("Testing that the css comes before </style>")
 	passert(contents.index("color: #123456") < contents.index("</style>"))
 
+
+	s = scripts("some_tabs.html")
+	worked = False
+	for script in s:
+		try:
+			tabs = script["body"][0]["declarations"][0]["init"]["elements"]
+		except:
+			continue
+		pprint("Testing that there are two tabs")
+		passert(len(tabs) == 2)
+		pprint("Testing that the first tab has two elements")
+		passert(len(tabs[0]["elements"]) == 2)
+		pprint("Testing that the first tab has the right title")
+		passert(tabs[0]["elements"][0]["value"] == "Some page 1")
+		pprint("Testing that the first tab has the right url")
+		passert(tabs[0]["elements"][1]["value"] == "index.html")
+		pprint("Testing that the second tab has two elements")
+		passert(len(tabs[1]["elements"]) == 3)
+		pprint("Testing that the second tab has the right title")
+		passert(tabs[1]["elements"][0]["value"] == "Some page 2")
+		pprint("Testing that the second tab has the right url")
+		passert(tabs[1]["elements"][1]["value"] == "index.html")
+		pprint("Testing that the second tab has the right function")
+		passert(tabs[1]["elements"][2]["body"]["body"][0]["expression"]["arguments"][0]["value"] == "iframe loaded")
+		worked = True
+	pprint("Testing that some_tabs.html contains the given configuration")
+	passert(worked)
+
+	contents = get("some_tabs.html")
+	pprint("Testing that the css comes after <style>")
+	passert(contents.index("<style>") < contents.index("float: right"))
+	pprint("Testing that the css comes before </style>")
+	passert(contents.index("float: right") < contents.index("</style>"))
+
+	s = scripts("some_graph.html")
+	worked = False
+	for script in s:
+		try:
+			show_value = script["body"][0]["expression"]["right"]["value"]
+			iframeOnly = script["body"][1]["expression"]["right"]["value"]
+			sort = script["body"][2]["expression"]["right"]["value"]
+			reverse = script["body"][3]["expression"]["right"]["value"]
+			alert = script["body"][5]["expression"]["arguments"][0]["value"]
+		except:
+			print(traceback.format_exc())
+			continue
+		pprint("Testing that show_value is false")
+		passert(not show_value)
+		pprint("Testing that iframeOnly is false")
+		passert(not iframeOnly)
+		pprint("Testing that sort is false")
+		passert(not sort)
+		pprint("Testing that reverse is false")
+		passert(not reverse)
+		pprint("Testing that the generic javascript is correct")
+		passert(alert == "graphs alert")
+		worked = True
+	pprint("Testing that some_graph.html contains the given configuration")
+	passert(worked)
+
+	contents = get("some_graph.html")
+	pprint("Testing that the css comes after <style>")
+	passert(contents.index("<style>") < contents.index("top: 100vh"))
+	pprint("Testing that the css comes before </style>")
+	passert(contents.index("top: 100vh") < contents.index("</style>"))
+
 	cleanup()
+
+	print(green)
+	utils.message("The following tests SHOULD throw syntax errors")
+	print(reset)
 
 	print("Building with syntax errors")
 	worked = False;
@@ -363,8 +438,13 @@ try:
 except:
 	print()
 	print(traceback.format_exc())
+	print(red)
 	utils.message("TEST FAILED")
+	print(reset)
 	all_passed = False;
 cleanup_all()
 
-if all_passed: utils.message("ALL TESTS PASSED")
+if all_passed:
+	print(green)
+	utils.message(str(global_test_counter) + " TESTS PASSED")
+	print(reset)
