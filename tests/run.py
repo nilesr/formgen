@@ -425,7 +425,7 @@ try:
 
 	print("Building with a non-existent file in the helper")
 	worked = False;
-	setup("bad2.py")
+	setup("bad3.py")
 	try:
 		make();
 	except:
