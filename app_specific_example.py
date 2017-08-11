@@ -614,7 +614,7 @@ helper.make_table("geopoints_list.html", "", """
 	add.addEventListener("click", function() {
 		alert("TODO"); // CACHED_D DOESN'T EXIST THIS IS A LIST VIEW
 		var id = newGuid();
-		odkData.addRow("geopoints", {"client_id": cached_d.getData(0, "client_id", "_id": id)}
+		odkData.addRow("geopoints", {"client_id": cached_d.getData(0, "client_id"), "_id": id})
 		odkTables.launchHTML(null, "config/assets/formgen/geopoints/index.html#" + id);
 	});
 	var map = document.createElement("button");
@@ -671,7 +671,7 @@ helper.make_detail("femaleClients_detail.html", """
 	];
 	var newInstance = function(table, form) {
 		if (form == table) form = "index";
-		odkTables.launchHTML(null, "config/assets/formgen/" + table + "/" + form + ".html#" + newGuid();
+		odkTables.launchHTML(null, "config/assets/formgen/" + table + "/" + form + ".html#" + newGuid());
 	};
 	var homeLocator = function homeLocator() {
 		var where = "client_id = ?"
@@ -704,7 +704,7 @@ helper.make_detail("geopoints_detail.html", "", """
 	];
 	var newInstance = function(table, form) {
 		if (form == table) form = "index";
-		odkTables.launchHTML(null, "config/assets/formgen/" + table + "/" + form + ".html#" + newGuid();
+		odkTables.launchHTML(null, "config/assets/formgen/" + table + "/" + form + ".html#" + newGuid());
 	};
 	var homeLocator = function homeLocator() {
 		var where = "client_id = ?"
