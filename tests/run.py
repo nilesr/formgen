@@ -51,7 +51,7 @@ def scripts(file):
 	for x in s:
 		tempfile = utils.tmp + "/script_" + form_generator.gensym();
 		open(tempfile, "wb").write(x)
-		result.append(json.loads(subprocess.check_output(["acorn", tempfile])))
+		result.append(json.loads(subprocess.check_output(["acorn", tempfile]).decode("utf-8")))
 		os.remove(tempfile)
 	return result
 def cleanup_all():
