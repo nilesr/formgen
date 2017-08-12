@@ -1,9 +1,11 @@
-push := False
 appname := fail
+push := 
+quiet := 
+syntax := --syntax
 all:
-	python3 -c "import sys; sys.path.append('.'); import utils; utils.make('$(appname)', $(push))"
+	./make $(appname) $(push) $(syntax) $(quiet)
 	make clean
-deploy: push = True
+deploy: push = --push
 deploy: all
 clean:
 	rm -rf __pycache__ custom_prompt_types/__pycache__ ||:

@@ -11,20 +11,43 @@ helper.make_table("Tea_houses_list.html", "", "", """
 	global_join = "Tea_types ON Tea_types._id = Tea_houses.Specialty_Type_id"
 	global_which_cols_to_select = "*, Tea_types.Name AS ttName, Tea_houses.Name AS thName"
 	display_subcol = [["Specialty: ", "ttName", true], ["", "District", false], [", ", "Neighborhood", true]];
+
+	display_subcol = [
+		{"column": "ttName", "display_name": "Specialty: ", "newline": true},
+		{"column": "District", "newline": false},
+		{"column": "Neighborhood", "display_name": ", ", "newline": true}
+	]
 	display_col = "thName";
 	table_id = "Tea_houses";
 	allowed_group_bys = [
-		"District", "Neighborhood", "State", "WiFi", "Hot", "Iced", "State", ["ttName", "Specialty"]
+		{"column": "District"},
+		{"column": "Neighborhood"},
+		{"column": "State"},
+		{"column": "WiFi"},
+		{"column": "Hot"},
+		{"column": "Iced"},
+		{"column": "State"},
+		{"column": "ttName", "display_name": "Specialty"},
 	]
 """, "", "")
 helper.make_table("Tea_inventory_list.html", "", "", """
 	global_join = "Tea_houses ON Tea_houses._id = Tea_inventory.House_id JOIN Tea_types ON Tea_types._id = Tea_inventory.Type_id"
 	global_which_cols_to_select = "*, Tea_types.Name AS ttName, Tea_houses.Name AS thName, Tea_inventory.Name AS tiName"
 	display_subcol = [["Tea House: ", "thName", true], ["Type: ", "ttName", true]];
+
+	display_subcol = [
+		{"column": "thName", "display_name": "Tea House: ", "newline": true},
+		{"column": "ttName", "display_name": "Type: ", "newline": true}
+	]
 	display_col = "tiName";
 	table_id = "Tea_inventory";
 	allowed_group_bys = [
-		["thName", "House"], ["ttName", "Type"], "Iced", "Hot", "Bags", "Loose_Leaf"
+		{"column": "thName", "display_name": "House"},
+		{"column": "ttName", "display_name": "Type"},
+		{"column": "Iced"},
+		{"column": "Hot"},
+		{"column": "Bags"},
+		{"column": "Loose_Leaf"}
 	]
 """, "", "")
 helper.make_table("Tea_types_list.html", "", "", """
@@ -37,10 +60,17 @@ helper.make_table("Tea_types_list.html", "", "", """
 		return extras.join(", ");
 	}
 	display_subcol = [["Origin: ", "Origin", true], [extras_cb, "_id", true]];
+
+	display_subcol = [
+		{"column": "Origin", "display_name": "Origin: ", "newline": true},
+		{"column": "_id", "callback": extras_cb, "newline": true}
+	]
 	display_col = "Name";
 	table_id = "Tea_types";
 	allowed_group_bys = [
-		"Origin", "Caffeinated", "Fermented"
+		{"column": "Origin"},
+		{"column": "Caffeinated"},
+		{"column": "Fermented"}
 	]
 """, "", "")
 detail_helper_js = """
@@ -94,6 +124,28 @@ helper.make_detail("Tea_houses_detail.html", "", "", detail_helper_js + """
 			return "<span onClick='openTeas();' style='color: blue; text-decoration: underline;'>" + c + " tea" + (c.toString() == 1 ? "" : "s") + "</span>";
 		}],
 	]
+	colmap = [
+		{"column": "thName", "callback": function(e, c, d) { return c; }},
+		{"column": "State"},
+		{"column": "Region"},
+		{"column": "District"},
+		{"column": "Neighborhood", "callback": br("Neighborhood")},
+		{"column": "ttName", "callback": br("Specialty")},
+		{"column": "Date_Opened", "callback": opened},
+		{"column": "Customers", "display_name": "Number of Customers: "},
+		{"column": "Visits", "callback": br("Total Number of Visits")},
+		{"column": "Location_latitude", "display_name": "Latitude (GPS): "},
+		{"column": "Location_longitude", "callback": br("Longitude (GPS)", "<br /><br /><b>Services</b>:")},
+		{"column": "Iced", "callback": check("Iced")},
+		{"column": "Hot", "callback": check("Hot")},
+		{"column": "WiFi", "callback": function(e, c, d) { return check("WiFi")(e, c, d) + "<br /><h3>Contact Information</h3>"; }},
+		{"column": "Store_Owner"},
+		{"column": "Phone_Number", "display_name": "Mobile number: "},
+		{"column": "num_teas", "callback": function(e, c, d) {
+			odkTables.setSubListView("Tea_inventory", "House_id = ?", [row_id], "config/assets/Tea_inventory_list.html#Tea_inventory/thName = ?/" + d.getData(0, "thName"));
+			return "<span onClick='openTeas();' style='color: blue; text-decoration: underline;'>" + c + " tea" + (c.toString() == 1 ? "" : "s") + "</span>";
+		}}
+	]
 	window.openTeas = function openTeas() {
 		odkTables.openTableToListView({}, "Tea_inventory", "House_id = ?", [row_id], "config/assets/Tea_inventory_list.html#Tea_inventory/thName = ?/" + cached_d.getData(0, "thName"));
 	}
@@ -115,6 +167,17 @@ helper.make_detail("Tea_inventory_detail.html", "", "", detail_helper_js + """
 		["Loose_Leaf", check("Loose Leaf")],
 		["Bags", check("Bags")],
 	]
+	colmap = [
+		{"column": "tiName", "callback": function(e, c, d) { return c; }},
+		{"column": "ttName", "display_name": "Type: "},
+		{"column": "Price_8oz", "display_name": "8oz: "},
+		{"column": "Price_12oz", "display_name": "12oz: "},
+		{"column": "Price_16oz", "callback": function(e, c, d) { return "<b>16oz</b>: " + c + "<br /><br /><b>Offered</b>:"; }},
+		{"column": "Iced", "callback": check("Iced")},
+		{"column": "Hot", "callback": check("Hot")},
+		{"column": "Loose_Leaf", "callback": check("Loose Leaf")},
+		{"column": "Bags", "callback": check("Bags")}
+	]
 """, "")
 helper.make_detail("Tea_types_detail.html", "", "", detail_helper_js + """
 
@@ -126,6 +189,13 @@ helper.make_detail("Tea_types_detail.html", "", "", detail_helper_js + """
 		["Caffeinated", check("Caffeinated")],
 		["Fermented", check("Fermented")],
 	]
+	colmap = [
+		{"column": "Name", "callback": function(e, c, d) { return c; }},
+		{"column": "Origin", "callback": br("Origin", "<br /><br />Details:")},
+		{"column": "Caffeinated", "callback": check("Caffeinated")},
+		{"column": "Fermented", "callback": check("Fermented")}
+	]
+
 """, "")
 
 helper.make_detail("example_detail.html", "", "", "", "")
@@ -137,6 +207,10 @@ helper.make_table("example_list.html", "", "", """
 			return "Doesn't acknowledge!";
 		}
 		display_subcol = [[ack, "has_html", true], ["Admin region: ", "adminRegion", true]];
+		display_subcol = [
+			{"column": "has_html", "callback": ack, "newline": true},
+			{"column": "adminRegion", "display_name": "Admin region: ", "newline": true},
+		]
 		display_col = "name"
 		table_id = "exampleForm";
 """, "", "")
@@ -152,6 +226,7 @@ helper.make_table("selects_list.html", "", "", """
 		return "Saw a" + n + " " + color + " " + bird;
 	}
 	display_subcol = [[cb, "bird", true]];
+	display_subcol = [{"column": "bird", "callback": cb, "newline": true}]
 	display_col = "user_name"
 	table_id = "selects";
 """, "", "")
@@ -176,10 +251,10 @@ helper.make_table("selects_list.html", "", "", """
 
 helper.make_tabs("index.html", """
 	var tabs = [
-		["General", "general.html"],
-		["Tea", "th_index.html"],
-		["Selects", "selects_index.html"],
-		["Plot", "plot_index.html"],
+		{"title": "General", "file": "general.html"},
+		{"title": "Tea", "file": "th_index.html"},
+		{"title": "Selects", "file": "selects_index.html"},
+		{"title": "Plot", "file": "plot_index.html"},
 		//["Hope", "hope_index.html"]
 	]
 """, "")
@@ -212,16 +287,16 @@ helper.make_index("th_index.html", """
 			odkTables.launchHTML(null, "config/assets/formgen/"+table+"#" + id);
 		}
 	}
-	menu = ["Tea Demo", null, [
-		["View Tea Houses (try searching for \\"Hill\\")", "Tea_houses", ""],
-		["View Tea Houses on a Map", "_js", function() { odkTables.openTableToMapView(null, "Tea_Houses", null, null, "config/assets/Tea_houses_list.html"); }],
-		["New tea house", "_js", newinstance("Tea_houses")],
-		["View Teas", "Tea_inventory", ""],
-		["View Teas by Tea House", "Tea_inventory", "thName"],
-		["Add Tea", "_js", newinstance("Tea_inventory")],
-		["View Tea Types", "Tea_types", ""],
-		["Add Tea Type", "_js", newinstance("Tea_types")],
-	]]
+	menu = {"label": "Tea Demo", "type": "menu", "contents": [
+		{"label": "View Tea Houses (try searching for \\"Hill\\")", "type": "list_view", "table": "Tea_houses"},
+		{"label": "View Tea Houses on a Map", "type": "js", "function": function() { odkTables.openTableToMapView(null, "Tea_Houses", null, null, "config/assets/Tea_houses_list.html"); }},
+		{"label": "New tea house", "type": "js", "function": newinstance("Tea_houses")},
+		{"label": "View Teas", "type": "list_view", "table": "Tea_inventory"},
+		{"label": "View Teas by Tea House", "type": "group_by", "table": "Tea_inventory", "grouping": "thName"},
+		{"label": "Add Tea", "type": "js", "function": newinstance("Tea_inventory")},
+		{"label": "View Tea Types", "type": "list_view", "table": "Tea_types"},
+		{"label": "Add Tea Type", "type": "js", "function": newinstance("Tea_types")},
+	]}
 """, """
 body {
 	background: url('img/teaBackground.jpg') no-repeat center/cover fixed;
@@ -241,12 +316,12 @@ helper.make_index("general.html", """
 			odkTables.launchHTML(null, "config/assets/formgen/"+table+"#" + id);
 		}
 	}
-	menu = ["Example Form", null, [
-		["New Instance", "_js", newinstance("exampleForm")],
-		["View Responses", "exampleForm", ""],
-		["Custom prompt types", "_js", newinstance("datesTest")],
-		["ETHIOPIA", "_js", newinstance("Ethiopia_household")]
-	]]
+	menu = {"label": "Example Form", "type": "menu", "contents": [
+		{"label": "New Instance", "type": "js", "function": newinstance("exampleForm")},
+		{"label": "View Responses", "type": "list_view", "table": "exampleForm"},
+		{"label": "Custom prompt types", "type": "js", "function": newinstance("datesTest")},
+		{"label": "ETHIOPIA", "type": "js", "function": newinstance("Ethiopia_household")},
+	]}
 """, """
 body {
 	background: url('img/hallway.jpg') no-repeat center/cover fixed;
@@ -260,10 +335,10 @@ helper.make_index("selects_index.html", """
 		var id = newGuid();
 		odkTables.launchHTML(null, "config/assets/formgen/selects#" + id);
 	}
-	menu = ["Selects Demo", null, [
-		["New Instance", "_js", newinstance],
-		["View Responses", "selects", ""]
-	]]
+	menu = {"label": "Selects Demo", "type": "menu", "contents": [
+		{"label": "New Instance", "type": "js", "function": function() { newinstance("selects"); }},
+		{"label": "View Responses", "type": "list_view", "table": "selects"},
+	]}
 """, """
 body {
 	background: url('img/bird.png') no-repeat center/cover fixed;
@@ -277,20 +352,20 @@ helper.make_index("plot_index.html", """
 		"plot": "config/assets/plot_list.html",
 		"visit": "config/assets/visit_list.html",
 	}
-	menu = ["Plots Demo", null, [
-		["View Plots", "plot", ""],
-		["View Plots on a Map", "_js", function() { odkTables.openTableToMapView(null, "plot", null, null, "config/assets/plot_map.html#plot") }],
-		["View Visits", "visit", ""],
-		["View Reports", null, [
-			["View Overall Data", "_html", "config/assets/view_overall_data.html"],
-			["View Single Plot Data", "_html", "config/assets/single_plot_data_list.html"],
-			["View Comparison Data", null, [
-				["Compare by plant type", "_html", "config/assets/compare_list_planting.html#plot/STATIC/SELECT * FROM plot GROUP BY planting/[]/distinct values of planting"],
-				["Compare by soil type", "_html", "config/assets/compare_list_soil.html#plot/STATIC/SELECT * FROM plot JOIN visit ON visit.plot_id = plot._id GROUP BY soil/[]/distinct values of soil type"],
-				["Compare all plots", "_html", "config/assets/compare_all_plots.html"],
-			]],
-		]]
-	]]
+	menu = {"label": "Plots demo", "type": "menu", "contents": [
+		{"label": "View Plots", "type": "list_view", "table": "plot"},
+		{"label": "View Plots on a Map", "type": "js", "function": function() { odkTables.openTableToMapView(null, "plot", null, null, "config/assets/plot_map.html#plot"); }},
+		{"label": "View Visits", "type": "list_view", "table": "visit"},
+		{"label": "View Reports", "type": "menu", "contents": [
+			{"label": "View Overall Data", "type": "html", "file": "config/assets/view_overall_data.html"},
+			{"label": "View Single Plot Data", "type": "html", "file": "config/assets/single_plot_data_list.html"},
+			{"label": "View Comparison Data", "type": "menu", "contents": [
+				{"label": "Compare by plant type", "type": "html", "file": "config/assets/compare_list_planting.html#plot/STATIC/SELECT * FROM plot GROUP BY planting/[]/distinct values of planting"},
+				{"label": "Compare by soil type", "type": "html", "file": "config/assets/compare_list_soil.html#plot/STATIC/SELECT * FROM plot JOIN visit ON visit.plot_id = plot._id GROUP BY soil/[]/distinct values of soil type"},
+				{"label": "Compare all plots", "type": "html", "file": "config/assets/compare_all_plots.html"},
+			]}
+		]}
+	]}
 """, """
 body {
 	background: url('img/Agriculture_in_Malawi_by_Joachim_Huber_CClicense.jpg') no-repeat center/cover fixed;
@@ -305,7 +380,11 @@ helper.make_table("plot_list.html", "", "", """
 		return "Planting " + planting.toLowerCase() + " corn"
 	}
 	display_col = "plot_name";
-	display_subcol = [[planting_cb, "planting", false], [", ","plot_size", false], [" hectares", null, true]];
+	display_subcol = [
+		{"column": "planting", "callback": planting_cb, "newline": false},
+		{"column": "plot_size", "display_name": ", ", "newline": false},
+		{"display_name": " hectares", "newline": true},
+	]
 	table_id = "plot";
 """, "", "")
 helper.make_table("visit_list.html", "", """
@@ -340,7 +419,7 @@ body {
 	}
 	global_cols_to_select = "visit.*, plot.plot_name AS plot_name";
 	global_join = "plot ON plot._id = visit.plot_id";
-	display_subcol = [["", "plot_name", true]];
+	display_subcol = [{"column": "plot_name"}];
 	table_id = "visit";
 """, """
 	stuff = document.getElementsByClassName("displays");
@@ -375,16 +454,16 @@ helper.make_detail("plot_detail.html", "", """
 	global_which_cols_to_select = "plot.*, COUNT(*) AS num_visits"
 	global_join = "visit ON plot._id = visit.plot_id"
 	colmap = [
-		["plot_name", function(e, c, d) { return c }],
-		["location_latitude", "Latitude: "],
-		["location_longitude", br("Longitude")],
-		["planting", "Crop: "],
-		["num_visits", function(e, c, d) {
+		{"column": "plot_name", "callback": function(e, c, d) { return c; }},
+		{"column": "location_latitude", "display_name": "Latitude: "},
+		{"column": "location_longitude", "callback": br("Longitude")},
+		{"column": "planting", "display_name": "Crop: "},
+		{"column": "num_visits", "callback": function(e, c, d) {
 			num = Number(c);
 			return "<span style=\\"color: blue; text-decoration: underline;\\" onClick='openVisits(\\""+d.getData(0, 'plot_name')+"\\")'>" + c + " visit" + (num == 1 ? "" : "s") + "</span>";
-		}],
-		[null, function(e, c, d) { return makeIframe(); }],
-		[null, function(e, c, d) { return makeButtons(); }],
+		}},
+		{"callback": makeIframe},
+		{"callback": makeButtons},
 	]
 	document.getElementById("header").id = "title"
 """, """
@@ -419,25 +498,25 @@ helper.make_detail("visit_detail.html", "", """
 	global_which_cols_to_select = "visit.*, plot.plot_name AS plot_name"
 	global_join = "plot ON plot._id = visit.plot_id"
 	colmap = [
-		["date", function(e, c, d) { return "Visit on " + c.split("T")[0]; }],
-		["plot_name", true],
-		["plant_height", br("Plant height", "cm")],
-		["plant_health", function(e, c, d) {
+		{"column": "date", "callback": function(e, c, d) { return "Visit on " + c.split("T")[0]; }},
+		{"column": "plot_name"},
+		{"column": "plant_height", "callback": br("Plant height", "cm")},
+		{"column": "plant_health", "callback": function(e, c, d) {
 			var retVal = "<b>Plant Health</b>:<br />";
 			retVal += check("Good", function(e, c, d) { return selected(c, "good"); }, "radio")(e, c, d) + "<br />";
 			retVal += check("Fair", function(e, c, d) { return selected(c, "fair"); }, "radio")(e, c, d) + "<br />";
 			retVal += check("Bad", function(e, c, d) { return selected(c, "bad"); }, "radio")(e, c, d);
 			return retVal;
-		}],
-		["soil", function(e, c, d) {
+		}},
+		{"column": "soil", "callback": function(e, c, d) {
 			var retVal = "<b>Soil</b>: <br />";
 			retVal += check("Medium Sand", function(e, c, d) { return selected(c, "medium_sand"); }, "radio")(e, c, d) + "<br />";
 			retVal += check("Fine Sand", function(e, c, d) { return selected(c, "fine_sand"); }, "radio")(e, c, d) + "<br />";
 			retVal += check("Sandy Loam", function(e, c, d) { return selected(c, "sandy_loam"); }, "radio")(e, c, d) + "<br />";
 			retVal += check("Loam", function(e, c, d) { return selected(c, "loam"); }, "radio")(e, c, d);
 			return retVal;
-		}],
-		["pests", function(e, c, d) {
+		}},
+		{"column": "pests", "callback": function(e, c, d) {
 			var retVal = "<b>Pests</b>: <br />"
 			retVal += check("Earworm", function(e, c, d) { return selected(c, "earworm"); })(e, c, d) + "<br />";
 			retVal += check("Stink Bug", function(e, c, d) { return selected(c, "stink_bug"); })(e, c, d) + "<br />";
@@ -445,8 +524,8 @@ helper.make_detail("visit_detail.html", "", """
 			retVal += check("Cutworm", function(e, c, d) { return selected(c, "cutworm"); })(e, c, d) + "<br />";
 			retVal += "<h3>Observations: </h3>"
 			return retVal;
-		}],
-		["observations", function(e, c, d) { return c; }],
+		}},
+		{"column": "observations", "callback": function(e, c, d) { return c; }}
 	]
 """, "")
 
@@ -536,11 +615,11 @@ helper.make_index("hope_index.html", """
 	list_views = {
 		"femaleClients": "config/assets/femaleClients_list.html"
 	}
-	menu = ["Hope Study" + "<br />xlsx not copied over yet, nothing will work", null, [
-		["Screen Female Client", "_js", newinstance("femaleClients", "screenClient")],
-		["Follow Up with Existing Client", "femaleClients", ""],
-		["Send Data", "_js", send]
-	]]
+	menu = {"label": "Hope Study" + "<br />xlsx not copied over yet, nothing will work", "type": "menu", "contents": [
+		{"label": "Screen Female Client", "type": "js", "function": newinstance("femaleClients", "screenClient")},
+		{"label": "Follow Up with Exsting Client", "type": "list_view", "table": "femaleClients"},
+		{"label": "Send Data", "type": "js", "function": send}
+	]};
 """, """
 	body {
 		background-color: white;
@@ -580,6 +659,10 @@ helper.make_index("hope_index.html", """
 helper.make_table("femaleClients_list.html", "", "", """
 	display_col = "client_id";
 	display_subcol = [["Age: ", "age", true], ["Randomization: ", "randomization", true]];
+	display_subcol = [
+		{"column": "age", "display_name": "Age: ", "newline": true},
+		{"column": "randomization", "display_name": "Randomization: ", "newline": true}
+	]
 	table_id = "femaleClients";
 
 	document.getElementById("search").insertAdjacentHTML("beforeend", "<button onClick='addClient()' style='margin-left: 15%; min-height: 1.5em; width: 70%; display: block;'>Add Client</button>")
@@ -605,6 +688,10 @@ helper.make_table("geopoints_list.html", "", """
 		return "Transportation: " + c;
 	}
 	display_subcol = [["Step: ", "step", true], [transpo, "transportation_mode", true]];
+	display_subcol = [
+		{"column": "step", "display_name": "Step: ", "newline": true},
+		{"column": "transportation_mode", "callback": transpo, "newline": true}
+	]
 	table_id = "geopoints";
 
 	var add = document.createElement("button");
@@ -632,11 +719,11 @@ helper.static_files.append("hope_graph_view.html")
 helper.make_detail("femaleClients_detail.html", """
 	<button disabled class='title-button'>Client Forms</button>
 		<button onClick='homeLocator();' class='smaller-button'>Home Locator</button>
-		<button onClick='newInstance("femaleClients", "client6Week");' class='smaller-button'>Six Week Follow-Up</button>
-		<button onClick='newInstance("femaleClients", "client6Month");' class='smaller-button'>Six Month Follow-Up</button>
+		<button onClick='newinstance("femaleClients", "client6Week");' class='smaller-button'>Six Week Follow-Up</button>
+		<button onClick='newinstance("femaleClients", "client6Month");' class='smaller-button'>Six Month Follow-Up</button>
 	<button disabled class='title-button'>Partner Forms</button>
-		<button onClick='newInstance("maleClients", "screenPartner");' class='smaller-button'>Partner Screening</button>
-		<button onClick='newInstance("maleClients", "partner6Month");' class='smaller-button'>Six Month Follow-Up</button>
+		<button onClick='newinstance("maleClients", "screenPartner");' class='smaller-button'>Partner Screening</button>
+		<button onClick='newinstance("maleClients", "partner6Month");' class='smaller-button'>Six Month Follow-Up</button>
 """, """
 	body {
 		text-align: center;
@@ -669,7 +756,12 @@ helper.make_detail("femaleClients_detail.html", """
 		["age", "AGE"],
 		["randomization", "RANDOMIZATION"]
 	];
-	var newInstance = function(table, form) {
+	colmap = [
+		{"column": "client_id", callback: function(e, c, d) { return c; }},
+		{"column": "age", "display_name": "AGE"},
+		{"column": "randomization", "display_name": "RANDOMIZATION"},
+	];
+	var newinstance = function(table, form) {
 		if (form == table) form = "index";
 		odkTables.launchHTML(null, "config/assets/formgen/" + table + "/" + form + ".html#" + newGuid());
 	};
@@ -692,17 +784,17 @@ helper.make_detail("geopoints_detail.html", "", """
 	main_col = "client_id";
 	table_id = "geopoints";
 	colmap = [
-		["client_id", function(e, c, d) { return c }],
-		["transportation_mode", function(e, c, d) {
+		{"column": "client_id", "callback": function(e, c, d) { return c; }},
+		{"column": "transportation_mode", "callback": function(e, c, d) {
 			if (c == null) c = d.getData(0, "transportation_mode_other")
 			return "MODE OF TRANSPORTATION: " + c;
-		}],
-		["description", "DESCRIPTION"],
-		["coordinates_latitude", function(e, c, d) {
+		}},
+		{"column": "description", "display_name": "DESCRIPTION"},
+		{"column": "coordinates_latitude", "callback": function(e, c, d) {
 		 	return "COORDINATES: " + c + " " + d.getData(0, "coordinates_longitude");
-		 }],
-	];
-	var newInstance = function(table, form) {
+		}}
+	]
+	var newinstance = function(table, form) {
 		if (form == table) form = "index";
 		odkTables.launchHTML(null, "config/assets/formgen/" + table + "/" + form + ".html#" + newGuid());
 	};

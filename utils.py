@@ -5,12 +5,16 @@ import form_generator, generate_table, generate_tables, generate_detail, generat
 appdesigner = "/home/niles/Documents/odk/app-designer"
 tmp = "/tmp"
 
-def do_command(push, command):
+def do_command(push, command, quiet):
 	if type(command) != type([]):
 		raise Exception("Unsafe subprocess command")
 	if push:
-		print(" ".join(command))
-		subprocess.check_call(command)
+		out = sys.stdout
+		if quiet:
+			out = open(os.devnull, "w")
+		else:
+			print(" ".join(command))
+		subprocess.check_call(command, stdout = out)
 def message(msg):
 	err = "## " + msg + " ##"
 	print("#" * len(err))
@@ -148,7 +152,7 @@ class utils():
 			bar_idx = 0;
 			for q in self.queue:
 				command = q
-				do_command(push, command)
+				do_command(push, command, quiet)
 				if quiet:
 					bar_idx += 1;
 					bar.index = bar_idx
@@ -156,9 +160,9 @@ class utils():
 			for f in self.filenames + static_files:
 				if do_syntax_check: check_syntax(f, quiet)
 				command = ["adb", "shell", "mkdir", "-p", "/sdcard/opendatakit/" + appname + "/config/assets/" + "/".join(f.split("/")[:-1])]
-				do_command(push, command)
+				do_command(push, command, quiet)
 				command = ["adb", "push", f, "/sdcard/opendatakit/" + appname + "/config/assets/" + f]
-				do_command(push, command)
+				do_command(push, command, quiet)
 				dest = ad_subpath + "/" + "/".join(f.split("/")[:-1])
 				if dest in ["table_slave.html"]: continue
 				if not quiet: print("mkdir -p " + dest);
