@@ -53,9 +53,11 @@ That display "Specialty: Herbal" on one line then "Seattle, Belltown" on the nex
 
 ![](ss.png)
 
-The `display_name` is displayed immediately before the value of that column, unless `callback` is provided instead.
+The `display_name` is displayed immediately before the value of that column, unless `callback` is provided.
 
 If `column` is not provided, then `display_name` is displayed by itself.
+
+You can also provide `pretty_value` and set it to true or false if you don't provide a callback. This will determine if the column value should be prettified and/or translated (e.g. `community_hospital` -> "Community Hospital")
 
 If `callback` is provided, it's called with the second argument set to the column value, and whatever the function returns is displayed. For example:
 
@@ -167,6 +169,10 @@ And the result might look like this:
 **Number of refrigerators**: 12<br />
 **Facility Type**: Dispensary<br />
 Located in **Atlanta**, **Georgia**
+
+You can also provide `pretty_column` set to false to display the raw column name if you don't provide a display_name or callback.
+
+You can also give `pretty_value` and set it to true or false to determine if the column value should be prettified or translated if you don't provide a callback.
 
 If you have an image, audio or video column, with \_contentType and \_uriFragment columns, you can specify the name without the extra \_uriFragment and you'll get a dom element that can be appended to e, or for an image you can get c.src to put it in your own html.
 
