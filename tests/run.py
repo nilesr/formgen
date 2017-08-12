@@ -45,7 +45,7 @@ def get(file):
 def userjs(file):
 	return "userjs/" + utils.gensym(file) + ".js"
 def scripts(file):
-	return json.loads(subprocess.check_output(["acorn", userjs(file)]).decode("utf-8"))
+	return json.loads(subprocess.check_output(["acorn", fname(userjs(file))]).decode("utf-8"))
 def cleanup_all():
 	if os.path.exists("app_specific_default.py.bac"):
 		os.rename("app_specific_default.py.bac", "app_specific_default.py")
@@ -164,7 +164,9 @@ try:
 	passert(alert["arguments"][0]["value"] == "Custom JS run when you search for something!")
 
 
-	contents.index("Custom JS put in a random script tag")
+	pprint("Checking for generic js")
+	get(userjs("plot.html")).index("Custom JS put in a random script tag")
+	passert(True)
 	customJsGeneric = script["body"][6]
 	pprint("Testing that customJsGeneric is an ExpressionStatement")
 	passert(customJsGeneric["type"] == "ExpressionStatement")
@@ -335,8 +337,6 @@ try:
 		worked = True
 	pprint("Testing that the build was aborted on the syntax error")
 	passert(worked)
-	pprint("Testing that the build was aborted on the syntax error using a different method")
-	passert(not os.path.exists(fname("some_other_file.html")))
 	cleanup()
 
 
