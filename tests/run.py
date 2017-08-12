@@ -60,7 +60,7 @@ def cleanup_all():
 	subprocess.call(["make", "clean"])
 def make():
 	# we MUST spawn a new process instead of using utils.make because python won't recognize that we swapped out app_specific_default.py because it thinks it's already imported it
-	subprocess.check_call(["python3",  "-c",  "import sys; sys.path.append(\".\"); import utils; utils.make(\"default\", False, True, True);"])
+	subprocess.check_call(["bash",  "-c",  "./build default --quiet"])
 
 
 all_passed = True;
@@ -69,7 +69,7 @@ try:
 	print("Building with an empty config")
 	setup("empty.py")
 	make();
-	pprint("Making sure the build completed succesfully")
+	pprint("Making sure the build completed successfully")
 	passert(True)
 	cleanup();
 
@@ -401,7 +401,7 @@ try:
 	try:
 		make();
 	except:
-		print()
+		print("")
 		worked = True
 	pprint("Testing that the build was aborted on the syntax error")
 	passert(worked)
@@ -416,7 +416,7 @@ try:
 	try:
 		make();
 	except:
-		print()
+		print("")
 		worked = True
 	pprint("Testing that the build was aborted on the syntax error")
 	passert(worked)
@@ -429,14 +429,14 @@ try:
 	try:
 		make();
 	except:
-		print()
+		print("")
 		worked = True
 	pprint("Testing that the build was aborted on the missing file")
 	passert(worked)
 	cleanup()
 
 except:
-	print()
+	print("")
 	print(traceback.format_exc())
 	print(red)
 	utils.message("TEST FAILED")
