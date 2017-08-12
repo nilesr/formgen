@@ -159,7 +159,7 @@ So for an imaginary cold chain deployment in the US, you might write this
 		{"column": "facility_type"},
 		{"column": "city", "callback": function(element, columnValue, data) {
 			return "Located in <b>" + columnValue + "</b>, <b>" + data.getData(0, "state") + "</b>;
-		}];
+		}};
 	]
 
 And the result might look like this:
