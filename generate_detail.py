@@ -4,6 +4,7 @@ def make(utils, filename, customHtml, customCss, customJsOl, customJsGeneric):
 	tables = utils.get_tables();
 	for table in tables:
 		cols[table] = utils.yank_instance_col(table)
+	token = utils.gensym(filename)
 	basehtml = """
 <html>
 """ + utils.warning + """
@@ -18,16 +19,7 @@ def make(utils, filename, customHtml, customCss, customJsOl, customJsGeneric):
 		<style>
 """ + customCss + """
 		</style>
-		<script>
-// A map of table ids to their instance columns (or _id if we couldn't pull it)
-var display_cols = """ + json.dumps(cols) + """
-// List of tables to edit with formgen. If a table isn't found in this list, we edit it with survey instead
-var allowed_tables = """ + json.dumps(utils.get_allowed_tables()) + """;
-var customJsOl = function customJsOl() {
-	"""+customJsOl+"""
-}
-""" + customJsGeneric + """
-		</script>
+		<script type="text/javascript" src="userjs/"""+token+""".js"></script>
 		<script type="text/javascript" src="generate_detail.js"></script>
 	</head>
 	<body onLoad='ol();'>
@@ -41,4 +33,15 @@ var customJsOl = function customJsOl() {
 """ + customHtml + """
 	</body>
 </html>"""
+	basejs = """
+// A map of table ids to their instance columns (or _id if we couldn't pull it)
+var display_cols = """ + json.dumps(cols) + """
+// List of tables to edit with formgen. If a table isn't found in this list, we edit it with survey instead
+var allowed_tables = """ + json.dumps(utils.get_allowed_tables()) + """;
+var customJsOl = function customJsOl() {
+	"""+customJsOl+"""
+}
+""" + customJsGeneric
 	open(filename, "w").write(basehtml)
+	open("userjs/" + token + ".js", "w").write(basejs)
+	utils.filenames.append("userjs/" + token + ".js")

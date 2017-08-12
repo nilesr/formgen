@@ -1,4 +1,5 @@
 def make(utils, filename, customJs, customCss):
+	token = utils.gensym(filename);
 	basehtml = """
 <!doctype html>
 <html>
@@ -12,14 +13,7 @@ def make(utils, filename, customJs, customCss):
 		<style>
 		""" + customCss + """
 		</style>
-		<script>
-			var metadata = {};
-			var list_views = {};
-			var menu = ["Empty menu!", null, []];
-			// BEGIN CONFIG
-			""" + customJs + """
-			// END CONFIG
-		</script>
+		<script type="text/javascript" src="userjs/"""+token+""".js"></script>
 		<script src="generate_index.js"></script>
 	</head>
 	<body onLoad='ol();'>
@@ -28,5 +22,14 @@ def make(utils, filename, customJs, customCss):
 	</body>
 </html>
 	"""
+	basejs = """
+			var metadata = {};
+			var list_views = {};
+			var menu = ["Empty menu!", null, []];
+			// BEGIN CONFIG
+			""" + customJs + """
+			// END CONFIG
+			"""
 	open(filename, "w").write(basehtml)
-
+	open("userjs/" + token + ".js", "w").write(basejs)
+	utils.filenames.append("userjs/" + token + ".js")

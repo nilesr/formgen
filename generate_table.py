@@ -4,6 +4,7 @@ def make(utils, filename, customHtml, customCss, customJsOl, customJsSearch, cus
 	tables = utils.get_tables();
 	for table in tables:
 		cols[table] = utils.yank_instance_col(table)
+	token = utils.gensym(filename)
 	basehtml = """
 <!doctype html>
 """ + utils.warning + """
@@ -19,29 +20,7 @@ def make(utils, filename, customHtml, customCss, customJsOl, customJsSearch, cus
 		<script type="text/javascript" src="/""" + utils.appname + """/system/tables/js/odkTables.js"></script>
 		<script type="text/javascript" src="formgen_common.js"></script>
 		<script type="text/javascript" src="generate_common.js"></script>
-		<script>
-// If you set a display_col, that column will be shown in the large text for each row item.
-// If you don't set one, we'll try and use the table id to pull it from this variable, which stores the
-// instance column for each table or _id if it couldn't be found.
-var display_cols = """ + json.dumps(cols) + """
-// List of tables we can add/edit with formgen, if the table isn't found in this list, we'll use survey
-var allowed_tables = """ + json.dumps(utils.get_allowed_tables()) + """
-// A map of table ids to tokens that can be used to localize their display name
-var display_col_wrapper = null;
-var clicked = function(table_id, row_id) {
-	odkTables.openDetailView({}, table_id, row_id);
-}
-var customJsOl = function customJsOl() {
-	"""+customJsOl+"""
-}
-var customJsSearch = function customJsSearch() {
-	"""+customJsSearch+"""
-}
-""" + customJsGeneric + """
-
-var embedded = false;
-var forMapView = false;
-		</script>
+		<script type="text/javascript" src="userjs/"""+token+""".js"></script>
 		<script type="text/javascript" src="generate_table.js"></script>
 	</head>
 	<body onLoad="ol();">
@@ -76,4 +55,29 @@ var forMapView = false;
 		""" + customHtml + """
 	</body>
 </html>"""
+	basejs = """
+// If you set a display_col, that column will be shown in the large text for each row item.
+// If you don't set one, we'll try and use the table id to pull it from this variable, which stores the
+// instance column for each table or _id if it couldn't be found.
+var display_cols = """ + json.dumps(cols) + """
+// List of tables we can add/edit with formgen, if the table isn't found in this list, we'll use survey
+var allowed_tables = """ + json.dumps(utils.get_allowed_tables()) + """
+// A map of table ids to tokens that can be used to localize their display name
+var display_col_wrapper = null;
+var clicked = function(table_id, row_id) {
+	odkTables.openDetailView({}, table_id, row_id);
+}
+var customJsOl = function customJsOl() {
+	"""+customJsOl+"""
+}
+var customJsSearch = function customJsSearch() {
+	"""+customJsSearch+"""
+}
+""" + customJsGeneric + """
+
+var embedded = false;
+var forMapView = false;
+"""
 	open(filename, "w").write(basehtml)
+	open("userjs/" + token + ".js", "w").write(basejs)
+	utils.filenames.append("userjs/" + token + ".js")

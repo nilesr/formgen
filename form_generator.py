@@ -11,19 +11,13 @@ def falsey(r):
 	if r.endswith(";"):
 		r = r[:-1].strip()
 	return r == "0" or r == "false";
-# like S4 in formgen_common.js, just makes four random 0-9a-f digits, used in gensym
-def genpart(): return hex(random.randint(0, 2**(8*2))).split("x")[1].rjust(4, "0")
-# returns a random guid, used for translation tokens
-def gensym(thing = False):
-	if thing:
-		return hashlib.md5(str(thing).encode("utf-8")).hexdigest()
-	return genpart() + genpart() + "-4" + genpart()[1:] + "-" + genpart() + "-" + genpart() + genpart() + genpart()
 default_initial = [
 	#{"type": "note", "display": "You are at the beginning of an instance"},
 	{"clause": "do section survey"},
 	{"type": "note", "display": "You are at the the end of this instance. Press finalize to save as complete, or close this window to save as incomplete"},
 ]
 def generate_all(utils, filenames, quiet):
+	gensym = utils.gensym
 	if not os.path.exists("formgen"): os.mkdir("formgen");
 	tables = utils.get_tables()
 	all_pairs = []

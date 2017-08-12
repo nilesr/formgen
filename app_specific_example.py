@@ -357,12 +357,12 @@ helper.make_index("plot_index.html", """
 		{"label": "View Plots on a Map", "type": "js", "function": function() { odkTables.openTableToMapView(null, "plot", null, null, "config/assets/plot_map.html#plot"); }},
 		{"label": "View Visits", "type": "list_view", "table": "visit"},
 		{"label": "View Reports", "type": "menu", "contents": [
-			{"label": "View Overall Data", "type": "html", "file": "config/assets/view_overall_data.html"},
-			{"label": "View Single Plot Data", "type": "html", "file": "config/assets/single_plot_data_list.html"},
+			{"label": "View Overall Data", "type": "html", "page": "config/assets/view_overall_data.html"},
+			{"label": "View Single Plot Data", "type": "html", "page": "config/assets/single_plot_data_list.html"},
 			{"label": "View Comparison Data", "type": "menu", "contents": [
-				{"label": "Compare by plant type", "type": "html", "file": "config/assets/compare_list_planting.html#plot/STATIC/SELECT * FROM plot GROUP BY planting/[]/distinct values of planting"},
-				{"label": "Compare by soil type", "type": "html", "file": "config/assets/compare_list_soil.html#plot/STATIC/SELECT * FROM plot JOIN visit ON visit.plot_id = plot._id GROUP BY soil/[]/distinct values of soil type"},
-				{"label": "Compare all plots", "type": "html", "file": "config/assets/compare_all_plots.html"},
+				{"label": "Compare by plant type", "type": "html", "page": "config/assets/compare_list_planting.html#plot/STATIC/SELECT * FROM plot GROUP BY planting/[]/distinct values of planting"},
+				{"label": "Compare by soil type", "type": "html", "page": "config/assets/compare_list_soil.html#plot/STATIC/SELECT * FROM plot JOIN visit ON visit.plot_id = plot._id GROUP BY soil/[]/distinct values of soil type"},
+				{"label": "Compare all plots", "type": "html", "page": "config/assets/compare_all_plots.html"},
 			]}
 		]}
 	]}

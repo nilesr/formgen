@@ -1,4 +1,5 @@
 def make(utils, filename, customJs, customCss):
+	token = utils.gensym(filename)
 	basehtml = """
 <!doctype html>
 <html>
@@ -10,9 +11,7 @@ def make(utils, filename, customJs, customCss):
 		<style>
 			"""+customCss+"""
 		</style>
-		<script>
-			"""+customJs+"""
-		</script>
+		<script src="userjs/"""+token+""".js"></script>
 		<script src="tabs.js"></script>
 	</head>
 	<body onLoad='ol();'>
@@ -22,3 +21,5 @@ def make(utils, filename, customJs, customCss):
 </html>
 	"""
 	open(filename, "w").write(basehtml);
+	open("userjs/" + token + ".js", "w").write(customJs);
+	utils.filenames.append("userjs/" + token + ".js")
