@@ -431,7 +431,7 @@ def make_map(val, depth = 0):
 	submenu = {"label": val, "type": "menu", "contents": [make_map(hierarchy[val][i], depth + 1) for i in range(len(hierarchy[val]))]}
 	# if depth >= 2:
 	if depth >= 2 or val == "North":
-		submenu["contents"] += {"label": "Filter By Type", "type": "html", "page": "config/assets/admin_region_filter.html#" + val + ":"}
+		submenu["contents"].append({"label": "Filter By Type", "type": "html", "page": "config/assets/admin_region_filter.html#" + val + ":"})
 	return submenu
 #print(hierarchy)
 as_list = make_map("_start")
