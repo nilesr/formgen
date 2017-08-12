@@ -1,13 +1,12 @@
-# This readme is outdated, almost everything has changed, including the build system. I'll update it tomorrow.
-## formgen
+## formgen 2
 
 ## Getting started
 
 First, clone [the app designer repo](https://github.com/opendatakit/app-designer), and set the path of where you cloned it to in the `appdesigner` variable in `utils.py`
 
-Then run `make all appname=your_app_name` to generate forms and automatically copy them to your app designer repo. Change `all` to `deploy` to have them sent to a connected device as well.
+Then run `./build your_app_name` to generate forms and automatically copy them to your app designer repo. Add `--push` to have them sent to a connected device as well.
 
-To have `make` remember your app name, add a target to the Makefile. There are two examples to copy from already in there
+You can add --quiet for some prettier output, and If you're feeling lucky, you can also add --no-syntax to skip syntax checking, which will vastly improve speeds.
 
 ## Configuring list/detail views
 
@@ -44,51 +43,71 @@ Also, the column to be displayed for each row in the list will be automatically 
 
 You can set `display_subcol` if you want more things displayed, like this
 
-	display_subcol = [["Specialty: ", "ttName", true], ["", "District", false], [", ", "Neighborhood", true]];
+	display_subcol = [
+		{"column": "ttName", "display_name": "Specialty: ", "newline": true},
+		{"column": "District", "newline": false},
+		{"column": "Neighborhood", "display_name": ", ", "newline": true}
+	]
 
 That display "Specialty: Herbal" on one line then "Seattle, Belltown" on the next
 
 ![](ss.png)
 
-The second thing in the triplet is the column ID, and the third thing in the triplet is whether to add a newline after that triplet
+The `display_name` is displayed immediately before the value of that column, unless `callback` is provided instead.
 
-If the first thing in the triplet is a string, the string is printed immediately followed by the value of the given column, unless the column is null, in which case it will just print the text
+If `column` is not provided, then `display_name` is displayed by itself.
 
-If the first thing is a function, it's called with the second argument set to the column value, and whatever the function returns is displayed. For example:
+If `callback` is provided, it's called with the second argument set to the column value, and whatever the function returns is displayed. For example:
 
-	var sc_callback = function(e, c, d, i) {
-		  if (c == "Black") {
+	var sc_callback = function(element, columnValue, data, i) {
+		  if (columnValue == "Black") {
 			  return "This tea house specializes in Black Tea - Yuck!"
 		  } else {
-			  return "Specialty: " +  c;
+			  return "Specialty: " +  columnValue;
 		  }
 	};
-	display_subcol = [[sc_callback, "ttName", true]]
+	display_subcol = [{"column": "ttName", "callback": sc_callback, "newline": true}]
 
 would display a snide remark about the tea houses specialty if it specializes in Black Tea, otherwise display it normally
 
 Another example from selects:
 
-	var cb = function(e, bird, d, i) {
-		if (bird == null || bird == undefined || bird.trim().length == 0) return "Didn't see anything";
+	var cb = function(element, columnValue, data, i) {
+		if (columnValue == null || columnValue == undefined || columnValue.trim().length == 0) return "Didn't see anything";
 		var n = ""
-		if ("aeiou".indexOf(bird[0].toLowerCase()) >= 0) n = "n"
-		return "Saw a" + n + " " + bird;
+		if ("aeiou".indexOf(columnValue[0].toLowerCase()) >= 0) n = "n"
+		return "Saw a" + n + " " + columnValue;
 	}
-	display_subcol = [[cb, "bird", true]];
+	display_subcol = [{"column": "bird", "callback": cb, "newline": true}]
 
 which can display lines like "Didn't see anything", "Saw a robin", or "Saw an egret" on each row
 
-The four arguments are `e`, the dom element that the text will be displayed inside of, `c`, the database value of the requested column, `d`, the odkData object and `i`, the index of the row. So if you had a callback that needed data from another column, you can get it using `d.getData(i, "some_other_column")`
+The four arguments are `element`, the dom element that the text will be displayed inside of, `columnValue`, the database value of the requested column, `data`, the odkData object and `i`, the index of the row. So if you had a callback that needed data from another column, you can get it using `d.getData(i, "some_other_column")`
 
 The callback functions can return html too.
+
+You can also set `display_col_wrapper` to a function that returns what should be displayed, like this
+
+	display_col_wrapper = function display_col_wrapper(d, i, c) {
+		return c.split("T")[0];
+	}
+	display_col = "date_serviced"
+
+This would display "2017-03-05" instead of "2017-03-05T00:00:00.0000000" in the `display_col` field
+
+You can change the behavior of clicking on a row by changing the global `clicked` function. The default implementation is this
+
+	var clicked = function clicked(table_id, row_id, data, i) {
+		odkTables.openDetailView({}, table_id, row_id);
+	}
+
+If you wanted to open a detail with sub list view or something, just set clicked to something different in your customJsOl (without the leading `var`)
 
 When you enter something into the search box, first it tries to find results `WHERE :display_col LIKE %:search%`
 
 If no results are returned, it adds an OR clause for each column in `display_subcol`. So if you're in tea houses and you search for "Tea", it will show all the columns that have "Tea" in their name. But if you search for "Hill", it will first try and show all the columns that have Hill in their name, realize that there are no results, then (if you used the `display_subcol` above) show all the columns where `Name LIKE %Hill% OR District LIKE %Hill% OR Neighborhood LIKE %Hill%`, and there are several neighborhoods with Hill in their name so it will come back with some results.
 
 If you want to search for a column but not display it, you could just write a callback function that returns "" and set the third value in the triplet to false. Bit of a hack but it works
-
 
 To do a cross table query, set a JOIN, example from tea houses
 
@@ -102,38 +121,22 @@ Unless your column names actually conflict this is usually unnecessary. If you n
 
 By default it will allow you to group on any column, and display the translated/prettified name in the listing. To configure which ones are allowed, set something like this
 
-	allowed_group_bys = [["Specialty", true], ["District", "District of the tea house"]]
+	allowed_group_bys = [
+		{"column": "Specialty"},
+		{"column": "District", "display_name": "District of the tea house"}
+	]
 
-Then your users won't be able to group by silly things like the column name
+Then your users won't be able to group by silly things like the location latitude
 
-First string in each pair is the column id, second one is a bit special. If it's a string, that string is displayed in the dropdown menu
+If you provide `display_name`, that is what is show in the list. It is also shown in the explanation for the relevant group by and collection views ("Displaying x-y of z unique values of `display_name goes here`" and "Displaying x-y of z rows where `display_name goes here` is `whatever the user selected`")
 
-If it's true, the translated column id is used
+If you provide `pretty` and set it to false, and don't provide a display name, the raw column name is used.
 
-If it's false, the literal column id is used (same as duplicating the first argument)
-
-If there's only one pair in the list of `allowed_group_bys`, it's launched automatically if the user clicks the group by button.
+If there's only one element in the list of `allowed_group_bys`, it's launched automatically if the user clicks the group by button.
 
 If you set `allowed_group_bys` to an empty list, the group by button won't be displayed
 
-You can also set `display_col_wrapper` to a function that returns what should be displayed, like this
-
-	display_col_wrapper = function display_col_wrapper(d, i, c) {
-		return c.split("T")[0];
-	}
-	display_col = "date_serviced"
-
-This would display "2017-03-05" instead of "2017-03-05T00:00:00.0000000" in the `display_col` field
-
-You can change the behavior of clicking on a row by changing the global `clicked` function. The default implementation is this
-
-	var clicked = function clicked(table_id, row_id, d, i) {
-		odkTables.openDetailView({}, table_id, row_id);
-	}
-
-If you wanted to open a detail with sub list view or something, just set clicked to something different in your customJsOl (without the leading `var`)
-
-TODO document `forMapView`
+If you set `forMapView` to true, your list view will be way slower but it will open the selected marker as soon as the user selects it. Map view support is abysmal, mostly due to getViewData. I don't recommend map views in formgen to my worst enemies.
 
 ### Detail views
 
@@ -145,23 +148,17 @@ For joins, set `global_join` the same as lists. You can also set `global_which_c
 
 By default, it will display every single column in the list. To configure how it gets shown, set `colmap`.
 
-`colmap` is a list of pairs describing which columns to show. If a colmap is set, a column is not displayed in the detail view unless it is found in `colmap`. Each pair is in the form of `[column_id, text_to_display]`, and the ul on the screen will appear as `text_to_display: value_of_that_column`.
-
-If you pass in a literal boolean true as the text to display, the translated column name is sued as the text to display, and the data displayed is pretty printed.
-
-If you pass in a literal boolean false as the text to display, the translated column name is sued as the text to display, and the data displayed is the raw data from the database, or if it was a select one/select multiple, it will be translated.
-
-If you pass a function as the text to display, it is called with three arguments, `e`, `c` and `d`. `e` is the li element that will be appended, `c` is the value of the reqested column from the database, and `d` is the odkData success callback result. Whatever the function returns is displayed to the screen.
+`colmap` is a list of objects describing which columns to show. If a colmap is set, a column is not displayed in the detail view unless it is found in `colmap`. Each pair is in the form of `[column_id, text_to_display]`, and the ul on the screen will appear as `text_to_display: value_of_that_column`.
 
 Your `main_col` should be in your `colmap`
 
 So for an imaginary cold chain deployment in the US, you might write this
 
 	colmap = [
-		["refrig_count", "Number of refrigerators"],
-		["facility_type", true],
-		["city", function(e, c, d) {
-			return "Located in <b>" + c + "</b>, <b>" + d.getData(0, "state") + "</b>;
+		{"column": "refrig_count", "display_name": "Number of refrigerators"},
+		{"column": "facility_type"},
+		{"column": "city", "callback": function(element, columnValue, data) {
+			return "Located in <b>" + columnValue + "</b>, <b>" + data.getData(0, "state") + "</b>;
 		}];
 	]
 
@@ -175,33 +172,39 @@ If you have an image, audio or video column, with \_contentType and \_uriFragmen
 
 ### Menus
 
-In customJs you need to set `menu`. A `menu` is either a triplet of strings `["Value to display on the screen", "table_id", "something appended to the list view path]`. So for example, to make a buttom that opens a list of `health_facilities` where admin_region is Dowa, you would set
-
-	menu = ["Menu Title", null, [
-		["Button text", "health_facility", "admin_region = ?/Dowa"]
-	]]
+In customJs you need to set `menu`. The different types of menus that you can have are listed here
 	
+	menu = {"label": "Menu Title Here", "type": "menu", "contents": [
+			{"label": "Button Text 1", "type": "list_view", "table": "some_table"},
+			{"label": "Button Text 2", "type": "group_by", "table": "some_table", "grouping": "some_group_by_column"},
+			{"label": "Button Text 3", "type": "collection", "table": "some_table", "column": "some_column", "value": "some_value"},
+			{"label": "Button Text 4", "type": "static", "table": "some_table", "query": "SELECT * FROM health_facility WHERE regionLevel2 = ? AND facility_type = ?", "args": ["North", "community_hospital"], "explanation": "Health facilities in the region level 2 ? of the type ?"},
+			{"label": "Button Text 5", "type": "js", "function": function() { alert('Some javascript'); }},
+			{"label": "Button Text 6", "type": "html", "page": "config/assets/some_page.html" },
+			{"type": "group_by", "table": "some_table", "grouping": "some_column"}
+		]}
 	
-You only need to set the table id on the buttons that will open a list view, or on buttons that are going to open a group by and you want the name of the column that you're going to group by to be automatically translated by setting a literal boolean `true` as the button text.
+ 
+For example, to make a buttom that opens a list of `health_facilities` where admin_region is Dowa, you would set
 
-If you pass in a boolean true for the title, it assumes you want a group by, interprets the third value in the triplet as a column id and attempts to pull the localized column name from the metadata of the table id (second item in the triplet).
+	menu = {"label": "Menu Title", type": "menu", "contents": [
+		{"label": "Button text", "type": "collection", "table": "health_facility", "column": "admin_region", "value": "Dowa"}
+	]}
+	
+A menu can also have embedded menus using the `menu` type
 
-You can set the second value to the magic `_html` and the third value will be understood as a relative path and passed to `odkTables.launchHTML`. 
-
-A menu can also have embedded menus, simply pass a list as the third element in the triplet. For example:
-
-	menu = ["Main Title", null, [
+	menu = {"label": "Main Title", "type": "menu", "contents": [
 			// Will display all health facilities
-			["View All Health Facilities", "health_facility", ""],
+			{"label": "View All Health Facilities", "type": "list_view", "table: "health_facility"],
 			// Will group by admin region and display "By Admin Region" for the button's text	
-			[true, "health_facility", "admin_region"],
-			["Launch another page", "_html", "assets/config/some_other_page.html"],
-			["This is an embedded menu", null, [
-				[true, "health_facility", "delivery_type"],
-				["By Reserve Stock Requirement", "health_facility", "vaccine_reserve_stock_requirement"]
-				["All refrigerators in the health facility Dowa that were installed before 1995", "refrigerators", "STATIC/SELECT * FROM refrigerators JOIN health_facility ON health_facility._id = refrigerators.facility_row_id WHERE health_facility.admin_region = ? AND refrigerators.year < 1995/[\"Dowa\"]/refrigerators in health facilities in the admin region ? that were installed before 1995"]
-			]]
-		]]
+			{"type": "group_by", "table": health_facility", "grouping": "admin_region"},
+			{"label": "Launch another page", "type": "html", "page": "assets/config/some_other_page.html"},
+			{"label": "This is an embedded menu", "type": "menu", "contents": [
+				{"type": "group_by", "table": "health_facility", "grouping": "delivery_type"},
+				{"label": "By Reserve Stock Requirement", "type": "group_by", "table": "health_facility", "grouping": "vaccine_reserve_stock_requirement"},
+				{"label": "All refrigerators in health facilities in the admin region of Dowa that were installed before 1995", "type": "static", "table": "refrigerators", "query": "SELET * FROM refrigerators JOIN health_facility ON health_facility._id = refrigerators.facility_row_id WHERE health_facility.admin_region = ? AND year < ?", "args": ["Dowa", 1995], "explanation": "refrigerators in health facilities in the admin region ? that were installed before ?"},
+			]}
+		]}
 
 You also need to set the `list_views` variable to a dictionary. So for the above example,
 
@@ -218,9 +221,9 @@ You can make a page that has tabs like this
 
 	helper.make_tabs("index.html", """
 		var tabs = [
-			["Some tab name", "first_page.html"],
-			["Tab Two", "second_page.html"],
-			["Tab Three", "third_page.html"],
+			{"title": "Some tab name", "file": "first_page.html"},
+			{"title": "Tab two", "file": "second_page.html"},
+			{"title": "Tab three", "file": "third_page.html"}
 		]
 	""", "")
 
@@ -229,10 +232,10 @@ An iframe with `src` set to the second element in the pair will take up the rest
 Remember that odkData despises iframes with a loathing passion, and your odkData callbacks on these pages will not work. To get data callbacks, you can have your iframe's html set a `window.success` (or a similar name), and add a function to your triplet, like this
 
 	var tabs = [
-		["Some tab name", "first_page.html"],
-		["Tab Two", "second_page.html", function(iframe) {
+		{"title": "Some tab name", "file": "first_page.html"},
+		{"title": "Tab Two", "page": "second_page.html", "callback": function(iframe) {
 			odkData.arbitraryQuery(table, raw_query, args, 10000, 0, iframe.contentWindow.success, function(e) { alert("Error: " + e); });
-		}],
+		}},
 	]
 
 ### Translations
@@ -242,7 +245,10 @@ Most of the above configuration involves setting strings that will be displayed 
 	helper.make_table("aa_health_facility_list.html", "", "", """
 		table_id = "health_facility";
 		display_col = "facility_name"
-		display_subcol = [["Facility ID: ", "facility_id", true], ["Refrigerators: ", "refrigerator_count", true]]
+		display_subcol = [
+			{"column": "facility_id", "display_name": "Facility ID: ", "newline": true},
+			{"column": "refrig_count", "display_name": "Refrigerators: ", "newline": true},
+		]
 	""", "", "")
 	
 	helper.translations = {
