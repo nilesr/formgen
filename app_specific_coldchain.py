@@ -29,8 +29,18 @@ helper.make_table("aa_refrigerator_types_list.html", "", """
 		if (c == null || c == "null") return "No picture available";
 		return "<div class='img-wrapper'><img class='refrig-img' src='" + odkCommon.getRowFileAsUrl(table_id, d.getData(i, "_id"), c) + "' /></div>";
 	}
-	display_subcol = [["Manufacturer: ", "manufacturer", true], ["Model ID: ", "model_id", true], [makepicture, "refrigerator_picture_uriFragment", true]];
-	allowed_group_bys = ["manufacturer", "climate_zone", "equipment_type"]
+	//display_subcol = [["Manufacturer: ", "manufacturer", true], ["Model ID: ", "model_id", true], [makepicture, "refrigerator_picture_uriFragment", true]];
+	display_subcol = [
+		{"column": "manufacturer", "display_name": "Manufacturer: ", "newline": true},
+		{"column": "model_id", "display_name": "Model ID: ", "newline": true},
+		{"column": "refrigerator_picture_uriFragment", "callback": makepicture, "newline": true}
+	]
+	//allowed_group_bys = ["manufacturer", "climate_zone", "equipment_type"]
+	allowed_group_bys = [
+		{"column": "manufacturer"},
+		{"column": "climate_zone"},
+		{"column": "equipment_type"}
+	]
 	display_col = "catalog_id"
 	table_id = "refrigerator_types";
 """, """
@@ -46,10 +56,22 @@ helper.make_table("aa_refrigerator_types_list.html", "", """
 
 helper.make_table("aa_refrigerators_list.html", "", "", global_allowed_tables + global_block_add + """
 	global_join = "refrigerator_types ON refrigerators.model_row_id = refrigerator_types._id JOIN health_facility ON refrigerators.facility_row_id = health_facility._id"
-	display_subcol = [["", "model_id", true], ["Healthcare Facility: ", "facility_name", true]];
+	//display_subcol = [["", "model_id", true], ["Healthcare Facility: ", "facility_name", true]];
+	display_subcol = [
+		{"column": "model_id", "newline": true},
+		{"column": "facility_name", "display_name": "Healthcare Facility: ", "newline": true}
+	]
 	display_col = "tracking_id"
 	table_id = "refrigerators";
-	allowed_group_bys = [["facility_row_id", "Facility"], ["model_row_id", "Model"], "reason_not_working", ["utilization", "Use"], "working_status", "year"]
+	//allowed_group_bys = [["facility_row_id", "Facility"], ["model_row_id", "Model"], "reason_not_working", ["utilization", "Use"], "working_status", "year"]
+	allowed_group_bys = [
+		{"column": "facility_row_id", "display_name": "Facility"},
+		{"column": "model_row_id", "display_name": "Model"},
+		{"column": "reason_not_working"},
+		{"column": "utilization", "display_name": "Use"},
+		{"column": "working_status"},
+		{"column": "year"}
+	]
 """, "", "")
 
 #hf_cols_to_select = "*, (SELECT COUNT(*) FROM refrigerators WHERE facility_row_id = health_facility._id) AS refrigerator_count"
@@ -58,12 +80,28 @@ hf_cols_to_select = "*"
 helper.make_table("aa_health_facility_list.html", "", "", global_allowed_tables + global_block_add + """
 	display_col = "facility_name"
 	table_id = "health_facility";
-	allowed_group_bys = ["admin_region", "climate_zone", "delivery_type", "electricity_source", ["facility_ownership", "Ownership"], "facility_type", "storage_type", "solar_suitable_climate", "solar_suitable_site", "vaccine_supply_mode", "vaccine_reserve_stock_requirement"];
+	//allowed_group_bys = ["admin_region", "climate_zone", "delivery_type", "electricity_source", ["facility_ownership", "Ownership"], "facility_type", "storage_type", "solar_suitable_climate", "solar_suitable_site", "vaccine_supply_mode", "vaccine_reserve_stock_requirement"];
+	allowed_group_bys = [
+		{"column": "admin_region"},
+		{"column": "climate_zone"},
+		{"column": "delivery_type"},
+		{"column": "electricity_source"},
+		{"column": "facility_ownership", "display_name": "Ownership"},
+		{"column": "facility_type"},
+		{"column": "storage_type"},
+		{"column": "solar_suitable_climate"},
+		{"column": "solar_suitable_site"},
+		{"column": "vaccine_supply_mode"},
+		{"column": "vaccine_reserve_stock_requirement"},
+	]
 
 	global_which_cols_to_select = \""""+hf_cols_to_select+"""\"
-	display_subcol = [
-		["Facility ID: ", "facility_id", true],
+	//display_subcol = [
+		//["Facility ID: ", "facility_id", true],
 		//["Refrigerators: ", "refrigerator_count", true]
+	//]
+	display_subcol = [
+		{"column": "facility_id", "display_name": "Facility ID: ", "newline": true},
 	]
 	document.getElementById("add").style.display = "none";
 """, "", "")
@@ -79,8 +117,12 @@ helper.make_table("aa_m_logs_list.html", "", "", global_allowed_tables + global_
 		return c.split("T")[0];
 	}
 	display_col = "date_serviced"
-	display_subcol = [["", "refs_tracking_number", true], [notes_cb, "notes", true]];
-	allowed_group_bys = ["manufacturer", "climate_zone", "equipment_type"]
+	//display_subcol = [["", "refs_tracking_number", true], [notes_cb, "notes", true]];
+	display_subcol = [
+		{"column": "refs_tracking_number", "newline": true},
+		{"column": "notes", "callback": notes_cb, "newline": true},
+	]
+	allowed_group_bys = [];
 	table_id = "m_logs";
 	global_join = "refrigerators ON refrigerators.refrigerator_id = m_logs.refrigerator_id"
 	global_which_cols_to_select = "*, refrigerators.refrigerator_id AS refs_refid, refrigerators.tracking_id AS refs_tracking_number"
@@ -176,21 +218,20 @@ helper.make_detail("aa_refrigerators_detail.html", """
 	var subquery = "(SELECT date_serviced FROM m_logs WHERE m_logs.refrigerator_id = refrigerators.refrigerator_id AND m_logs._savepoint_type != 'INCOMPLETE' ORDER BY date_serviced DESC LIMIT 1)"
 	global_which_cols_to_select = global_which_cols_to_select.concat(", (CASE WHEN "+subquery+" IS NOT NULL THEN "+subquery+" ELSE 'No Records' END) as date_serviced")
 	colmap = [
-		["facility_name", hf_callback],
-		["year", build_generic_callback("year", true, "Year Installed")],
-		["working_status", build_generic_callback("working_status", true, "Status")],
-		["reason_not_working", build_generic_callback("reason_not_working", true)],
-		["model_row_id", model_callback],
-		["tracking_id", build_generic_callback("tracking_id", false, "Tracking Number")],
-		["voltage_regulator", build_generic_callback("voltage_regulator", true)],
-		//["refrigerator_id", build_generic_callback("refrigerator_id", true)],
-		["date_serviced", build_generic_callback("date_serviced", function(i) {
+		{"column": "facility_name", "callback": hf_callback},
+		{"column": "year", "callback": build_generic_callback("year", true, "Year Installed")},
+		{"column": "working_status", "callback": build_generic_callback("working_status", true, "Status")},
+		{"column": "reason_not_working", "callback": build_generic_callback("reason_not_working", true)},
+		{"column": "model_row_id", "callback": model_callback},
+		{"column": "tracking_id", "callback": build_generic_callback("tracking_id", false, "Tracking Number")},
+		{"column": "voltage_regulator", "callback": build_generic_callback("voltage_regulator", true)},
+		{"column": "date_serviced", "callback": build_generic_callback("date_serviced", function(i) {
 			if (i == "No Records") {
 				return _tu(i);
 			}
 			return i.split("T")[0];
-		}, _tu("Date Serviced"))]
-	];
+		}, _tu("Date Serviced"))}
+	]
 """, "")
 
 helper.make_detail("aa_refrigerator_types_detail.html", """
@@ -231,17 +272,17 @@ helper.make_detail("aa_refrigerator_types_detail.html", """
 		document.getElementById("refrig_with_this_model_count").innerText = d.getData(0, "refrig_with_this_model_count");
 	}
 	colmap = [
-		["manufacturer", build_generic_callback("manufacturer", true)],
-		["power_source", build_generic_callback("power_source", function(i) { return pretty(jsonParse(i).join(", ")); })],
-		["refrigerator_gross_volume", build_generic_callback("refrigerator_gross_volume", " litres")],
-		["freezer_gross_volume", build_generic_callback("freezer_gross_volume", " litres")],
-		["equipment_type", build_generic_callback("equipment_type", true)],
-		["climate_zone", build_generic_callback("climate_zone", true)],
-		["refrigerator_net_volume", build_generic_callback("refrigerator_net_volume", " litres")],
-		["freezer_net_volume", build_generic_callback("freezer_net_volume", " litres")],
-		["model_id", mid_callback],
-		["catalog_id", build_generic_callback("catalog_id", true)],
-		["refrigerator_picture", function(e,c,d){document.getElementById("inject-refrigerator_picture").appendChild(c)}]
+		{"column": "manufacturer", "callback": build_generic_callback("manufacturer", true)},
+		{"column": "power_source", "callback": build_generic_callback("power_source", function(i) { return pretty(jsonParse(i).join(", ")); })},
+		{"column": "refrigerator_gross_volume", "callback": build_generic_callback("refrigerator_gross_volume", " litres")},
+		{"column": "freezer_gross_volume", "callback": build_generic_callback("freezer_gross_volume", " litres")},
+		{"column": "equipment_type", "callback": build_generic_callback("equipment_type", true)},
+		{"column": "climate_zone", "callback": build_generic_callback("climate_zone", true)},
+		{"column": "refrigerator_net_volume", "callback": build_generic_callback("refrigerator_net_volume", " litres")},
+		{"column": "freezer_net_volume", "callback": build_generic_callback("freezer_net_volume", " litres")},
+		{"column": "model_id", "callback": mid_callback},
+		{"column": "catalog_id", "callback": build_generic_callback("catalog_id", true)},
+		{"column": "refrigerator_picture", "callback": function(e,c,d){document.getElementById("inject-refrigerator_picture").appendChild(c)}}
 	]
 """, "")
 
@@ -321,26 +362,26 @@ helper.make_detail("aa_health_facility_detail.html", """
 		});
 	}
 	colmap = [
-		['facility_name', fname_callback],
-		['facility_id', build_generic_callback("facility_id", true, "Health Facility ID")],
-		['facility_type', build_generic_callback("facility_type", true)],
-		['facility_ownership', build_generic_callback("facility_ownership", true, "Ownership")],
-		['facility_population', build_generic_callback("facility_population", true, "Population")],
-		['facility_coverage', build_generic_callback("facility_coverage", "%", "Coverage")],
-		['admin_region', build_generic_callback("admin_region", true, "Admin Region")],
-		['electricity_source', build_generic_callback("electricity_source", true)],
-		['grid_power_availability', build_generic_callback("grid_power_availability", true, "Grid Availability")],
-		['gas_availability', build_generic_callback("gas_availability", true)],
-		['kerosene_availability', build_generic_callback("kerosene_availability", true)],
-		['solar_suitable_climate', build_generic_callback("solar_suitable_climate", true, "Solar Suitable Climate?")],
-		['solar_suitable_site', build_generic_callback("solar_suitable_site", true, "Solar Suitable Site?")],
-		['Location_latitude', build_generic_callback("Location_latitude", true, "Latitude (GPS)")],
-		['Location_longitude', build_generic_callback("Location_longitude", true, "Longitude (GPS)")],
-		['climate_zone', build_generic_callback("climate_zone", true, "Climate")],
-		['distance_to_supply', build_generic_callback("distance_to_supply", true, "Distance to Supply Point")],
-		['vaccine_supply_interval', build_generic_callback("vaccine_supply_interval", true)],
-		['vaccine_reserve_stock_requirement', build_generic_callback("vaccine_reserve_stock_requirement", true, "Vaccine Reserve Stock Req")],
-		['vaccine_supply_mode', build_generic_callback("vaccine_supply_mode", true)],
+		{"column": 'facility_name', "callback": fname_callback},
+		{"column": 'facility_id', "callback": build_generic_callback("facility_id", true, "Health Facility ID")},
+		{"column": 'facility_type', "callback": build_generic_callback("facility_type", true)},
+		{"column": 'facility_ownership', "callback": build_generic_callback("facility_ownership", true, "Ownership")},
+		{"column": 'facility_population', "callback": build_generic_callback("facility_population", true, "Population")},
+		{"column": 'facility_coverage', "callback": build_generic_callback("facility_coverage", "%", "Coverage")},
+		{"column": 'admin_region', "callback": build_generic_callback("admin_region", true, "Admin Region")},
+		{"column": 'electricity_source', "callback": build_generic_callback("electricity_source", true)},
+		{"column": 'grid_power_availability', "callback": build_generic_callback("grid_power_availability", true, "Grid Availability")},
+		{"column": 'gas_availability', "callback": build_generic_callback("gas_availability", true)},
+		{"column": 'kerosene_availability', "callback": build_generic_callback("kerosene_availability", true)},
+		{"column": 'solar_suitable_climate', "callback": build_generic_callback("solar_suitable_climate", true, "Solar Suitable Climate?")},
+		{"column": 'solar_suitable_site', "callback": build_generic_callback("solar_suitable_site", true, "Solar Suitable Site?")},
+		{"column": 'Location_latitude', "callback": build_generic_callback("Location_latitude", true, "Latitude (GPS)")},
+		{"column": 'Location_longitude', "callback": build_generic_callback("Location_longitude", true, "Longitude (GPS)")},
+		{"column": 'climate_zone', "callback": build_generic_callback("climate_zone", true, "Climate")},
+		{"column": 'distance_to_supply', "callback": build_generic_callback("distance_to_supply", true, "Distance to Supply Point")},
+		{"column": 'vaccine_supply_interval', "callback": build_generic_callback("vaccine_supply_interval", true)},
+		{"column": 'vaccine_reserve_stock_requirement', "callback": build_generic_callback("vaccine_reserve_stock_requirement", true, "Vaccine Reserve Stock Req")},
+		{"column": 'vaccine_supply_mode', "callback": build_generic_callback("vaccine_supply_mode", true)},
 	]
 	document.getElementById("bfi").innerText = _tu("Basic Facility Information");
 	document.getElementById("pi").innerText = _tu("Power Information");
@@ -351,12 +392,12 @@ helper.make_detail("aa_health_facility_detail.html", """
 helper.make_detail("aa_m_logs_detail.html", "", "", """
 	main_col = "refs_tracking_number";
 	colmap = [
-		['refs_tracking_number', "Tracking Number: "],
-		['date_serviced', function(e, c, d) { return "<b>" + _tu("Date Serviced") + ":</b> " + c.split("T")[0]; }],
-		['notes', function(e, c, d) {
+		{"column": 'refs_tracking_number', "callback": "Tracking Number: "},
+		{"column": 'date_serviced', "callback": function(e, c, d) { return "<b>" + _tu("Date Serviced") + ":</b> " + c.split("T")[0]; }},
+		{"column": 'notes', "callback": function(e, c, d) {
 			if (c == null || c == "null") return "";
 			return "<b>" + _tu("Notes: ") + "</b>" + c;
-		}]
+		}}
 	]
 	global_join = "refrigerators ON refrigerators.refrigerator_id = m_logs.refrigerator_id"
 	global_which_cols_to_select = "*, refrigerators.tracking_id AS refs_tracking_number"
@@ -406,52 +447,55 @@ as_list[2].append(
 helper.static_files.append("inv_by_grid_power.html");
 helper.static_files.append("inv_by_age.html");
 as_list[2].append(
-	["View Data", None, [
-		["View Health Facilities", None, [
+	{"label": "View Data", "type": "menu", "contents": [
+		{"label": "View Health Facilities", "type": "menu", "contents": [
 			#["Filter By Region/Type", "_html", "config/assets/index.html"],
-			["Search By Name/ID", "health_facility", ""]
-		]],
-		["View Inventory", None, [
-			["Refrigerator Age", "_html", "config/assets/inv_by_age.html"],
-			["Facility Grid Power Availability", "_html", "config/assets/inv_by_grid_power.html"]
-		]],
-		["View Refrigerator Models", "refrigerator_types", "equipment_type"],
-		["More Options", None, [
-			["Health Facilities (Advanced)", "health_facility", [
-				["View All", "health_facility", ""],
-				[True, "health_facility", "admin_region"],
-				[True, "health_facility", "facility_type"],
-				["Ownership", "health_facility", "facility_ownership"],
-				["More", "health_facility", [
-					[True, "health_facility", "delivery_type"],
-					[True, "health_facility", "electricity_source"],
-					[True, "health_facility", "storage_type"],
-					[True, "health_facility", "solar_suitable_climate"],
-					[True, "health_facility", "solar_suitable_site"],
-					[True, "health_facility", "vaccine_supply_mode"],
-					["By Reserve Stock Requirement", "health_facility", "vaccine_reserve_stock_requirement"]
-				]]
-			]], ["Refrigerators (Advanced)", "refrigerators", [
-				["View All", "refrigerators", ""],
-				["By Facility", "refrigerators", "facility_name"],
-				["By Model", "refrigerators", "catalog_id"],
-				[True, "refrigerators", "year"],
-				["More", "refrigerators", [
-					["By Use", "refrigerators", "utilization"],
-					[True, "refrigerators", "working_status"],
-					[True, "refrigerators", "reason_not_working"]
-				]]
-			]], ["Models (Advanced)", "refrigerator_types", [
-				["View All", "refrigerator_types", ""],
-				[True, "refrigerator_types", "manufacturer"],
-				[True, "refrigerator_types", "equipment_type"],
-				["More", "refrigerator_types", [
-					[True, "refrigerator_types", "climate_zone"]
-				]]
-			]]
-		]]
-	]]
+			{"label": "Search By Name/ID", "type": "list_view", "table": "health_facility"}
+		]},
+		{"label": "View Inventory", "type": "menu", "contents": [
+			{"label": "Refrigerator Age", "type": "html", "page": "config/assets/inv_by_age.html"},
+			{"label": "Facility Grid Power Availability", "type": "html", "page": "config/assets/inv_by_grid_power.html"}
+		]},
+		{"label": "View Refrigerator Models", "type": "group_by", "table": "refrigerator_types", "grouping": "equipment_type"},
+		{"label": "More Options", "type": "menu", "contents": [
+			{"label": "Health Facilities (Advanced)", "type": "menu", "contents": [
+				{"label": "View All", "type": "list_view", "table": "health_facility"},
+				{"type": "group_by", "table": "health_facility", "grouping": "admin_region"},
+				{"type": "group_by", "table": "health_facility", "grouping": "facility_type"},
+				{"label": "Ownership", "type": "group_by", "table": "health_facility", "grouping": "ownership"},
+				{"label": "More", "type": "menu", "contents": [
+					{"type": "group_by", "table": "health_facility", "grouping": "delivery_type"},
+					{"type": "group_by", "table": "health_facility", "grouping": "electricity_source"},
+					{"type": "group_by", "table": "health_facility", "grouping": "storage_type"},
+					{"type": "group_by", "table": "health_facility", "grouping": "solar_suitable_climate"},
+					{"type": "group_by", "table": "health_facility", "grouping": "solar_suitable_site"},
+					{"type": "group_by", "table": "health_facility", "grouping": "vaccine_supply_mode"},
+					{"label": "By Reserve Stock Requirement", "type": "group_by", "table": "health_facility", "grouping": "vaccine_reserve_stock_requirement"}
+				]}
+			]},
+			{"type": "menu", "label": "Refrigerators (Advanced)", "contents": [
+				{"label": "View All", "type": "list_view", "table": "refrigerators"},
+				{"label": "By Facility", "type": "group_by", "table": "refrigerators", "grouping": "facility_name"},
+				{"label": "By Model", "type": "group_by", "table": "refrigerators", "grouping": "catalog_id"},
+				{"type": "group_by", "table": "refrigerators", "grouping": "year"},
+				{"label": "More", "type": "menu", "contents": [
+					{"label": "By Use", "type": "group_by", "table": "refrigerators", "grouping": "utilization"},
+					{"type": "group_by", "table": "refrigerators", "grouping": "working_status"},
+					{"type": "group_by", "table": "refrigerators", "grouping": "reason_not_working"},
+				]}
+			]},
+			{"label": "Models (Advanced)", "type": "menu", "contents": [
+				{"label": "View All", "type": "list_view", "table": "refrigerators_type"},
+				{"type": "group_by", "table": "refrigerator_types", "grouping": "manufacturer"},
+				{"type": "group_by", "table": "refrigerator_types", "grouping": "equipment_type"},
+				{"label": "More", "type": "menu", "contents": [
+					{"type": "group_by", "table": "refrigerator_types", "grouping": "climate_zone"},
+				]}
+			]}
+		]}
+	]}
 )
+as_list = {"label": as_list[0], "type": "menu", "contents": as_list[2]}
 
 helper.make_index("index.html", """
 list_views = {
@@ -466,22 +510,22 @@ var addhf = function addhf() {
 var addrf = function addrf() {
 	odkTables.addRowWithSurvey(null, "refrigerators", "refrigerators", null, null);
 }
-menu[2] = menu[2].concat(0);
-menu[2][menu[2].length - 1] = ["Administrative Actions", null, [
+menu["contents"] = menu["contents"].concat(0);
+menu["contents"][menu["contents"].length - 1] = {"label": "Administrative Actions", "type": "menu", "contents": [
 		//["Add Health Facility", "_js", addhf],
-		["Add Health Facility", "_html", "config/assets/add_hf.html"],
+		{"label": "Add Health Facility", "type": "html", "page": "config/assets/add_hf.html"},
 		//["Add Refrigerator", "_js", addrf]
-	]]
+	]}
 
 var make_path_from_string = function make_path_from_string(str, incomplete) {
 	var submenu = make_submenu(incomplete);
-	if (submenu[0].toUpperCase() == str.toUpperCase()) {
+	if (submenu["label"].toUpperCase() == str.toUpperCase()) {
 		return incomplete;
 	}
-	if (typeof(submenu[2]) != typeof([])) {
+	if (submenu["type"] != "menu") {
 		return null;
 	}
-	for (var i = 0; i < submenu[2].length; i++) {
+	for (var i = 0; i < submenu["contents"].length; i++) {
 		var found = make_path_from_string(str, incomplete.concat(i));
 		if (found != null) {
 			return found;
@@ -543,15 +587,15 @@ list_views = {
 }
 """ + make_val_accepting_index("""
 var subquery = "(SELECT date_serviced FROM m_logs WHERE m_logs.refrigerator_id = refrigerators.refrigerator_id ORDER BY date_serviced DESC LIMIT 1)"
-menu = [val, null, [
-	["View All Health Facilities", "_js", function() {
+menu = {"label": val, "type": "menu", "contents": [
+	{"label": "View All Health Facilities", "type": "js", "function": function() {
 		var where = "admin_region = ?"
 		odkTables.openTableToMapView(null, "health_facility", where, [val], "config/assets/hack_for_hf_map.html" + "#health_facility/" + where + "/" + val);
-	}],
-	["View All Refrigerators", "refrigerators", "STATIC/SELECT * FROM refrigerators JOIN health_facility ON refrigerators.facility_row_id = health_facility._id JOIN refrigerator_types ON refrigerators.model_row_id = refrigerator_types._id WHERE health_facility.admin_region = ?/[\\""+val+"\\"]/"+"refrigerators in health facilities in the admin region ?"],
-	["View All Refrigerators Not Serviced In The Last Six Months", "refrigerators", "STATIC/SELECT * FROM refrigerators JOIN health_facility ON refrigerators.facility_row_id = health_facility._id JOIN refrigerator_types ON refrigerators.model_row_id = refrigerator_types._id WHERE health_facility.admin_region = ? AND ("+subquery+" IS NULL OR (julianday(datetime('now')) - julianday("+subquery+")) > (6 * 30))/[\\""+val+"\\"]/refrigerators in health facilities in the admin region ? that haven't been serviced in the last 180 days or have no service records"],
-	["Filter By Type", "_html", "config/assets/admin_region_filter.html#" + val + ":"]
-]];
+	}},
+	{"label": "View All Refrigerators", "type": "static", "table": "refrigerators", "query": "SELECT * FROM refrigerators JOIN health_facility ON refrigerators.facility_row_id = health_facility._id JOIN refrigerator_types ON refrigerators.model_row_id = refrigerator_types._id WHERE health_facility.admin_region = ?", "args": [val], "explanation": "refrigerators in health facilities in the admin region ?"},
+	{"label": "View All Refrigerators Not Serviced In The Last Six Months", "type": "static", "table": "refrigerators", "query": "SELECT * FROM refrigerators JOIN health_facility ON refrigerators.facility_row_id = health_facility._id JOIN refrigerator_types ON refrigerators.model_row_id = refrigerator_types._id WHERE health_facility.admin_region = ? AND ("+subquery+" IS NULL OR (julianday(datetime('now')) - julianday("+subquery+")) > (6 * 30))", "args": [val], "explanation": "refrigerators in health facilities in the admin region ? that haven't been serviced in the last 180 days or have no service records"},
+	{"label": "Filter By Type", "type": "html", "page": "config/assets/admin_region_filter.html#" + val + ":"}
+]};
 		"""), hallway)
 
 helper.make_index("admin_region_filter.html", """
@@ -606,7 +650,7 @@ list_views = {
 							odkTables.openTableToMapView(null, "health_facility", where, args, "config/assets/hack_for_hf_map.html#health_facility/STATIC/SELECT """+hf_cols_to_select+""" FROM health_facility WHERE " + where + "/" + JSON.stringify(args) + "/" + hr_text);
 						}
 					//}
-					menu[2][menu[2].length - 1] = [_tc(d, "facility_type", ftype) + " (" + count + ")", "_js", cb]
+					menu["contents"][menu["contents"].length - 1] = {"label": _tc(d, "facility_type", ftype) + " (" + count + ")", "type": "js", "function": cb}
 				})(val, where, args, count, id);
 			}
 			doMenu();
