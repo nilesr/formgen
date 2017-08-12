@@ -1,3 +1,4 @@
+# This readme is outdated, almost everything has changed, including the build system. I'll update it tomorrow.
 ## formgen
 
 ## Getting started

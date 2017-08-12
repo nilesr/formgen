@@ -392,7 +392,7 @@ helper.make_detail("aa_health_facility_detail.html", """
 helper.make_detail("aa_m_logs_detail.html", "", "", """
 	main_col = "refs_tracking_number";
 	colmap = [
-		{"column": 'refs_tracking_number', "callback": "Tracking Number: "},
+		{"column": 'refs_tracking_number', "display_name": "Tracking Number: "},
 		{"column": 'date_serviced', "callback": function(e, c, d) { return "<b>" + _tu("Date Serviced") + ":</b> " + c.split("T")[0]; }},
 		{"column": 'notes', "callback": function(e, c, d) {
 			if (c == null || c == "null") return "";
@@ -422,31 +422,31 @@ for i in range(len(levels) - 1):
 		if row[i] != row[i + 1]:
 			hierarchy[row[i]].add(row[i+1])
 def make_admin_region(val):
-	return [val, "_html", "config/assets/admin_region.html#" + val + ":"];
+	return {"label": val, "type": "html", "page": "config/assets/admin_region.html#" + val + ":"};
 def make_map(val, depth = 0):
 	if len(hierarchy[val]) == 0: return make_admin_region(val)
 	# These two lines aren't needed, but they make it so the order in the list doesn't change every time you regenerate
 	hierarchy[val] = list(hierarchy[val])
 	hierarchy[val].sort()
-	submenu = [make_map(hierarchy[val][i], depth + 1) for i in range(len(hierarchy[val]))]
+	submenu = {"label": val, "type": "menu", "contents": [make_map(hierarchy[val][i], depth + 1) for i in range(len(hierarchy[val]))]}
 	# if depth >= 2:
 	if depth >= 2 or val == "North":
-		submenu = [["Filter By Type", "_html", "config/assets/admin_region_filter.html#" + val + ":"]] + submenu
-	return [val, None, submenu];
+		submenu["contents"] += {"label": "Filter By Type", "type": "html", "page": "config/assets/admin_region_filter.html#" + val + ":"}
+	return submenu
 #print(hierarchy)
 as_list = make_map("_start")
 # as_list now like ["_start", null, [...]]
 import json
-as_list[0] = "PATH Cold Chain Demo"
+as_list["label"] = "PATH Cold Chain Demo"
 # as_list now like ["PATH Cold Chain Demo", null, [...]]
 # append to the [...] our own option
 
-as_list[2].append(
-	["All Regions", None, [[val[0], "_html", "config/assets/admin_region.html#" + val[0] + ":"] for val in c.execute("SELECT regionlevel3 from t2;")]]
+as_list["contents"].append(
+	{"label": "All Regions", "type": "menu", "contents": [{"label": val[0], "type": "html", "page": "config/assets/admin_region.html#" + val[0] + ":"} for val in c.execute("SELECT regionlevel3 from t2;")]}
 )
 helper.static_files.append("inv_by_grid_power.html");
 helper.static_files.append("inv_by_age.html");
-as_list[2].append(
+as_list["contents"].append(
 	{"label": "View Data", "type": "menu", "contents": [
 		{"label": "View Health Facilities", "type": "menu", "contents": [
 			#["Filter By Region/Type", "_html", "config/assets/index.html"],
@@ -462,7 +462,7 @@ as_list[2].append(
 				{"label": "View All", "type": "list_view", "table": "health_facility"},
 				{"type": "group_by", "table": "health_facility", "grouping": "admin_region"},
 				{"type": "group_by", "table": "health_facility", "grouping": "facility_type"},
-				{"label": "Ownership", "type": "group_by", "table": "health_facility", "grouping": "ownership"},
+				{"label": "Ownership", "type": "group_by", "table": "health_facility", "grouping": "facility_ownership"},
 				{"label": "More", "type": "menu", "contents": [
 					{"type": "group_by", "table": "health_facility", "grouping": "delivery_type"},
 					{"type": "group_by", "table": "health_facility", "grouping": "electricity_source"},
@@ -485,7 +485,7 @@ as_list[2].append(
 				]}
 			]},
 			{"label": "Models (Advanced)", "type": "menu", "contents": [
-				{"label": "View All", "type": "list_view", "table": "refrigerators_type"},
+				{"label": "View All", "type": "list_view", "table": "refrigerator_types"},
 				{"type": "group_by", "table": "refrigerator_types", "grouping": "manufacturer"},
 				{"type": "group_by", "table": "refrigerator_types", "grouping": "equipment_type"},
 				{"label": "More", "type": "menu", "contents": [
@@ -495,7 +495,6 @@ as_list[2].append(
 		]}
 	]}
 )
-as_list = {"label": as_list[0], "type": "menu", "contents": as_list[2]}
 
 helper.make_index("index.html", """
 list_views = {
@@ -549,11 +548,11 @@ if (window.location.hash.substr(1).length == 0) {
 	odkData.getDefaultGroup(function(r) {
 		r = r.getDefaultGroup();
 		if (r == null) {
-			menu = ["Not logged in!", null, [
-				["Log in", "_js", function() {
+			menu = {"label": "Not logged in!", "type": "menu", "contents": [
+				{"label": "Log in", "type": "js", "function": function() {
 					odkCommon.doAction(null, "org.opendatakit.services.sync.actions.activities.SyncActivity", {"extras": {"showLogin": "true"}, "componentPackage": "org.opendatakit.services", "componentActivity": "org.opendatakit.services.sync.actions.activities.SyncActivity"});
-				}]
-			]];
+				}}
+			]};
 			doMenu();
 		} else if (r.indexOf("GROUP_REGION_") == 0) {
 			var region = r.replace("GROUP_REGION_", "");
@@ -577,7 +576,7 @@ def make_val_accepting_index(code):
 		window.location.hash = "#" + hash.split(":").slice(1)
 	}
 	odkCommon.setSessionVariable("val", val);
-	menu = ["Loading...", null, []];
+	menu = {"label": "Loading...", "type": "menu", "contents": []};
 	""" + code
 
 helper.make_index("admin_region.html", """
@@ -605,7 +604,7 @@ list_views = {
 """ + make_val_accepting_index("""
 	odkData.arbitraryQuery("health_facility", "SELECT admin_region, facility_type, regionLevel2, COUNT(facility_type) as cnt, _id FROM health_facility WHERE UPPER(admin_region) = UPPER(?) OR UPPER(regionLevel2) = UPPER(?) GROUP BY facility_type ORDER BY cnt DESC", [val, val], 100, 0, function(d) {
 		if (d.getCount() == 0) {
-			menu = [_tu("Admin region ") + val + _tu(" has no health facilities!"), null, []];
+			menu = {"label": _tu("Admin region ") + val + _tu(" has no health facilities!"), "type": "menu", "contents": []};
 			doMenu();
 		} else {
 			var distinct_admin_regions = 0;
@@ -623,22 +622,21 @@ list_views = {
 			var old_val = val;
 			if (distinct_admin_regions == 1) {
 				val = d.getData(0, "admin_region");
-				menu = [_tu("Filtering ") + val, null, []]
 				where = "UPPER(admin_region) = UPPER(?) AND facility_type = ?";
 				hr_text = "health facilities in the admin region ? of the type ?";
 			} else {
 				val = d.getData(0, "regionLevel2");
-				menu = [_tu("Filtering ") + val, null, []]
 				where = "UPPER(regionLevel2) = UPPER(?) AND facility_type = ?";
 				hr_text = "health facilities in the region level 2 ? of the type ?";
 			}
+			menu = {"label": _tu("Filtering ") + val, "type": "menu", "contents": []}
 
 			for (var i = 0; i < d.getCount(); i++) {
 				var ftype = d.getData(i, "facility_type")
 				args = [val, ftype];
 				var count = d.getData(i, "cnt").toString();
 				var id = d.getData(i, "_id");
-				menu[2] = menu[2].concat(0);
+				menu["contents"] = menu["contents"].concat(0);
 				(function(val, where, args, count, id) {
 					var cb = null;
 					//if (count == 1) {
