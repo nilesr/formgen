@@ -17,7 +17,7 @@ default_initial = [
 	{"type": "note", "display": "You are at the the end of this instance. Press finalize to save as complete, or close this window to save as incomplete"},
 ]
 def generate_all(utils, filenames, quiet):
-	gensym = utils.gensym
+	gensym = lambda x: utils.gensym(str(x)) # if there's an actual boolean false in the formdef, keep it stable don't use a uuid
 	if not os.path.exists("formgen"): os.mkdir("formgen");
 	tables = utils.get_tables()
 	all_pairs = []

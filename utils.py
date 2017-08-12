@@ -1,4 +1,4 @@
-import json, os, subprocess, glob, sys, shutil, bs4, random
+import json, os, subprocess, glob, sys, shutil, bs4, random, hashlib
 sys.path.append(".")
 import form_generator, generate_table, generate_tables, generate_detail, generate_common, generate_graph, custom, custom_prompt_types
 ## CONSTANTS
@@ -52,8 +52,6 @@ def check_syntax(file, quiet):
 			if not quiet: message("Syntax error")
 			raise Exception("Syntax error")
 
-def basename(filename):
-	return filename.split("/")[-1]
 # like S4 in formgen_common.js, just makes four random 0-9a-f digits, used in gensym
 def genpart(): return hex(random.randint(0, 2**(8*2))).split("x")[1].rjust(4, "0")
 # returns a random guid, used for translation tokens
@@ -68,8 +66,8 @@ class utils():
 		self.appdesigner = appdesigner
 		self.filenames = []
 		self.custom_prompt_types = [];
-		self.gensym = lambda self, arg = False: gensym(arg)
-		self.basename = lambda self, arg: basename(arg)
+	@staticmethod
+	def gensym(thing = False): return gensym(thing)
 	# Tries to pull the main display column from the formDef, almost always doesn't work
 	def yank_instance_col(self, table): return self.yank_setting(table, table, "instance_name", "_id");
 	# Tries to pull the requested setting from the formDef, or return the default argument if it can't find it
