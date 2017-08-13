@@ -660,7 +660,7 @@ list_views = {
 			}
 		""")
 
-helper.make_graph("cc_graph.html", hallway, "");
+helper.make_graph("cc_graph.html", hallway, "", True);
 
 helper.static_files.append("hack_for_hf_map.js")
 helper.static_files.append("hack_for_hf_map.html")

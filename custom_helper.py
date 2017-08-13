@@ -4,6 +4,7 @@ import generate_detail
 import generate_index
 import generate_graph
 import generate_tabs
+d3_files = ["d3.css", "graph_d3.js", "d3.js"]
 class helper():
 	def __init__(self):
 		self.filanames = []
@@ -16,8 +17,8 @@ class helper():
 		self.queue.append(["detail", filename, customHtml, customCss, customJsOl, customJsGeneric])
 	def make_index(self, filename, customJs, customCss):
 		self.queue.append(["index", filename, customJs, customCss])
-	def make_graph(self, filename, customCss, customJs):
-		self.queue.append(["graph", filename, customCss, customJs])
+	def make_graph(self, filename, customCss, customJs, use_d3 = False):
+		self.queue.append(["graph", filename, customCss, customJs, use_d3])
 	def make_tabs(self, filename, customJs, customCss):
 		self.queue.append(["tabs", filename, customJs, customCss])
 	def _make(self, utils, filenames):
@@ -30,6 +31,10 @@ class helper():
 				generate_index.make(utils, *(q[1:]))
 			elif q[0] == "graph":
 				generate_graph.make(utils, *(q[1:]))
+				if q[4]:
+					for f in d3_files:
+						if f not in self.static_files:
+							self.static_files.append(f)
 			elif q[0] == "tabs":
 				generate_tabs.make(utils, *(q[1:]))
 			else:
