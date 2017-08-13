@@ -84,14 +84,14 @@ Another example from selects:
 
 which can display lines like "Didn't see anything", "Saw a robin", or "Saw an egret" on each row
 
-The four arguments are `element`, the dom element that the text will be displayed inside of, `columnValue`, the database value of the requested column, `data`, the odkData object and `i`, the index of the row. So if you had a callback that needed data from another column, you can get it using `d.getData(i, "some_other_column")`
+The four arguments are `element`, the dom element that the text will be displayed inside of, `columnValue`, the database value of the requested column, `data`, the odkData object and `i`, the index of the row. So if you had a callback that needed data from another column, you can get it using `data.getData(i, "some_other_column")`
 
 The callback functions can return html too.
 
 You can also set `display_col_wrapper` to a function that returns what should be displayed, like this
 
-	display_col_wrapper = function display_col_wrapper(d, i, c) {
-		return c.split("T")[0];
+	display_col_wrapper = function display_col_wrapper(data, i, columnValue) {
+		return columnValue.split("T")[0];
 	}
 	display_col = "date_serviced"
 
@@ -174,7 +174,7 @@ You can also provide `pretty_column` set to false to display the raw column name
 
 You can also give `pretty_value` and set it to true or false to determine if the column value should be prettified or translated if you don't provide a callback.
 
-If you have an image, audio or video column, with \_contentType and \_uriFragment columns, you can specify the name without the extra \_uriFragment and you'll get a dom element that can be appended to e, or for an image you can get c.src to put it in your own html.
+If you have an image, audio or video column, with \_contentType and \_uriFragment columns, you can specify the name without the extra \_uriFragment and you'll get a dom element that can be appended to `element`, or for an image you can get `columnValue`.src to put it in your own html.
 
 ### Menus
 
@@ -357,7 +357,7 @@ and nothing else.
 	- global which cols to select
 	- callback functions
 - detail view generator
-- Detail views used to automatically display pictures, now they don't because we loop over the colmap instead of d.getColumns().
+- Detail views used to automatically display pictures, now they don't because we loop over the colmap instead of data.getColumns().
 
 ### Small stuff
 

@@ -25,9 +25,9 @@ helper.make_table("aa_refrigerator_types_list.html", "", """
 		text-align: center;
 	}
 """, global_allowed_tables + global_block_add + """
-	var makepicture = function makepicture(e, c, d, i) {
-		if (c == null || c == "null") return "No picture available";
-		return "<div class='img-wrapper'><img class='refrig-img' src='" + odkCommon.getRowFileAsUrl(table_id, d.getData(i, "_id"), c) + "' /></div>";
+	var makepicture = function makepicture(element, columnValue, data, i) {
+		if (columnValue == null || columnValue == "null") return "No picture available";
+		return "<div class='img-wrapper'><img class='refrig-img' src='" + odkCommon.getRowFileAsUrl(table_id, data.getData(i, "_id"), columnValue) + "' /></div>";
 	}
 	//display_subcol = [["Manufacturer: ", "manufacturer", true], ["Model ID: ", "model_id", true], [makepicture, "refrigerator_picture_uriFragment", true]];
 	display_subcol = [
@@ -107,14 +107,14 @@ helper.make_table("aa_health_facility_list.html", "", "", global_allowed_tables 
 """, "", "")
 
 helper.make_table("aa_m_logs_list.html", "", "", global_allowed_tables + global_block_add + """
-	var notes_cb = function notes_cb(e, notes) {
+	var notes_cb = function notes_cb(element, notes) {
 		if (notes == undefined || notes == null) {
 			return "";
 		}
 		return notes;
 	}
-	display_col_wrapper = function display_col_wrapper(d, i, c) {
-		return c.split("T")[0];
+	display_col_wrapper = function display_col_wrapper(data, i, columnValue) {
+		return columnValue.split("T")[0];
 	}
 	display_col = "date_serviced"
 	//display_subcol = [["", "refs_tracking_number", true], [notes_cb, "notes", true]];
@@ -159,43 +159,43 @@ helper.make_detail("aa_refrigerators_detail.html", """
 	<br />
 		""", open("refrigerator_detail.css").read(), open("refrigerator_detail.js", "r").read() + global_allowed_tables + """
 	document.getElementById("bfi").innerText = _tu("Basic Refrigerator Information")
-	var model_callback = function model_callback(e, c, d) {
+	var model_callback = function model_callback(element, columnValue, data) {
 		var btn = document.getElementById("open_model");
 		btn.innerText = _tu("Model Information");
-		var model = d.getData(0, "catalog_id"); // from join, not actually the model id
-		var model_row_id = d.getData(0, "model_row_id");
+		var model = data.getData(0, "catalog_id"); // from join, not actually the model id
+		var model_row_id = data.getData(0, "model_row_id");
 		btn.disabled = false;
 		btn.addEventListener("click", function() {
 			odkTables.openDetailView(null, "refrigerator_types", model_row_id);
 		});
-		build_generic_callback("model_id", true, _tu("Model ID"))(e, c, d)
+		build_generic_callback("model_id", true, _tu("Model ID"))(element, columnValue, data)
 		return "";
 	}
-	var hf_callback = function hf_callback(e, c, d) {
+	var hf_callback = function hf_callback(element, columnValue, data) {
 		/*
 			var btn = document.getElementById("open_hf");
 			btn.innerText = _tu("Health Facility Information");
-			var hf = d.getData(0, "facility_name"); // from join, not actually the hf id
-			var hf_row_id = d.getData(0, "facility_row_id");
+			var hf = data.getData(0, "facility_name"); // from join, not actually the hf id
+			var hf_row_id = data.getData(0, "facility_row_id");
 			btn.disabled = false;
 			btn.addEventListener("click", function() {
 				odkTables.openDetailView(null, "health_facility", hf_row_id, "config/assets/aa_health_facility_detail.html#health_facility/" + hf_row_id);
 			});
 		*/
-		build_generic_callback("facility_name", true, "Facility")(e, c, d)
+		build_generic_callback("facility_name", true, "Facility")(element, columnValue, data)
 		document.getElementById("add_m_log").disabled = false;
 		document.getElementById("add_m_log").innerText = _tu("Add Maintenance Record");
-		var defaults = {"refrigerator_id": d.getData(0, "refrigerator_id"), "date_serviced": odkCommon.toOdkTimeStampFromDate(new Date())};
-		defaults["_default_access"] = d.getData(0, "_default_access");
-		defaults["_group_read_only"] = d.getData(0, "_group_read_only");
-		defaults["_group_modify"] = d.getData(0, "_group_modify");
-		defaults["_group_privileged"] = d.getData(0, "_group_privileged");
+		var defaults = {"refrigerator_id": data.getData(0, "refrigerator_id"), "date_serviced": odkCommon.toOdkTimeStampFromDate(new Date())};
+		defaults["_default_access"] = data.getData(0, "_default_access");
+		defaults["_group_read_only"] = data.getData(0, "_group_read_only");
+		defaults["_group_modify"] = data.getData(0, "_group_modify");
+		defaults["_group_privileged"] = data.getData(0, "_group_privileged");
 		document.getElementById("add_m_log").addEventListener("click", function add_m_log() {
 			if (allowed_tables.indexOf("m_logs") >= 0) {
 				var id = newGuid();
 				odkData.addRow("m_logs", defaults, id, function() {
 					// Escape the LIMIT 1
-					odkData.arbitraryQuery("m_logs", "UPDATE m_logs SET _savepoint_type = ? WHERE _id = ?;--", ["INCOMPLETE", id], 100, 0, function success(d) {
+					odkData.arbitraryQuery("m_logs", "UPDATE m_logs SET _savepoint_type = ? WHERE _id = ?;--", ["INCOMPLETE", id], 100, 0, function success(data) {
 						odkTables.launchHTML({}, "config/assets/formgen/m_logs#" + id);
 					}, null);
 				});
@@ -206,7 +206,7 @@ helper.make_detail("aa_refrigerators_detail.html", """
 		document.getElementById("view_m_log").disabled = false;
 		document.getElementById("view_m_log").innerText = _tu("View all maintenance logs")
 		document.getElementById("view_m_log").addEventListener("click", function add_m_log() {
-			odkTables.launchHTML(null, "config/assets/aa_m_logs_list.html#m_log/STATIC/SELECT *, refrigerators.refrigerator_id AS refs_refid, refrigerators.tracking_id AS refs_tracking_number FROM m_logs JOIN refrigerators ON refrigerators.refrigerator_id = m_logs.refrigerator_id WHERE refs_refid = ?/" + JSON.stringify([d.getData(0, "refrigerator_id")]) + "/maintenance records for the selected refrigerator");
+			odkTables.launchHTML(null, "config/assets/aa_m_logs_list.html#m_log/STATIC/SELECT *, refrigerators.refrigerator_id AS refs_refid, refrigerators.tracking_id AS refs_tracking_number FROM m_logs JOIN refrigerators ON refrigerators.refrigerator_id = m_logs.refrigerator_id WHERE refs_refid = ?/" + JSON.stringify([data.getData(0, "refrigerator_id")]) + "/maintenance records for the selected refrigerator");
 		});
 
 		return "";
@@ -262,14 +262,14 @@ helper.make_detail("aa_refrigerator_types_detail.html", """
 
 	main_col = "";
 	global_which_cols_to_select = "*, (SELECT COUNT(*) FROM refrigerators WHERE model_row_id = refrigerator_types._id) as refrig_with_this_model_count"
-	var mid_callback = function mid_callback(e, c, d) {
-		generic_callback(e, c, d, "model_id", true);
-		document.getElementById("open_model").innerHTML = _tu("View All ") + c + _tu(" Refrigerators (<span id='refrig_with_this_model_count'>Loading...</span>)")
+	var mid_callback = function mid_callback(element, columnValue, data) {
+		generic_callback(element, columnValue, data, "model_id", true);
+		document.getElementById("open_model").innerHTML = _tu("View All ") + columnValue + _tu(" Refrigerators (<span id='refrig_with_this_model_count'>Loading...</span>)")
 		document.getElementById("open_model").disabled = false;
 		document.getElementById("open_model").addEventListener("click", function click() {
 			odkTables.launchHTML(null, "config/assets/aa_refrigerators_list.html#refrigerators/model_row_id = ?/" + row_id);
 		});
-		document.getElementById("refrig_with_this_model_count").innerText = d.getData(0, "refrig_with_this_model_count");
+		document.getElementById("refrig_with_this_model_count").innerText = data.getData(0, "refrig_with_this_model_count");
 	}
 	colmap = [
 		{"column": "manufacturer", "callback": build_generic_callback("manufacturer", true)},
@@ -282,7 +282,7 @@ helper.make_detail("aa_refrigerator_types_detail.html", """
 		{"column": "freezer_net_volume", "callback": build_generic_callback("freezer_net_volume", " litres")},
 		{"column": "model_id", "callback": mid_callback},
 		{"column": "catalog_id", "callback": build_generic_callback("catalog_id", true)},
-		{"column": "refrigerator_picture", "callback": function(e,c,d){document.getElementById("inject-refrigerator_picture").appendChild(c)}}
+		{"column": "refrigerator_picture", "callback": function(element,columnValue,data){document.getElementById("inject-refrigerator_picture").appendChild(columnValue)}}
 	]
 """, "")
 
@@ -333,26 +333,26 @@ helper.make_detail("aa_health_facility_detail.html", """
 
 	main_col = "";
 	global_which_cols_to_select = "*, (SELECT COUNT(*) FROM refrigerators WHERE facility_row_id = health_facility._id) as refrig_with_this_hfid_count"
-	var fname_callback = function fname_callback(e, c, d) {
-		generic_callback(e, c, d, "facility_name", true, "Health Facility ID");
+	var fname_callback = function fname_callback(element, columnValue, data) {
+		generic_callback(element, columnValue, data, "facility_name", true, "Health Facility ID");
 		document.getElementById("refrigerator_inventory").innerHTML = _tu("Refrigerator Inventory (<span id='refrig_with_this_hfid_count'>Loading...</span>)")
 		document.getElementById("refrigerator_inventory").disabled = false;
 		document.getElementById("refrigerator_inventory").addEventListener("click", function click() {
-			odkTables.launchHTML(null, "config/assets/aa_refrigerators_list.html#refrigerators/health_facility.facility_name = ?/" + d.getData(0, "facility_name"));
+			odkTables.launchHTML(null, "config/assets/aa_refrigerators_list.html#refrigerators/health_facility.facility_name = ?/" + data.getData(0, "facility_name"));
 		});
-		document.getElementById("refrig_with_this_hfid_count").innerText = d.getData(0, "refrig_with_this_hfid_count");
+		document.getElementById("refrig_with_this_hfid_count").innerText = data.getData(0, "refrig_with_this_hfid_count");
 		document.getElementById("addref").addEventListener("click", function() {
-			var defaults = {"facility_row_id": d.getData(0, "_id")};
+			var defaults = {"facility_row_id": data.getData(0, "_id")};
 			defaults["refrigerator_id"] = newGuid();
-			defaults["_default_access"] = d.getData(0, "_default_access");
-			defaults["_group_read_only"] = d.getData(0, "_group_read_only");
-			defaults["_group_modify"] = d.getData(0, "_group_modify");
-			defaults["_group_privileged"] = d.getData(0, "_group_privileged");
+			defaults["_default_access"] = data.getData(0, "_default_access");
+			defaults["_group_read_only"] = data.getData(0, "_group_read_only");
+			defaults["_group_modify"] = data.getData(0, "_group_modify");
+			defaults["_group_privileged"] = data.getData(0, "_group_privileged");
 			if (allowed_tables.indexOf("refrigerators") >= 0) {
 				var id = newGuid();
 				odkData.addRow("refrigerators", defaults, id, function() {
 					// Escape the LIMIT 1
-					odkData.arbitraryQuery("refrigerators", "UPDATE refrigerators SET _savepoint_type = ? WHERE _id = ?;--", ["INCOMPLETE", id], 100, 0, function success(d) {
+					odkData.arbitraryQuery("refrigerators", "UPDATE refrigerators SET _savepoint_type = ? WHERE _id = ?;--", ["INCOMPLETE", id], 100, 0, function success(data) {
 						odkTables.launchHTML({}, "config/assets/formgen/refrigerators#" + id);
 					}, null);
 				});
@@ -393,10 +393,10 @@ helper.make_detail("aa_m_logs_detail.html", "", "", """
 	main_col = "refs_tracking_number";
 	colmap = [
 		{"column": 'refs_tracking_number', "display_name": "Tracking Number: "},
-		{"column": 'date_serviced', "callback": function(e, c, d) { return "<b>" + _tu("Date Serviced") + ":</b> " + c.split("T")[0]; }},
-		{"column": 'notes', "callback": function(e, c, d) {
-			if (c == null || c == "null") return "";
-			return "<b>" + _tu("Notes: ") + "</b>" + c;
+		{"column": 'date_serviced', "callback": function(element, columnValue, data) { return "<b>" + _tu("Date Serviced") + ":</b> " + columnValue.split("T")[0]; }},
+		{"column": 'notes', "callback": function(element, columnValue, data) {
+			if (columnValue == null || columnValue == "null") return "";
+			return "<b>" + _tu("Notes: ") + "</b>" + columnValue;
 		}}
 	]
 	global_join = "refrigerators ON refrigerators.refrigerator_id = m_logs.refrigerator_id"
@@ -602,15 +602,15 @@ list_views = {
 	"health_facility": "config/assets/aa_health_facility_list.html",
 }
 """ + make_val_accepting_index("""
-	odkData.arbitraryQuery("health_facility", "SELECT admin_region, facility_type, regionLevel2, COUNT(facility_type) as cnt, _id FROM health_facility WHERE UPPER(admin_region) = UPPER(?) OR UPPER(regionLevel2) = UPPER(?) GROUP BY facility_type ORDER BY cnt DESC", [val, val], 100, 0, function(d) {
-		if (d.getCount() == 0) {
+	odkData.arbitraryQuery("health_facility", "SELECT admin_region, facility_type, regionLevel2, COUNT(facility_type) as cnt, _id FROM health_facility WHERE UPPER(admin_region) = UPPER(?) OR UPPER(regionLevel2) = UPPER(?) GROUP BY facility_type ORDER BY cnt DESC", [val, val], 100, 0, function(data) {
+		if (data.getCount() == 0) {
 			menu = {"label": _tu("Admin region ") + val + _tu(" has no health facilities!"), "type": "menu", "contents": []};
 			doMenu();
 		} else {
 			var distinct_admin_regions = 0;
 			var all_regions = [];
-			for (var i = 0; i < d.getCount(); i++) {
-				var this_admin_region = d.getData(i, "admin_region")
+			for (var i = 0; i < data.getCount(); i++) {
+				var this_admin_region = data.getData(i, "admin_region")
 				if (all_regions.indexOf(this_admin_region) == -1) {
 					all_regions = all_regions.concat(this_admin_region);
 					distinct_admin_regions++;
@@ -621,21 +621,21 @@ list_views = {
 			var hr_text = "";
 			var old_val = val;
 			if (distinct_admin_regions == 1) {
-				val = d.getData(0, "admin_region");
+				val = data.getData(0, "admin_region");
 				where = "UPPER(admin_region) = UPPER(?) AND facility_type = ?";
 				hr_text = "health facilities in the admin region ? of the type ?";
 			} else {
-				val = d.getData(0, "regionLevel2");
+				val = data.getData(0, "regionLevel2");
 				where = "UPPER(regionLevel2) = UPPER(?) AND facility_type = ?";
 				hr_text = "health facilities in the region level 2 ? of the type ?";
 			}
 			menu = {"label": _tu("Filtering ") + val, "type": "menu", "contents": []}
 
-			for (var i = 0; i < d.getCount(); i++) {
-				var ftype = d.getData(i, "facility_type")
+			for (var i = 0; i < data.getCount(); i++) {
+				var ftype = data.getData(i, "facility_type")
 				args = [val, ftype];
-				var count = d.getData(i, "cnt").toString();
-				var id = d.getData(i, "_id");
+				var count = data.getData(i, "cnt").toString();
+				var id = data.getData(i, "_id");
 				menu["contents"] = menu["contents"].concat(0);
 				(function(val, where, args, count, id) {
 					var cb = null;
@@ -648,7 +648,7 @@ list_views = {
 							odkTables.openTableToMapView(null, "health_facility", where, args, "config/assets/hack_for_hf_map.html#health_facility/STATIC/SELECT """+hf_cols_to_select+""" FROM health_facility WHERE " + where + "/" + JSON.stringify(args) + "/" + hr_text);
 						}
 					//}
-					menu["contents"][menu["contents"].length - 1] = {"label": _tc(d, "facility_type", ftype) + " (" + count + ")", "type": "js", "function": cb}
+					menu["contents"][menu["contents"].length - 1] = {"label": _tc(data, "facility_type", ftype) + " (" + count + ")", "type": "js", "function": cb}
 				})(val, where, args, count, id);
 			}
 			doMenu();
