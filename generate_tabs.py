@@ -11,7 +11,7 @@ def make(utils, filename, customJs, customCss):
 		<style>
 			"""+customCss+"""
 		</style>
-		<script src="userjs/"""+token+""".js"></script>
+		<script src="/"""+utils.appname+"""/config/assets/userjs/"""+token+""".js"></script>
 		<script src="tabs.js"></script>
 	</head>
 	<body onLoad='ol();'>

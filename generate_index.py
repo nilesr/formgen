@@ -13,7 +13,7 @@ def make(utils, filename, customJs, customCss):
 		<style>
 		""" + customCss + """
 		</style>
-		<script type="text/javascript" src="userjs/"""+token+""".js"></script>
+		<script type="text/javascript" src="/"""+utils.appname+"""/config/assets/userjs/"""+token+""".js"></script>
 		<script src="generate_index.js"></script>
 	</head>
 	<body onLoad='ol();'>

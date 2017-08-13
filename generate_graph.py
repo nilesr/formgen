@@ -9,7 +9,7 @@ def make(utils, filename, customCss, customJs):
 		<script type="text/javascript" src="/"""+utils.appname+"""/system/tables/js/odkTables.js"></script>
 		<script src="/"""+utils.appname+"""/config/assets/generate_common.js"></script>
 		<script src="/"""+utils.appname+"""/config/assets/formgen_common.js"></script>
-		<script src="userjs/"""+token+""".js"></script>
+		<script src="/"""+utils.appname+"""/config/assets/userjs/"""+token+""".js"></script>
 		<script src="/"""+utils.appname+"""/config/assets/graph.js"></script>
 		<link href="/"""+utils.appname+"""/config/assets/generate_index.css" rel="stylesheet" />
 		<link href="/"""+utils.appname+"""/config/assets/graph.css" rel="stylesheet" />

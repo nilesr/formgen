@@ -20,7 +20,7 @@ def make(utils, filename, customHtml, customCss, customJsOl, customJsSearch, cus
 		<script type="text/javascript" src="/""" + utils.appname + """/system/tables/js/odkTables.js"></script>
 		<script type="text/javascript" src="formgen_common.js"></script>
 		<script type="text/javascript" src="generate_common.js"></script>
-		<script type="text/javascript" src="userjs/"""+token+""".js"></script>
+		<script type="text/javascript" src="/"""+utils.appname+"""/config/assets/userjs/"""+token+""".js"></script>
 		<script type="text/javascript" src="generate_table.js"></script>
 	</head>
 	<body onLoad="ol();">
