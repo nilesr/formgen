@@ -2,10 +2,10 @@ var generic_callback = function generic_callback(element, columnValue, data, whi
 	if (optional_col_name == null || optional_col_name == undefined || typeof(optional_col_name) != "string") {
 		optional_col_name = displayCol(which, data.getMetadata(), data.getTableId());
 	} else {
-		optional_col_name = _tu(optional_col_name);
+		optional_col_name = translate_user(optional_col_name);
 	}
-	wrapper = function(i) { return _tc(data, which, i); };
-	if (pretty) wrapper = function(i) { return window.pretty(_tc(data, which, i.toString())); };
+	wrapper = function(i) { return translate_choice(data, which, i); };
+	if (pretty) wrapper = function(i) { return window.pretty(translate_choice(data, which, i.toString())); };
 	if (columnValue == null) columnValue = "null"; // because null.toString() will throw an exception
 	document.getElementById("inject-" + which).innerHTML = "<b>" + optional_col_name + "</b>: " + wrapper(columnValue);
 	document.getElementById("inject-" + which).classList.add("li-inner");

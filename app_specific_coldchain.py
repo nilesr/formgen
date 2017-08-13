@@ -158,23 +158,23 @@ helper.make_detail("aa_refrigerators_detail.html", """
 	<button disabled id='view_m_log'></button>
 	<br />
 		""", open("refrigerator_detail.css").read(), open("refrigerator_detail.js", "r").read() + global_allowed_tables + """
-	document.getElementById("bfi").innerText = _tu("Basic Refrigerator Information")
+	document.getElementById("bfi").innerText = translate_user("Basic Refrigerator Information")
 	var model_callback = function model_callback(element, columnValue, data) {
 		var btn = document.getElementById("open_model");
-		btn.innerText = _tu("Model Information");
+		btn.innerText = translate_user("Model Information");
 		var model = data.getData(0, "catalog_id"); // from join, not actually the model id
 		var model_row_id = data.getData(0, "model_row_id");
 		btn.disabled = false;
 		btn.addEventListener("click", function() {
 			odkTables.openDetailView(null, "refrigerator_types", model_row_id);
 		});
-		build_generic_callback("model_id", true, _tu("Model ID"))(element, columnValue, data)
+		build_generic_callback("model_id", true, translate_user("Model ID"))(element, columnValue, data)
 		return "";
 	}
 	var hf_callback = function hf_callback(element, columnValue, data) {
 		/*
 			var btn = document.getElementById("open_hf");
-			btn.innerText = _tu("Health Facility Information");
+			btn.innerText = translate_user("Health Facility Information");
 			var hf = data.getData(0, "facility_name"); // from join, not actually the hf id
 			var hf_row_id = data.getData(0, "facility_row_id");
 			btn.disabled = false;
@@ -184,7 +184,7 @@ helper.make_detail("aa_refrigerators_detail.html", """
 		*/
 		build_generic_callback("facility_name", true, "Facility")(element, columnValue, data)
 		document.getElementById("add_m_log").disabled = false;
-		document.getElementById("add_m_log").innerText = _tu("Add Maintenance Record");
+		document.getElementById("add_m_log").innerText = translate_user("Add Maintenance Record");
 		var defaults = {"refrigerator_id": data.getData(0, "refrigerator_id"), "date_serviced": odkCommon.toOdkTimeStampFromDate(new Date())};
 		defaults["_default_access"] = data.getData(0, "_default_access");
 		defaults["_group_read_only"] = data.getData(0, "_group_read_only");
@@ -204,7 +204,7 @@ helper.make_detail("aa_refrigerators_detail.html", """
 			}
 		});
 		document.getElementById("view_m_log").disabled = false;
-		document.getElementById("view_m_log").innerText = _tu("View all maintenance logs")
+		document.getElementById("view_m_log").innerText = translate_user("View all maintenance logs")
 		document.getElementById("view_m_log").addEventListener("click", function add_m_log() {
 			odkTables.launchHTML(null, "config/assets/aa_m_logs_list.html#m_log/STATIC/SELECT *, refrigerators.refrigerator_id AS refs_refid, refrigerators.tracking_id AS refs_tracking_number FROM m_logs JOIN refrigerators ON refrigerators.refrigerator_id = m_logs.refrigerator_id WHERE refs_refid = ?/" + JSON.stringify([data.getData(0, "refrigerator_id")]) + "/maintenance records for the selected refrigerator");
 		});
@@ -227,10 +227,10 @@ helper.make_detail("aa_refrigerators_detail.html", """
 		{"column": "voltage_regulator", "callback": build_generic_callback("voltage_regulator", true)},
 		{"column": "date_serviced", "callback": build_generic_callback("date_serviced", function(i) {
 			if (i == "No Records") {
-				return _tu(i);
+				return translate_user(i);
 			}
 			return i.split("T")[0];
-		}, _tu("Date Serviced"))}
+		}, translate_user("Date Serviced"))}
 	]
 """, "")
 
@@ -256,7 +256,7 @@ helper.make_detail("aa_refrigerator_types_detail.html", """
 	</div>
 		""", open("refrigerator_detail.css").read(), open("refrigerator_detail.js", "r").read() + global_allowed_tables + """
 
-	document.getElementById("mi").innerText = _tu("Model Information")
+	document.getElementById("mi").innerText = translate_user("Model Information")
 	document.getElementById("edit").style.display = "none";
 	document.getElementById("delete").style.display = "none";
 
@@ -264,7 +264,7 @@ helper.make_detail("aa_refrigerator_types_detail.html", """
 	global_which_cols_to_select = "*, (SELECT COUNT(*) FROM refrigerators WHERE model_row_id = refrigerator_types._id) as refrig_with_this_model_count"
 	var mid_callback = function mid_callback(element, columnValue, data) {
 		generic_callback(element, columnValue, data, "model_id", true);
-		document.getElementById("open_model").innerHTML = _tu("View All ") + columnValue + _tu(" Refrigerators (<span id='refrig_with_this_model_count'>Loading...</span>)")
+		document.getElementById("open_model").innerHTML = translate_user("View All ") + columnValue + translate_user(" Refrigerators (<span id='refrig_with_this_model_count'>Loading...</span>)")
 		document.getElementById("open_model").disabled = false;
 		document.getElementById("open_model").addEventListener("click", function click() {
 			odkTables.launchHTML(null, "config/assets/aa_refrigerators_list.html#refrigerators/model_row_id = ?/" + row_id);
@@ -335,7 +335,7 @@ helper.make_detail("aa_health_facility_detail.html", """
 	global_which_cols_to_select = "*, (SELECT COUNT(*) FROM refrigerators WHERE facility_row_id = health_facility._id) as refrig_with_this_hfid_count"
 	var fname_callback = function fname_callback(element, columnValue, data) {
 		generic_callback(element, columnValue, data, "facility_name", true, "Health Facility ID");
-		document.getElementById("refrigerator_inventory").innerHTML = _tu("Refrigerator Inventory (<span id='refrig_with_this_hfid_count'>Loading...</span>)")
+		document.getElementById("refrigerator_inventory").innerHTML = translate_user("Refrigerator Inventory (<span id='refrig_with_this_hfid_count'>Loading...</span>)")
 		document.getElementById("refrigerator_inventory").disabled = false;
 		document.getElementById("refrigerator_inventory").addEventListener("click", function click() {
 			odkTables.launchHTML(null, "config/assets/aa_refrigerators_list.html#refrigerators/health_facility.facility_name = ?/" + data.getData(0, "facility_name"));
@@ -383,20 +383,20 @@ helper.make_detail("aa_health_facility_detail.html", """
 		{"column": 'vaccine_reserve_stock_requirement', "callback": build_generic_callback("vaccine_reserve_stock_requirement", true, "Vaccine Reserve Stock Req")},
 		{"column": 'vaccine_supply_mode', "callback": build_generic_callback("vaccine_supply_mode", true)},
 	]
-	document.getElementById("bfi").innerText = _tu("Basic Facility Information");
-	document.getElementById("pi").innerText = _tu("Power Information");
-	document.getElementById("locationi").innerText = _tu("Location Information");
-	document.getElementById("stocki").innerText = _tu("Stock Information");
-	document.getElementById("addref").innerText = _tu("Add Refrigerator");
+	document.getElementById("bfi").innerText = translate_user("Basic Facility Information");
+	document.getElementById("pi").innerText = translate_user("Power Information");
+	document.getElementById("locationi").innerText = translate_user("Location Information");
+	document.getElementById("stocki").innerText = translate_user("Stock Information");
+	document.getElementById("addref").innerText = translate_user("Add Refrigerator");
 """, "")
 helper.make_detail("aa_m_logs_detail.html", "", "", """
 	main_col = "refs_tracking_number";
 	colmap = [
 		{"column": 'refs_tracking_number', "display_name": "Tracking Number: "},
-		{"column": 'date_serviced', "callback": function(element, columnValue, data) { return "<b>" + _tu("Date Serviced") + ":</b> " + columnValue.split("T")[0]; }},
+		{"column": 'date_serviced', "callback": function(element, columnValue, data) { return "<b>" + translate_user("Date Serviced") + ":</b> " + columnValue.split("T")[0]; }},
 		{"column": 'notes', "callback": function(element, columnValue, data) {
 			if (columnValue == null || columnValue == "null") return "";
-			return "<b>" + _tu("Notes: ") + "</b>" + columnValue;
+			return "<b>" + translate_user("Notes: ") + "</b>" + columnValue;
 		}}
 	]
 	global_join = "refrigerators ON refrigerators.refrigerator_id = m_logs.refrigerator_id"
@@ -604,7 +604,7 @@ list_views = {
 """ + make_val_accepting_index("""
 	odkData.arbitraryQuery("health_facility", "SELECT admin_region, facility_type, regionLevel2, COUNT(facility_type) as cnt, _id FROM health_facility WHERE UPPER(admin_region) = UPPER(?) OR UPPER(regionLevel2) = UPPER(?) GROUP BY facility_type ORDER BY cnt DESC", [val, val], 100, 0, function(data) {
 		if (data.getCount() == 0) {
-			menu = {"label": _tu("Admin region ") + val + _tu(" has no health facilities!"), "type": "menu", "contents": []};
+			menu = {"label": translate_user("Admin region ") + val + translate_user(" has no health facilities!"), "type": "menu", "contents": []};
 			doMenu();
 		} else {
 			var distinct_admin_regions = 0;
@@ -629,7 +629,7 @@ list_views = {
 				where = "UPPER(regionLevel2) = UPPER(?) AND facility_type = ?";
 				hr_text = "health facilities in the region level 2 ? of the type ?";
 			}
-			menu = {"label": _tu("Filtering ") + val, "type": "menu", "contents": []}
+			menu = {"label": translate_user("Filtering ") + val, "type": "menu", "contents": []}
 
 			for (var i = 0; i < data.getCount(); i++) {
 				var ftype = data.getData(i, "facility_type")
@@ -648,7 +648,7 @@ list_views = {
 							odkTables.openTableToMapView(null, "health_facility", where, args, "config/assets/hack_for_hf_map.html#health_facility/STATIC/SELECT """+hf_cols_to_select+""" FROM health_facility WHERE " + where + "/" + JSON.stringify(args) + "/" + hr_text);
 						}
 					//}
-					menu["contents"][menu["contents"].length - 1] = {"label": _tc(data, "facility_type", ftype) + " (" + count + ")", "type": "js", "function": cb}
+					menu["contents"][menu["contents"].length - 1] = {"label": translate_choice(data, "facility_type", ftype) + " (" + count + ")", "type": "js", "function": cb}
 				})(val, where, args, count, id);
 			}
 			doMenu();
