@@ -4,7 +4,7 @@ import custom_helper
 helper = custom_helper.helper();
 
 print("This is old don't use it")
-sys.exit(1)
+'''
 
 
 helper.make_table("plot.html", "", "", """
@@ -49,3 +49,4 @@ helper.make_table("selects_list.html", "", "", """
 	display_col = "user_name"
 	table_id = "selects";
 """, "", "")
+'''

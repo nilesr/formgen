@@ -124,8 +124,8 @@ helper.make_table("aa_m_logs_list.html", "", "", global_allowed_tables + global_
 	]
 	allowed_group_bys = [];
 	table_id = "m_logs";
-	global_join = "refrigerators ON refrigerators.refrigerator_id = m_logs.refrigerator_id"
-	global_which_cols_to_select = "*, refrigerators.refrigerator_id AS refs_refid, refrigerators.tracking_id AS refs_tracking_number"
+	global_join = "refrigerators ON refrigerators._id = m_logs.refrigerator_id"
+	global_which_cols_to_select = "*, refrigerators.tracking_id AS refs_tracking_number"
 	document.getElementById("add").style.display = "none";
 """, "", "")
 
@@ -185,7 +185,7 @@ helper.make_detail("aa_refrigerators_detail.html", """
 		build_generic_callback("facility_name", true, "Facility")(element, columnValue, data)
 		document.getElementById("add_m_log").disabled = false;
 		document.getElementById("add_m_log").innerText = translate_user("Add Maintenance Record");
-		var defaults = {"refrigerator_id": data.getData(0, "refrigerator_id"), "date_serviced": odkCommon.toOdkTimeStampFromDate(new Date())};
+		var defaults = {"refrigerator_id": data.getData(0, "_id"), "date_serviced": odkCommon.toOdkTimeStampFromDate(new Date())};
 		defaults["_default_access"] = data.getData(0, "_default_access");
 		defaults["_group_read_only"] = data.getData(0, "_group_read_only");
 		defaults["_group_modify"] = data.getData(0, "_group_modify");
@@ -206,7 +206,7 @@ helper.make_detail("aa_refrigerators_detail.html", """
 		document.getElementById("view_m_log").disabled = false;
 		document.getElementById("view_m_log").innerText = translate_user("View all maintenance logs")
 		document.getElementById("view_m_log").addEventListener("click", function add_m_log() {
-			odkTables.launchHTML(null, "config/assets/aa_m_logs_list.html#m_log/STATIC/SELECT *, refrigerators.refrigerator_id AS refs_refid, refrigerators.tracking_id AS refs_tracking_number FROM m_logs JOIN refrigerators ON refrigerators.refrigerator_id = m_logs.refrigerator_id WHERE refs_refid = ?/" + JSON.stringify([data.getData(0, "refrigerator_id")]) + "/maintenance records for the selected refrigerator");
+			odkTables.launchHTML(null, "config/assets/aa_m_logs_list.html#m_log/STATIC/SELECT *, refrigerators.tracking_id AS refs_tracking_number FROM m_logs JOIN refrigerators ON refrigerators._id = m_logs.refrigerator_id WHERE m_logs.refrigerator_id = ?/" + JSON.stringify([data.getData(0, "_id")]) + "/maintenance records for the selected refrigerator");
 		});
 
 		return "";
@@ -215,7 +215,7 @@ helper.make_detail("aa_refrigerators_detail.html", """
 	main_col = "";
 	global_join = "refrigerator_types ON refrigerators.model_row_id = refrigerator_types._id JOIN health_facility ON refrigerators.facility_row_id = health_facility._id"
 	global_which_cols_to_select = "*"
-	var subquery = "(SELECT date_serviced FROM m_logs WHERE m_logs.refrigerator_id = refrigerators.refrigerator_id AND m_logs._savepoint_type != 'INCOMPLETE' ORDER BY date_serviced DESC LIMIT 1)"
+	var subquery = "(SELECT date_serviced FROM m_logs WHERE m_logs.refrigerator_id = refrigerators._id AND m_logs._savepoint_type != 'INCOMPLETE' ORDER BY date_serviced DESC LIMIT 1)"
 	global_which_cols_to_select = global_which_cols_to_select.concat(", (CASE WHEN "+subquery+" IS NOT NULL THEN "+subquery+" ELSE 'No Records' END) as date_serviced")
 	colmap = [
 		{"column": "facility_name", "callback": hf_callback},
