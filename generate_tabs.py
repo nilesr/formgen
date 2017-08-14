@@ -1,5 +1,5 @@
 def make(utils, filename, customJs, customCss):
-	token = utils.gensym(filename)
+	token = utils.userjs(filename)
 	basehtml = """
 <!doctype html>
 <html>

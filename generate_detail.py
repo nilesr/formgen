@@ -4,7 +4,7 @@ def make(utils, filename, customHtml, customCss, customJsOl, customJsGeneric):
 	tables = utils.get_tables();
 	for table in tables:
 		cols[table] = utils.yank_instance_col(table)
-	token = utils.gensym(filename)
+	token = utils.userjs(filename)
 	basehtml = """
 <html>
 """ + utils.warning + """

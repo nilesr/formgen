@@ -1,5 +1,5 @@
 def make(utils, filename, customCss, customJs, use_d3 = False):
-	token = utils.gensym(filename)
+	token = utils.userjs(filename)
 	basejs = """
 			window.show_value = false;
 			window.iframeOnly = false;
