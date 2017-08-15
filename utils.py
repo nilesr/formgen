@@ -2,7 +2,7 @@ import json, os, subprocess, glob, sys, shutil, bs4, random, hashlib, string
 sys.path.append(".")
 import form_generator, generate_table, generate_tables, generate_detail, generate_common, generate_graph, custom, custom_prompt_types
 ## CONSTANTS
-appdesigner = "/home/niles/Documents/odk/app-designer"
+appdesigner = ".."
 tmp = "/tmp"
 
 def do_command(push, command, quiet):
